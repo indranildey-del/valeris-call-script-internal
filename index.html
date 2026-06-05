@@ -90,7 +90,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .step-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;opacity:.6}
 .step-text{font-size:13px;line-height:1.6;padding-right:28px;color:#1f2937}
 .step-field{font-size:11.5px;color:#6b7280;margin-top:4px;font-style:italic;padding-right:28px;line-height:1.4}
-.placeholder{background:#fef9c3;padding:1px 4px;border-radius:3px;font-style:italic;color:#92400e}
+.placeholder{background:#fef9c3;padding:1px 5px;border-radius:3px;font-style:italic;color:#92400e;font-weight:500}
+.hl-program{background:#dbeafe;color:#1d4ed8;border-radius:3px;padding:1px 5px;font-weight:700}
+.hl-recorded{background:#fee2e2;color:#991b1b;border-radius:3px;padding:1px 5px;font-weight:500}
 
 /* ── DRAG HANDLE ── */
 .drag-handle{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:#d1d5db;cursor:grab;font-size:13px;line-height:1;opacity:0;transition:opacity .14s;user-select:none;letter-spacing:-1px}
@@ -591,7 +593,7 @@ const programs = [
 function mmStandard(prog){
   return [
     {title:"Opening Statement",hdr:"hdr-opening",steps:[
-      {type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the <strong>${prog}</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> for the medication <span class='placeholder'>[Medication name]</span>.`},
+      {type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the <strong>${prog}</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> for the medication <span class='placeholder'>[Medication name]</span>.`},
       {type:"instruction",label:"HIPAA",text:"Complete HIPAA verification before providing any patient-specific treatment information. Minimum 3 patient identifiers must be verified."},
     ]},
     {title:"Plan Details",hdr:"hdr-plan",steps:[
@@ -766,7 +768,7 @@ function pbmNotCoveredFlow(){
 function pbmStandard(prog,lddSps){
   return [
     {title:"Opening Statement",hdr:"hdr-opening",steps:[
-      {type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of <strong>${prog}</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> for the medication <span class='placeholder'>[Medication name]</span>.`},
+      {type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of <strong>${prog}</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> for the medication <span class='placeholder'>[Medication name]</span>.`},
       {type:"instruction",label:"HIPAA",text:"Complete HIPAA verification before providing any patient-specific treatment information. Minimum 3 patient identifiers required."},
     ]},
     {title:"Plan Details",hdr:"hdr-plan",steps:[
@@ -864,7 +866,7 @@ function nemtScript(){
       {type:"instruction",label:"Flow Map",text:`<strong>START</strong><br>↓ Opening + Verification<br>↓ Plan Status<br>&nbsp;&nbsp;├── Inactive → Termination Date → Close<br>↓ Coverage Exists?<br>&nbsp;&nbsp;├── No → Close<br>↓ Model Type?<br>&nbsp;&nbsp;├── <strong>Vendor Only</strong> → Limits → Medical Qual → Vendor + Scheduling → Cost → Travel Support → Close<br>&nbsp;&nbsp;├── <strong>Reimbursement Only</strong> → Medical Qual → Geographic → Travel Support → Reimbursement → Close<br>&nbsp;&nbsp;└── <strong>Both (Hybrid)</strong> → Full Vendor Flow + Reimbursement → Close`},
     ]},
     {title:"1. Opening (Mandatory)",hdr:"hdr-opening",steps:[
-      {type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling from a <strong>Johnson & Johnson Innovative Medicine sponsored patient support program</strong> on behalf of <span class='placeholder'>[Insert Provider office/pharmacy/patient name, as applicable]</span> to verify insurance benefits for a patient. Before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes.`},
+      {type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling from a <strong>Johnson & Johnson Innovative Medicine sponsored patient support program</strong> on behalf of <span class='placeholder'>[Insert Provider office/pharmacy/patient name, as applicable]</span> to verify insurance benefits for <span class='placeholder'>[patient name]</span> with date of birth <span class='placeholder'>[DOB]</span>. Before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes.`},
     ]},
     {title:"2. Member Verification",hdr:"hdr-plan",steps:[
       {type:"question",label:"Q",text:"Can you confirm this is for [patient name] with date of birth [DOB]?",field:"→ Do not proceed until member is verified"},
@@ -975,7 +977,7 @@ function mmOcular(){
 
 function pbmOrgovyx(){
   const b=pbmStandard("Orgovyx support Team",[]);
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the provider with the <strong>Orgovyx support Team</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> for the medication <span class='placeholder'>[Medication name]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the provider with the <strong>Orgovyx support Team</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> for the medication <span class='placeholder'>[Medication name]</span>.`};
   const ci=b.findIndex(s=>s.title==="Coverage Details");
   b[ci].steps.push({type:"warning",label:"IMPORTANT",text:"<strong>ALWAYS ASK for EPP / Copay / Coinsurance for Biologics and Onco360.</strong> They are the preferred pharmacies for Orgovyx."});
   return b;
@@ -1354,7 +1356,7 @@ function renderAddedStep(s,progId,tabType,si,ai,dAttrs=''){
   return `<div class="step ${typeClass}" ${dAttrs} id="addstep_${CSS.escape(addedKey)}">
     <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">${s.label||cap} <span class="added-badge">Added</span></div>
-    <div class="step-text step-content-text">${s.text}</div>
+    <div class="step-text step-content-text">${applyScriptHL(s.text,s.type)}</div>
     ${s.field?`<div class="step-field step-content-field">${s.field}</div>`:""}
     ${addMeta}
     <button class="edit-btn" onclick="startEditAdded('${progId}','${tabType}',${si},${ai})" title="Edit">&#9999;</button>
@@ -1362,9 +1364,34 @@ function renderAddedStep(s,progId,tabType,si,ai,dAttrs=''){
   </div>`;
 }
 
+function applyScriptHL(html,type){
+  if(!html) return html;
+  if(type==='statement'){
+    // 1. Program names inside <strong> tags (fresh / un-edited text)
+    html=html.replace(/<strong>([^<]+)<\/strong>/g,(m,txt)=>{
+      if(txt.includes(':')||txt.includes('=')||/^(If |SOC|POS|PA |START|BCBS|ALWAYS|NOTE|ASC|I |Vendor|Reimbursement|Both|Hybrid)/.test(txt.trim())||txt.trim().length<3) return m;
+      return '<strong><span class="hl-program">'+txt+'</span></strong>';
+    });
+    // 2. Program names in plain text (saved/edited steps where <strong> was stripped)
+    if(!html.includes('hl-program')){
+      ['IpsenCares Program','Orgovyx support Team','OcuCare Service Program','Lundbeck Support Center','Sandoz One Source™','Johnson & Johnson Innovative Medicine support program','Johnson &amp; Johnson Innovative Medicine support program','Johnson & Johnson Innovative Medicine sponsored patient support program','Johnson &amp; Johnson Innovative Medicine sponsored patient support program'].forEach(p=>{
+        html=html.replace(new RegExp(p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="hl-program">'+p+'</span>');
+      });
+    }
+    // 3. Recording notice
+    html=html.replace(/(on a recorded line)/gi,'<span class="hl-recorded">$1</span>');
+    html=html.replace(/(this call is being recorded[^<]*?(?:training|assurance)[^<.]*?purposes)/gi,'<span class="hl-recorded">$1</span>');
+  }
+  // 4. [Bracket] fill-in items — applied to ALL step types
+  html=html.replace(/<span\s[^>]*class=['"]placeholder['"][^>]*>(\[[^\]]*\])<\/span>/g,'$1');
+  html=html.replace(/\[([^\]]{1,80})\]/g,'<span class="placeholder">[$1]</span>');
+  return html;
+}
+
 function renderStep(s,key,dAttrs=''){
   const saved=editStore[key];
-  const displayText=saved?saved.text:s.text;
+  const rawText=saved?saved.text:s.text;
+  const displayText=applyScriptHL(rawText,s.type);
   const displayField=saved?(saved.field!==undefined?saved.field:s.field):s.field;
   const typeClass={statement:"step-statement",question:"step-question",instruction:"step-instruction",warning:"step-warning",branch:"step-branch"}[s.type]||"step-question";
   const isEdited=!!saved;
