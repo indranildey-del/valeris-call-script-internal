@@ -508,7 +508,7 @@ let editStore = {};
 try { editStore = JSON.parse(localStorage.getItem(STORE_KEY)||"{}"); } catch(e){}
 // Clear any stale saved overrides for Ipsen opening statements so updated text shows correctly
 (function(){
-  const staleKeys=["ipsen__mm__0__0","ipsen__pbm__0__0"];
+  const staleKeys=["ipsen__mm__0__0","ipsen__pbm__0__0","ocular__mm__0__0"];
   let changed=false;
   staleKeys.forEach(k=>{ if(editStore[k]){delete editStore[k];changed=true;} });
   if(changed){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(editStore)); }catch(e){} }
@@ -983,7 +983,7 @@ function nemtScript(){
 function mmOcular(){
   return [
     {title:"Opening Statement",hdr:"hdr-opening",steps:[
-      {type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>XXXXX</span> and I am calling with the <strong>OcuCare Service Program</strong> on a recorded line for quality and training purposes. How are you doing today? — or — I'm calling for benefits and eligibility for a patient of ours.`},
+      {type:"statement",label:"Script",text:`Hello, this is <span class='placeholder'>[Patient Access Manager's name]</span>, calling on behalf of the <strong>OcuCare Service Program</strong>, on a recorded line to verify benefits for member <span class='placeholder'>[Patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span>.`},
       {type:"instruction",label:"HIPAA",text:"Complete HIPAA verification before providing any patient-specific treatment information. Minimum 3 patient identifiers."},
       {type:"instruction",label:"Benefits Collection Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; patient has OON benefits:</strong> only OON benefits collected<br><strong>If Provider network status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> no benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`},
     ]},
