@@ -89,7 +89,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .step-branch{background:#faf5ff;border-color:#8b5cf6}
 .step-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;opacity:.6}
 .step-text{font-size:13px;line-height:1.6;padding-right:28px;color:#1f2937}
-.step-field{font-size:11.5px;color:#6b7280;margin-top:4px;font-style:italic;padding-right:28px;line-height:1.4}
+.step-field{font-size:11.5px;color:#6b7280;margin-top:4px;font-style:italic;padding-right:28px;line-height:1.4;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.na-accept-badge{font-style:normal;font-size:10px;font-weight:700;padding:1px 7px;border-radius:3px;white-space:nowrap;letter-spacing:.2px;flex-shrink:0}
+.na-accept-badge.na-ok{background:#dcfce7;color:#15803d}
+.na-accept-badge.na-no{background:#fee2e2;color:#991b1b}
 .placeholder{background:#fef9c3;padding:1px 5px;border-radius:3px;font-style:italic;color:#92400e;font-weight:500}
 .hl-program{background:#dbeafe;color:#1d4ed8;border-radius:3px;padding:1px 5px;font-weight:700}
 .hl-recorded{background:#fee2e2;color:#991b1b;border-radius:3px;padding:1px 5px;font-weight:500}
@@ -333,15 +336,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .lock-btn{margin-left:10px;padding:5px 14px;background:rgba(255,255,255,.08);color:#94a3b8;border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.3px;transition:all .14s;font-family:'Inter',sans-serif}
 .lock-btn:hover{background:rgba(255,255,255,.16);color:#f1f5f9}
 .lock-btn.unlocked{color:#34d399;border-color:rgba(52,211,153,.3)}
-.edit-meta{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:4px 10px;background:#eff2ff;border:1px solid #c7d2fe;border-radius:20px;font-size:11px;color:#4263eb;font-weight:600;width:fit-content}
-.edit-meta .meta-icon{font-size:12px}
-.edit-meta .meta-name{color:#111827;font-weight:700}
-.edit-meta .meta-sep{color:#a5b4fc;font-weight:400}
-.edit-meta .meta-date{color:#6b7280;font-weight:500}
-.auth-name-field{margin-top:12px}
-.auth-name-field label{display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;text-align:left}
-.auth-name-field input{width:100%;padding:9px 14px;border:1.5px solid #e5e9f2;border-radius:8px;font-size:13px;text-align:left;letter-spacing:0;outline:none;color:#111827;background:#f8fafc;font-family:'Inter',sans-serif}
-.auth-name-field input:focus{border-color:#4263eb;background:#fff}
 
 /* ── DOWNLOAD BUTTON & DROPDOWN ── */
 .btn-pdf{padding:6px 14px;background:#f1f5f9;color:#4263eb;border:1.5px solid #c7d2fe;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .14s;white-space:nowrap;font-family:'Inter',sans-serif}
@@ -365,6 +359,72 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+/* ── N/A ACCEPTANCE PANEL (inline in PBM scripts) ── */
+.na-legend{display:flex;align-items:center;flex-wrap:wrap;gap:16px;background:#f8faff;border:1.5px solid #e2e8f4;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:11.5px;color:#4b5563}
+.na-legend-label{font-weight:700;color:#374151;margin-right:2px;white-space:nowrap}
+.na-legend-item{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.na-legend-desc{color:#6b7280}
+.na-panel{background:#fff;border:1.5px solid #e2e8f4;border-radius:10px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.na-panel-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;user-select:none;background:#f8faff;transition:background .12s}
+.na-panel-hdr:hover{background:#eff2ff}
+.na-panel-title{font-size:13px;font-weight:700;color:#3451d1}
+.na-panel-sub{font-size:11.5px;color:#94a3b8;margin-left:4px}
+.na-panel-toggle{margin-left:auto;font-size:11px;font-weight:600;color:#4263eb;background:#e0e7ff;padding:2px 10px;border-radius:20px;white-space:nowrap;border:none;cursor:pointer;font-family:'Inter',sans-serif}
+.na-panel-body{padding:14px 16px;border-top:1px solid #e5e9f2}
+.na-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.na-pcol{border-radius:8px;overflow:hidden;border:1px solid #e5e9f2}
+.na-pcol-hdr{padding:7px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.na-pcol-hdr.no{background:#fee2e2;color:#991b1b}
+.na-pcol-hdr.yes{background:#dcfce7;color:#15803d}
+.na-pcol-grp{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;padding:5px 12px 2px;background:#fafbff;border-top:1px solid #f1f4fb}
+.na-pcol-item{padding:5px 12px;font-size:12px;color:#334155;border-top:1px solid #f8f9ff;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.na-pcol-item:hover{background:#f8f9ff}
+.na-badge-m{font-size:10px;font-weight:600;background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+.na-badge-c{font-size:10px;font-weight:600;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+/* ── PBM FIELD REFERENCE ── */
+.fref-header{display:flex;align-items:flex-start;gap:16px;padding:20px 24px 14px;background:#fff;border-bottom:1px solid #e5e9f2;flex-wrap:wrap}
+.fref-title{font-size:20px;font-weight:700;color:#1e293b}
+.fref-meta{font-size:12.5px;color:#94a3b8;margin-top:2px}
+.fref-search-bar{display:flex;align-items:center;background:#fff;border:1.5px solid #e2e8f4;border-radius:8px;padding:0 12px;margin:14px 24px 0;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.fref-search-input{flex:1;border:none;outline:none;padding:9px 0;font-size:13.5px;font-family:'Inter',sans-serif;color:#2d3a55;background:transparent}
+.fref-search-input::placeholder{color:#b0bac9}
+.fref-search-clear{background:none;border:none;cursor:pointer;color:#b0bac9;font-size:14px;padding:2px 4px;border-radius:4px;font-family:'Inter',sans-serif}
+.fref-search-clear:hover{color:#4263eb;background:#f0f2f8}
+.fref-search-count{font-size:12px;color:#94a3b8;white-space:nowrap}
+.fref-body{padding:20px 24px 40px}
+.fref-section{margin-bottom:28px}
+.fref-section-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;user-select:none;justify-content:space-between}
+.fref-sec-toggle{font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;border:none;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;margin-left:auto;flex-shrink:0}
+.fref-section-hdr.mandatory .fref-sec-toggle{color:#991b1b;background:#fecaca}
+.fref-section-hdr.conditional .fref-sec-toggle{color:#92400e;background:#fde68a}
+.fref-section-hdr.optional .fref-sec-toggle{color:#1e40af;background:#bfdbfe}
+.fref-section-hdr.naref .fref-sec-toggle{color:#14532d;background:#bbf7d0}
+.fref-section-hdr.mandatory{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.fref-section-hdr.conditional{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.fref-section-hdr.optional{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.fref-section-hdr.naref{background:#f0fdf4;color:#14532d;border:1px solid #bbf7d0}
+.fref-table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.fref-table thead tr{background:#f8faff}
+.fref-table th{padding:9px 12px;text-align:left;font-weight:600;color:#475569;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #e5e9f2}
+.fref-table td{padding:9px 12px;border-bottom:1px solid #f1f4fb;color:#334155;vertical-align:top;line-height:1.5}
+.fref-table tr:last-child td{border-bottom:none}
+.fref-table tr:hover td{background:#f8f9ff}
+.fref-group-row td{background:#f8faff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;padding:6px 12px}
+.fref-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;white-space:nowrap}
+.fref-badge.req{background:#fee2e2;color:#991b1b}
+.fref-badge.cond{background:#fef3c7;color:#92400e}
+.fref-badge.opt{background:#dbeafe;color:#1e40af}
+.fref-badge.na-no{background:#fee2e2;color:#b91c1c}
+.fref-badge.na-yes{background:#dcfce7;color:#15803d}
+.fref-na-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fref-na-col{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
+.fref-na-col-hdr{padding:10px 14px;font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:8px}
+.fref-na-col-hdr.no{background:#fee2e2;color:#991b1b}
+.fref-na-col-hdr.yes{background:#dcfce7;color:#15803d}
+.fref-na-item{padding:7px 14px;border-bottom:1px solid #f1f4fb;font-size:12px;color:#334155;display:flex;align-items:center;justify-content:space-between}
+.fref-na-item:last-child{border-bottom:none}
+.fref-na-item:hover{background:#f8f9ff}
+.fref-na-group{font-size:10px;color:#94a3b8;font-weight:600;padding:5px 14px 3px;text-transform:uppercase;letter-spacing:.5px;background:#fafbff}
 </style>
 </head>
 <body>
@@ -372,12 +432,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div class="auth-box">
     <div class="lock-icon">&#128274;</div>
     <h3>Access Required</h3>
-    <p>Enter the access code and your name to make changes.</p>
-    <input type="password" id="authInput" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" onkeydown="if(event.key==='Enter')document.getElementById('authName').focus()">
-    <div class="auth-name-field">
-      <label>Your Name</label>
-      <input type="text" id="authName" placeholder="e.g. Jane Smith" onkeydown="if(event.key==='Enter')submitAuth()">
-    </div>
+    <p>Enter the access code to make changes.</p>
+    <input type="password" id="authInput" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" onkeydown="if(event.key==='Enter')submitAuth()">
     <div class="auth-error" id="authError"></div>
     <div class="auth-actions">
       <button class="btn-auth-cancel" onclick="closeAuth()">Cancel</button>
@@ -417,14 +473,10 @@ function requireAuth(fn){
 
 function submitAuth(){
   const inp=document.getElementById("authInput");
-  const nameInp=document.getElementById("authName");
-  const name=(nameInp?nameInp.value.trim():"");
   if(inp.value===EDIT_CODE){
-    if(!name){document.getElementById("authError").textContent="Please enter your name.";nameInp.focus();return;}
     editUnlocked=true;
-    localStorage.setItem("valeris_editor",name);
     document.getElementById("authModal").classList.remove("show");
-    document.getElementById("lockBtn").innerHTML=`&#128275; ${name}`;
+    document.getElementById("lockBtn").innerHTML=`&#128275; Unlocked`;
     document.getElementById("lockBtn").classList.add("unlocked");
     if(_pendingAuth){_pendingAuth();_pendingAuth=null;}
   } else {
@@ -601,7 +653,6 @@ function mmStandard(prog){
       {type:"question",label:"Q",text:"May I know the plan name and type of the plan the patient is currently enrolled in?",field:"→ Plan Type: HMO / PPO / POS / EPO / Medicare Advantage / Medicaid"},
       {type:"question",label:"Q",text:"Could you help me with the effective date and termination date of the plan?",field:"→ Plan Effective Date | Plan Term/End Date"},
       {type:"question",label:"Q",text:"Does this plan run on a Calendar Year? Fiscal Year? Plan Year?",field:"→ Benefit Year Type"},
-      {type:"question",label:"Q",text:"Can you confirm the Member's ID#?",field:"→ Member ID"},
       {type:"question",label:"Q",text:"Is this patient the subscriber of the plan?",field:"→ Patient's relationship to subscriber"},
       {type:"question",label:"Q",text:"Is this an Employer Based Plan?",field:"→ Not required"},
       {type:"question",label:"Q",text:"Is this plan enrolled in any type of Alternate Funding Plan (e.g., PayerRx, PrudentRx)?",field:"→ Not required"},
@@ -777,7 +828,6 @@ function pbmStandard(prog,lddSps){
       {type:"question",label:"Q",text:"What is the effective date of the plan?",field:"→ Plan Effective Date"},
       {type:"question",label:"Q",text:"Is there a termination date on the plan?",field:"→ Plan Term/End Date"},
       {type:"question",label:"Q",text:"Does this plan run on a Calendar Year / Fiscal Year / Plan Year? (If fiscal — get renewal date)",field:"→ Benefit Year Type | Renewal Date"},
-      {type:"question",label:"Q",text:"Can you confirm the Member's ID#?",field:"→ Member ID"},
       {type:"question",label:"Q",text:"Is the member the subscriber of the plan? If not — patient's relationship to subscriber?",field:"→ Subscriber relationship"},
       {type:"question",label:"Q",text:"Does this patient have Low Income Subsidy? [Medicare Part D only]",field:"→ LIS: Yes/No | LIS Level"},
     ]},
@@ -1142,7 +1192,7 @@ const sidebarEl=document.getElementById("sidebar");
 // ── Drug Reference nav item ──
 const navSection=document.createElement("div");
 navSection.className="sidebar-nav-section";
-navSection.innerHTML=`<div class="sidebar-nav-item" id="navDrugInfo" onclick="showDrugInfo()">💊 <span>Drug Reference</span></div><div class="sidebar-nav-item" id="navTerms" onclick="showTerminology()">📚 <span>Terminologies</span></div>`;
+navSection.innerHTML=`<div class="sidebar-nav-item" id="navDrugInfo" onclick="showDrugInfo()">💊 <span>Drug Reference</span></div><div class="sidebar-nav-item" id="navTerms" onclick="showTerminology()">📚 <span>Terminologies</span></div><div class="sidebar-nav-item" id="navFieldRef" onclick="showFieldRef()">📋 <span>PBM Field Reference</span></div>`;
 sidebarEl.appendChild(navSection);
 companies.forEach(co=>{
   const group=programs.filter(p=>p.company===co);
@@ -1171,8 +1221,7 @@ function filterSidebar(q){
 let currentTab="mm", currentProgId="", currentView="programs";
 function selectProgram(id){
   currentView="programs";
-  document.getElementById("navDrugInfo")&&document.getElementById("navDrugInfo").classList.remove("active");
-  document.getElementById("navTerms")&&document.getElementById("navTerms").classList.remove("active");
+  document.querySelectorAll(".sidebar-nav-item").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll(".sidebar-item").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll(`.sidebar-item[data-id="${id}"]`).forEach(el=>el.classList.add("active"));
   const p=programs.find(x=>x.id===id);
@@ -1251,6 +1300,35 @@ function renderProgram(p){
 function switchTab(tab,id){
   if(tab!=="compliance"){_editingCompIdx=null;_editingCompType=null;}
   currentTab=tab;const p=programs.find(x=>x.id===id);if(p)renderProgram(p);
+}
+
+let _naPanelOpen=false;
+function toggleNAPanel(){
+  _naPanelOpen=!_naPanelOpen;
+  const body=document.getElementById('naPanelBody');
+  const icon=document.getElementById('naPanelToggleIcon');
+  if(body) body.style.display=_naPanelOpen?'':'none';
+  if(icon) icon.textContent=_naPanelOpen?'▲ Collapse':'▼ Expand';
+}
+function renderNAPanel(){
+  const ref=typeof FIELD_REF!=='undefined'?FIELD_REF:[];
+  if(!ref.length) return '';
+  const noList=ref.filter(f=>!f.acceptNA);
+  const yesList=ref.filter(f=>f.acceptNA);
+  const uniq=arr=>[...new Set(arr.map(f=>f.group))];
+  const makeCol=list=>uniq(list).map(grp=>{
+    const items=list.filter(f=>f.group===grp);
+    return `<div class="na-pcol-grp">${grp}</div>`+items.map(f=>`<div class="na-pcol-item"><span>${f.field}</span><span class="${f.status==='REQUIRED'?'na-badge-m':'na-badge-c'}">${f.status==='REQUIRED'?'Mandatory':'Conditional'}</span></div>`).join('');
+  }).join('');
+  const bodyContent=`<div class="na-panel-grid"><div class="na-pcol"><div class="na-pcol-hdr no">❌ Cannot Accept "Not Available" (${noList.length})</div>${makeCol(noList)}</div><div class="na-pcol"><div class="na-pcol-hdr yes">✅ Can Accept "Not Available" (${yesList.length})</div>${makeCol(yesList)}</div></div>`;
+  return `<div class="na-panel">
+    <div class="na-panel-hdr" onclick="toggleNAPanel()">
+      <span class="na-panel-title">📋 N/A Acceptance Reference</span>
+      <span class="na-panel-sub">Which fields accept "not available" from payer?</span>
+      <button class="na-panel-toggle" id="naPanelToggleIcon" onclick="event.stopPropagation();toggleNAPanel()">${_naPanelOpen?'▲ Collapse':'▼ Expand'}</button>
+    </div>
+    <div class="na-panel-body" id="naPanelBody" style="display:${_naPanelOpen?'':'none'}">${bodyContent}</div>
+  </div>`;
 }
 
 function renderScript(sections,progId,tabType){
@@ -1345,20 +1423,20 @@ function renderScript(sections,progId,tabType){
     </div>`;
   }).join("");
   const searchBar=`<div class="script-search-wrap"><span style="color:#b0bac9;font-size:15px">&#128269;</span><input class="script-search" id="scriptSearchInput" type="text" placeholder="Search sections or questions..." oninput="filterScript(this.value)" autocomplete="off"><button class="script-search-clear" onclick="document.getElementById('scriptSearchInput').value='';filterScript('')" title="Clear">&#10005;</button><div class="script-search-divider"></div><button class="btn-sec-toggle" onclick="expandAllSections()" title="Expand all sections">&#8661; Expand All</button><button class="btn-sec-toggle" onclick="collapseAllSections()" title="Collapse all sections">&#8661; Collapse All</button></div>`;
-  return searchBar+restoreBar+`<div class="script-container" ondragover="event.preventDefault()" ondrop="dropSection(event,'${progId}','${tabType}')">${sectionsHtml}</div>`;
+  const naPanel=tabType==='pbm'?renderNAPanel():'';
+  const naLegend=tabType==='pbm'?`<div class="na-legend"><span class="na-legend-label">Badge Legend:</span><div class="na-legend-item"><span class="na-accept-badge na-ok">✓ N/A OK</span><span class="na-legend-desc">Payer saying "not available" is acceptable — record and move on</span></div><div class="na-legend-item"><span class="na-accept-badge na-no">✗ N/A</span><span class="na-legend-desc">Must obtain a value — "not available" is not acceptable for this field</span></div></div>`:'';
+  return naLegend+naPanel+searchBar+restoreBar+`<div class="script-container" ondragover="event.preventDefault()" ondrop="dropSection(event,'${progId}','${tabType}')">${sectionsHtml}</div>`;
 }
 
 function renderAddedStep(s,progId,tabType,si,ai,dAttrs=''){
   const addedKey=`${progId}__${tabType}__${si}__added__${ai}`;
   const typeClass={statement:"step-statement",question:"step-question",instruction:"step-instruction",warning:"step-warning",branch:"step-branch"}[s.type]||"step-question";
   const cap=s.type.charAt(0).toUpperCase()+s.type.slice(1);
-  const addMeta=s.editor?`<div class="edit-meta"><span class="meta-icon">&#43;</span><span class="meta-name">${s.editor}</span><span class="meta-sep">|</span><span class="meta-date">${s.addedAt||""}</span></div>`:"";
   return `<div class="step ${typeClass}" ${dAttrs} id="addstep_${CSS.escape(addedKey)}">
     <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">${s.label||cap} <span class="added-badge">Added</span></div>
     <div class="step-text step-content-text">${applyScriptHL(s.text,s.type)}</div>
-    ${s.field?`<div class="step-field step-content-field">${s.field}</div>`:""}
-    ${addMeta}
+    ${(()=>{const isPBM=tabType==='pbm';const ns=isPBM&&s.type==='question'?getPBMNAInfo(s.field,s.text):null;const nb=ns===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:ns===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';return s.field?`<div class="step-field step-content-field"><span>${s.field}</span>${nb}</div>`:nb?`<div class="step-field">${nb}</div>`:''})()}
     <button class="edit-btn" onclick="startEditAdded('${progId}','${tabType}',${si},${ai})" title="Edit">&#9999;</button>
     <button class="delete-btn" onclick="deleteAddedStep('${progId}','${tabType}',${si},${ai})" title="Delete">&#10006;</button>
   </div>`;
@@ -1388,6 +1466,73 @@ function applyScriptHL(html,type){
   return html;
 }
 
+// Returns true (N/A ok), false (N/A not ok), or null (not a tracked PBM field)
+function getPBMNAInfo(field,text){
+  if(!field) return null;
+  const f=field.toLowerCase();
+  const t=(text||'').replace(/<[^>]+>/g,'').toLowerCase();
+  // Plan Info
+  if(f==='→ insurance type'||f==='→ plan type') return false;
+  if(f.includes('plan effective date')||f==='→ plan effective date') return true;
+  if(f.includes('benefit year type')||f.includes('renewal date')) return true;
+  if(f.includes('lis:')&&f.includes('lis level')) return false;
+  // BIN / PCN / Group
+  if(f.includes('rx bin')||f.includes('pcn')||f.includes('rx group')) return true;
+  // Coverage
+  if(f.includes('is drug covered')||f.includes('drug name, strength')) return false;
+  if(f.includes('prior auth or formulary')) return false;
+  if(f.includes('pa/fe on file')) return false;
+  if(f.includes('pa approval #')) return false;
+  if(f.includes('pa effective dates')) return false;
+  if(f.includes('→ pa on file')) return false;
+  if(f.includes('authorization status')) return false;
+  if(f.includes('pa ref id')) return false;
+  if(f.includes('preferred sp |')||f.includes('preferred sp name')) return false;
+  if(f.includes('sp name | sp phone')) return false;
+  // Benefit Details
+  if(f.includes('drug tier')) return true;
+  if(f.includes('estimated copay')) return true;
+  if(f.includes('copay $')||f.includes('coinsurance %')) return false;
+  if(f==='→ yes/no'&&(t.includes('accumulator')||t.includes('maximizer'))) return true;
+  if(f.includes('individual deductible:')||f.includes('indiv. deductible')) return false;
+  if(f.includes('family deductible:')) return true;
+  if(f==='→ yes/no'&&t.includes('deductible')&&(t.includes('oop')||t.includes('out-of-pocket'))) return true;
+  if(f.includes('indiv. oop max')) return false;
+  if(f.includes('troop:')) return false;
+  if(f.includes('pharmacy cap:')) return true;
+  if(f.includes('step therapy required')||f.includes('step therapy drug')) return true;
+  if(f.includes('call ref#')||f.includes('call ref #')) return false;
+  if(f.includes('standard tat')||f.includes('urgent tat')) return true;
+  // PA not-covered flow
+  if(f==='→ pa required: yes / no') return false;
+  if(f==='→ pa on file: yes / no') return false;
+  if(f.includes('pa dept phone')) return true;
+  if(f.includes('pa dept name')||f==='→ pa dept name') return true;
+  if(f==='→ submission method') return true;
+  if(f.includes('phone: _____')) return false; // PA submission methods
+  // PA reference / dates (in approved/pending context — both false)
+  if(f==='→ pa ref id') return false;
+  if(f==='→ effective date') return false;
+  if(f==='→ end date') return false;
+  if(f==='→ reference #') return false; // appeal or PA ref#, both false
+  // Appeal
+  if(f==='→ appeal available: yes / no') return false;
+  if(f.includes('appeal status:')) return false;
+  if(f.includes('available appeal count')) return true;
+  if(f.includes('submitted appeal count')) return true;
+  if(f==='→ denied on') return true;
+  if(f==='→ denial reason') return true;
+  if(f==='→ notification method') return false;
+  if(f==='→ submitted on') return false; // appeal/PA submission date — false
+  // Sandoz-specific
+  if(f.includes('payer rep name')) return false;
+  if(f.includes('call reference #')) return false;
+  if(f.includes('commercial / medicare advantage')||f.includes('ppo / hmo')) return false;
+  if(f.includes('plan name | group #')) return true;
+  if(f.includes('effective date | term date')) return true;
+  if(f.includes('calendar / fiscal')||f.includes('renewal month')) return true;
+  return null;
+}
 function renderStep(s,key,dAttrs=''){
   const saved=editStore[key];
   const rawText=saved?saved.text:s.text;
@@ -1396,13 +1541,15 @@ function renderStep(s,key,dAttrs=''){
   const typeClass={statement:"step-statement",question:"step-question",instruction:"step-instruction",warning:"step-warning",branch:"step-branch"}[s.type]||"step-question";
   const isEdited=!!saved;
   const editedBadge=isEdited?`<span class="edited-badge">Edited</span>`:"";
-  const editMeta=isEdited&&saved.editor?`<div class="edit-meta"><span class="meta-icon">&#9998;</span><span class="meta-name">${saved.editor}</span><span class="meta-sep">|</span><span class="meta-date">${saved.editedAt||""}</span></div>`:"";
+  const isPBM=key&&key.includes('__pbm__');
+  const naStatus=isPBM&&s.type==='question'?getPBMNAInfo(displayField,s.text):null;
+  const naBadge=naStatus===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:naStatus===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';
+  const fieldHtml=displayField!=null&&displayField!==''?`<div class="step-field step-content-field"><span>${displayField}</span>${naBadge}</div>`:naBadge?`<div class="step-field">${naBadge}</div>`:'';
   return `<div class="step ${typeClass}" ${dAttrs} id="step_${CSS.escape(key)}" data-key="${key}" data-orig-text="${escHtml(s.text)}" data-orig-field="${escHtml(s.field||'')}">
     <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">${s.label||""} ${editedBadge}</div>
     <div class="step-text step-content-text">${displayText}</div>
-    ${displayField!==undefined&&displayField!==''&&displayField!==null?`<div class="step-field step-content-field">${displayField}</div>`:""}
-    ${editMeta}
+    ${fieldHtml}
     <button class="edit-btn" onclick="startEdit('${key}')" title="Edit this step">&#9999;</button>
     <button class="delete-btn" onclick="removeStep('${key}')" title="Hide this step">&#10006;</button>
   </div>`;
@@ -1449,9 +1596,7 @@ function saveEdit(key){
   const fi=document.getElementById("efi_"+CSS.escape(key));
   const newText=ta?ta.value.trim():"";
   const newField=fi?fi.value.trim():undefined;
-  const editor=localStorage.getItem("valeris_editor")||"";
-  const editedAt=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
-  editStore[key]={text:newText,field:newField,editor,editedAt};
+  editStore[key]={text:newText,field:newField};
   persistStore();
   const p=programs.find(x=>x.id===currentProgId);
   if(p)renderProgram(p);
@@ -1553,9 +1698,7 @@ function saveNewStep(progId,tabType,si){
   const addKey=`${progId}__${tabType}__${si}__added`;
   if(!editStore[addKey])editStore[addKey]=[];
   const cap=type.charAt(0).toUpperCase()+type.slice(1);
-  const editor=localStorage.getItem("valeris_editor")||"";
-  const addedAt=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
-  editStore[addKey].push({type,label:label||cap,text,field,editor,addedAt});
+  editStore[addKey].push({type,label:label||cap,text,field});
   persistStore();
   const p=programs.find(x=>x.id===progId);
   if(p)renderProgram(p);
@@ -1664,8 +1807,6 @@ function saveEditAdded(progId,tabType,si,ai){
   if(editStore[addKey]&&editStore[addKey][ai]){
     editStore[addKey][ai].text=newText;
     editStore[addKey][ai].field=newField;
-    editStore[addKey][ai].editor=localStorage.getItem("valeris_editor")||"";
-    editStore[addKey][ai].addedAt=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
     persistStore();
   }
   const p=programs.find(x=>x.id===progId);
@@ -1944,7 +2085,6 @@ function renderDailyLog(p){
         <div class="log-entry-header">
           <span class="log-entry-date">&#128197; ${e.date}</span>
           <span class="log-entry-time">${e.time}</span>
-          <span class="log-entry-author">&#128100; ${e.author}</span>
           ${catStyle(e.category)}
         </div>
         <div class="log-entry-text">${escHtml(e.text)}</div>
@@ -1981,14 +2121,13 @@ function cancelLogEntry(progId){
 function saveLogEntry(progId){
   const text=(document.getElementById(`logText_${progId}`)?.value||"").trim();
   if(!text){alert("Please enter a log entry.");return;}
-  const author=localStorage.getItem("valeris_editor")||"Unknown";
   const cat=_selectedLogCat[progId]||"";
   const now=new Date();
   const date=now.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
   const time=now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
   const logKey=`${progId}__daily_log`;
   if(!editStore[logKey])editStore[logKey]=[];
-  editStore[logKey].push({id:Date.now(),author,date,time,category:cat,text});
+  editStore[logKey].push({id:Date.now(),date,time,category:cat,text});
   persistStore();
   delete _selectedLogCat[progId];
   const p=programs.find(x=>x.id===progId);
@@ -2116,9 +2255,7 @@ function saveComplianceItem(idx){
   const h=(document.getElementById(`compedith_${idx}`)?.value||"").trim();
   const t=(document.getElementById(`compedit_${idx}`)?.value||"").trim();
   if(!h||!t){alert("Heading and description are required.");return;}
-  const editor=localStorage.getItem("valeris_editor")||"";
-  const editedAt=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
-  editStore[`compliance__${idx}`]={h,t,editor,editedAt};
+  editStore[`compliance__${idx}`]={h,t};
   persistStore();
   _editingCompIdx=null;_editingCompType=null;
   _reRenderCompliance();
@@ -2177,10 +2314,8 @@ function saveNewComplianceItem(){
   const h=(document.getElementById("compedith_new")?.value||"").trim();
   const t=(document.getElementById("compedit_new")?.value||"").trim();
   if(!h||!t){alert("Heading and description are required.");return;}
-  const editor=localStorage.getItem("valeris_editor")||"";
-  const addedAt=new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
   const arr=editStore['compliance__added']||[];
-  arr.push({h,t,editor,addedAt});
+  arr.push({h,t});
   editStore['compliance__added']=arr;
   persistStore();
   _editingCompIdx=null;_editingCompType=null;
@@ -2799,6 +2934,228 @@ function clearTermSearch(){
   const inp=document.getElementById('termSearchInput');if(inp)inp.focus();
 }
 
+// ══════════════════════════════════════════════════════════════
+//  PBM FIELD REFERENCE
+// ══════════════════════════════════════════════════════════════
+const FIELD_REF=[
+  // ── Plan Info — Required ──
+  {group:'Plan Info',field:'Plan Type (Policy Type)',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:false,note:'Drives all scenario gating — Commercial vs Part D vs Govt'},
+  {group:'Plan Info',field:'Plan Effective Date',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:true,note:'Format: MM/DD/YYYY'},
+  {group:'Plan Info',field:'Plan Name',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:true,note:'Capture only from payer rep — never from IVR or hold audio'},
+  {group:'Plan Info',field:'Renewal Type',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:true,note:'"Calendar year" → CALENDAR_YEARLY; "Benefit/plan/policy year" → BENEFIT_YEARLY'},
+  {group:'Plan Info',field:'Confirmed BIN',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:true,note:'6-digit, stated or read-back confirmed by rep'},
+  {group:'Plan Info',field:'Confirmed PCN',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:true,note:'Stated or read-back confirmed by rep'},
+  {group:'Plan Info',field:'Confirmed Group',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:true,note:'Group number confirmed by rep'},
+  // ── Plan Info — Conditional ──
+  {group:'Plan Info',field:'Annual Benefit Cap Exists',status:'CONDITIONAL',condition:'Commercial plans, S1–S3',acceptNA:true,note:'Defaults to true — gates amount and met fields'},
+  {group:'Plan Info',field:'Annual Benefit Cap Amount',status:'CONDITIONAL',condition:'Commercial plans, S1–S3 when cap exists',acceptNA:true,note:'Required when Annual Benefit Cap Exists is not explicitly No'},
+  {group:'Plan Info',field:'Annual Benefit Cap Met',status:'CONDITIONAL',condition:'Commercial plans, S1–S3 when cap exists',acceptNA:true,note:'Required when Annual Benefit Cap Exists is not explicitly No'},
+  {group:'Plan Info',field:'Part D Current Stage',status:'CONDITIONAL',condition:'Part D plans only',acceptNA:true,note:'If stage = Catastrophic, TrOOP auto-set to $2,100'},
+  {group:'Plan Info',field:'On Low Income Subsidy (LIS)',status:'CONDITIONAL',condition:'Part D / non-commercial plans, S1–S3',acceptNA:false,note:'Cannot accept N/A — must confirm Yes or No'},
+  {group:'Plan Info',field:'Low Income Subsidy Level',status:'CONDITIONAL',condition:'When LIS = Yes (non-commercial)',acceptNA:true,note:'Level 1–4 or Not Applicable'},
+  // ── Plan Info — Optional ──
+  {group:'Plan Info',field:'Plan Status',status:'OPTIONAL',condition:'All scenarios',acceptNA:true,note:'Inferred ACTIVE for S1–S4 when payer shares benefits'},
+  {group:'Plan Info',field:'Plan Type Category',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Do NOT ask — only capture if payer mentions (HMO/PPO/POS…)'},
+  {group:'Plan Info',field:'Current Plan Priority',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Do NOT ask — only capture if payer mentions (Primary/Secondary…)'},
+  {group:'Plan Info',field:'Plan Termination Date',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Required only in S5 (terminated plan)'},
+  {group:'Plan Info',field:'Tier Level',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Captured opportunistically; signals drug coverage'},
+  {group:'Plan Info',field:'Days Supply Limit',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Numeric or "no limit"'},
+  {group:'Plan Info',field:'Lifetime Maximum Exists',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Capture if mentioned'},
+  {group:'Plan Info',field:'Lifetime Maximum Amount',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Capture if mentioned'},
+  {group:'Plan Info',field:'Lifetime Maximum Met',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Capture if mentioned'},
+  {group:'Plan Info',field:'Other Insurance Status (COB)',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Coordination of benefits'},
+  {group:'Plan Info',field:'Policy Holder Relationship',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Relationship of patient to subscriber'},
+  // ── Coverage ──
+  {group:'Coverage',field:'Drug Coverage Info',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:false,note:'Core gating field — set from explicit payer statement, never inferred'},
+  {group:'Coverage',field:'Reason for Drug Not Covered',status:'CONDITIONAL',condition:'S4 (drug not covered)',acceptNA:true,note:'If reason = STEP_THERAPY_REQUIRED → Step Therapy Treatment also required'},
+  // ── Specialty Pharmacy ──
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Name (Primary)',status:'CONDITIONAL',condition:'S1–S3 (drug covered)',acceptNA:false,note:'Capture only when rep states a pharmacy — never from IVR/greeting'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Phone (Primary)',status:'CONDITIONAL',condition:'When SP Name (Primary) has a value',acceptNA:true,note:'E.164 format'},
+  {group:'Specialty Pharmacy',field:'Estimated Patient Pay Amount',status:'CONDITIONAL',condition:'Part D S1–S3 always; Commercial/FEP if no copay & no coinsurance',acceptNA:true,note:'Pharmacy-specific cost — distinct from plan copay'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Network Type',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Bias toward UNKNOWN when ambiguous'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Fax (Primary)',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'E.164 format'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Name 2',status:'OPTIONAL',condition:'Only if payer offers multiple SP options',acceptNA:true,note:'Secondary SP name'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Phone 2',status:'OPTIONAL',condition:'When SP Name 2 has a value',acceptNA:true,note:'E.164 format'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Fax 2',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'E.164 format'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Name 3',status:'OPTIONAL',condition:'Only if payer offers 3+ SP options',acceptNA:true,note:'Tertiary SP name'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Phone 3',status:'OPTIONAL',condition:'When SP Name 3 has a value',acceptNA:true,note:'E.164 format'},
+  {group:'Specialty Pharmacy',field:'Specialty Pharmacy Fax 3',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'E.164 format'},
+  {group:'Specialty Pharmacy',field:'Test Claim Available',status:'OPTIONAL',condition:'Capture if payer ran a test claim',acceptNA:true,note:'Set when payer ran a test claim'},
+  {group:'Specialty Pharmacy',field:'Test Claim Patient Responsibility',status:'OPTIONAL',condition:'When test claim was run',acceptNA:true,note:'Populate in addition to estimated patient pay'},
+  // ── Prior Authorization — Required ──
+  {group:'Prior Authorization',field:'PA Required',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:false,note:'Gates the entire PA pathway'},
+  // ── Prior Authorization — Conditional ──
+  {group:'Prior Authorization',field:'PA On File',status:'CONDITIONAL',condition:'S1, S2, S4',acceptNA:false,note:'S1 gates via Yes; S2 gates via No or non-approved PA status'},
+  {group:'Prior Authorization',field:'PA Status',status:'CONDITIONAL',condition:'S1, S2 (when PA on file)',acceptNA:false,note:'S1 must be in APPROVED states to proceed'},
+  {group:'Prior Authorization',field:'PA Reference ID',status:'CONDITIONAL',condition:'S1 (approved) + S2 (on file or pending)',acceptNA:false,note:'Must capture if PA is on file'},
+  {group:'Prior Authorization',field:'PA Effective Date',status:'CONDITIONAL',condition:'S1 (PA approved)',acceptNA:false,note:'Format: MM/DD/YYYY'},
+  {group:'Prior Authorization',field:'PA End Date',status:'CONDITIONAL',condition:'S1 (PA approved)',acceptNA:false,note:'Format: MM/DD/YYYY'},
+  {group:'Prior Authorization',field:'PA Submission Methods',status:'CONDITIONAL',condition:'S2 (PA needed not approved); S4 (PA required)',acceptNA:false,note:'Phone, Fax, Portal, Mail, Email, Website'},
+  {group:'Prior Authorization',field:'PA Phone Number',status:'CONDITIONAL',condition:'When submission methods include Phone',acceptNA:true,note:'E.164 format'},
+  {group:'Prior Authorization',field:'PA Fax Number',status:'CONDITIONAL',condition:'When submission methods include Fax',acceptNA:true,note:'E.164 format'},
+  {group:'Prior Authorization',field:'PA Denial Reason',status:'CONDITIONAL',condition:'When PA Status = Denied',acceptNA:true,note:'Capture denial reason from rep'},
+  {group:'Prior Authorization',field:'PA Denial Date',status:'CONDITIONAL',condition:'When PA Status = Denied',acceptNA:true,note:'Format: MM/DD/YYYY'},
+  {group:'Prior Authorization',field:'PA Denial Next Step',status:'CONDITIONAL',condition:'When PA Status = Denied',acceptNA:true,note:'Aligns with is_appeal_available / appeals_available_count'},
+  {group:'Prior Authorization',field:'Step Therapy Required',status:'CONDITIONAL',condition:'S2, S3, S4',acceptNA:true,note:'S1 (approved PA): not required — ST handled at original submission'},
+  {group:'Prior Authorization',field:'Step Therapy Treatment',status:'CONDITIONAL',condition:'When Step Therapy Required = Yes',acceptNA:true,note:'Also required in S4 when reason for non-coverage = Step Therapy'},
+  // ── Prior Authorization — Optional ──
+  {group:'Prior Authorization',field:'PA Quantity Limit',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Optional'},
+  {group:'Prior Authorization',field:'PA Department',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Department handling PA'},
+  {group:'Prior Authorization',field:'PA Turn Around Time',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Standard and urgent TAT'},
+  {group:'Prior Authorization',field:'PA Website',status:'OPTIONAL',condition:'Capture if payer provides URL',acceptNA:true,note:'Portal or submission website'},
+  // ── Appeals — Conditional ──
+  {group:'Appeals',field:'Appeal Available',status:'CONDITIONAL',condition:'Drug not covered (S4) OR PA denied',acceptNA:false,note:'Must confirm Yes or No — cannot accept N/A'},
+  {group:'Appeals',field:'Appeal Status',status:'CONDITIONAL',condition:'When appeal is available',acceptNA:false,note:'Not on File / Approved / Denied / Pending'},
+  {group:'Appeals',field:'Appeal Reference Number',status:'CONDITIONAL',condition:'When appeal is filed',acceptNA:false,note:'Must capture if appeal on file'},
+  {group:'Appeals',field:'Appeal Submission Date',status:'CONDITIONAL',condition:'When appeal is filed',acceptNA:false,note:'Format: MM/DD/YYYY'},
+  {group:'Appeals',field:'Appeals Notification Method',status:'CONDITIONAL',condition:'When appeal is available',acceptNA:false,note:'Phone, Fax, Email, Website'},
+  {group:'Appeals',field:'Appeal Denial Date',status:'CONDITIONAL',condition:'When Appeal Status = Denied',acceptNA:true,note:'Format: MM/DD/YYYY'},
+  {group:'Appeals',field:'Appeal Denial Reason',status:'CONDITIONAL',condition:'When Appeal Status = Denied',acceptNA:true,note:'Capture reason from rep'},
+  {group:'Appeals',field:'Appeals Available Count',status:'CONDITIONAL',condition:'When Appeal Status = Denied',acceptNA:true,note:'Agent must ask "Can we still appeal?" when denied'},
+  {group:'Appeals',field:'Appeals Submitted Count',status:'CONDITIONAL',condition:'When appeal is filed',acceptNA:true,note:'Number of appeals already filed'},
+  {group:'Appeals',field:'Appeals Contact Website',status:'CONDITIONAL',condition:'Capture when payer provides URL',acceptNA:true,note:'Portal for tracking or submitting appeal'},
+  {group:'Appeals',field:'Appeals Contact Fax',status:'CONDITIONAL',condition:'Capture when payer provides fax',acceptNA:true,note:'E.164 format'},
+  {group:'Appeals',field:'Appeals Contact Phone',status:'CONDITIONAL',condition:'Capture when payer provides phone',acceptNA:true,note:'E.164 format'},
+  // ── Plan Accumulators — Conditional ──
+  {group:'Plan Accumulators',field:'Individual Deductible Amount',status:'CONDITIONAL',condition:'S1–S3 unless deductible explicitly does not exist',acceptNA:false,note:'Required unless Individual Deductible Exists is explicitly No'},
+  {group:'Plan Accumulators',field:'Individual Deductible Met',status:'CONDITIONAL',condition:'S1–S3 unless deductible explicitly does not exist',acceptNA:false,note:'Amount met toward deductible'},
+  {group:'Plan Accumulators',field:'Individual OOP Max',status:'CONDITIONAL',condition:'Commercial plans, S1–S3',acceptNA:false,note:'Required for all Commercial active scenarios'},
+  {group:'Plan Accumulators',field:'Individual OOP Met',status:'CONDITIONAL',condition:'Commercial plans, S1–S3',acceptNA:false,note:'Amount met toward OOP maximum'},
+  {group:'Plan Accumulators',field:'True OOP Met (TrOOP)',status:'CONDITIONAL',condition:'Part D plans, S1–S3',acceptNA:false,note:'If patient stage = Catastrophic, auto-set to $2,100'},
+  {group:'Plan Accumulators',field:'Has Accumulator Plan',status:'CONDITIONAL',condition:'When accumulator flag enabled + Commercial (not Medicaid/Tricare/Medicare)',acceptNA:true,note:''},
+  {group:'Plan Accumulators',field:'Has Maximizer Plan',status:'CONDITIONAL',condition:'When accumulator flag enabled + Commercial',acceptNA:true,note:''},
+  // ── Plan Accumulators — Optional ──
+  {group:'Plan Accumulators',field:'Individual Deductible Exists',status:'OPTIONAL',condition:'Defaults to True unless payer explicitly says No',acceptNA:false,note:'Gates deductible amount and met fields'},
+  {group:'Plan Accumulators',field:'Deductible Included In OOP',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Optional confirmation'},
+  {group:'Plan Accumulators',field:'Family Deductible Exists',status:'OPTIONAL',condition:'Commercial only — capture if mentioned',acceptNA:true,note:'Medicare Part D has no family deductible'},
+  {group:'Plan Accumulators',field:'Family Deductible Amount',status:'OPTIONAL',condition:'Commercial only — capture if mentioned',acceptNA:true,note:'Capture if mentioned'},
+  {group:'Plan Accumulators',field:'Family Deductible Met',status:'OPTIONAL',condition:'Commercial only — capture if mentioned',acceptNA:true,note:'Capture if mentioned'},
+  {group:'Plan Accumulators',field:'Family OOP Exists',status:'OPTIONAL',condition:'Commercial only — capture if mentioned',acceptNA:true,note:'Medicare Part D has no family OOP'},
+  {group:'Plan Accumulators',field:'Family OOP Max',status:'OPTIONAL',condition:'Commercial only — capture if mentioned',acceptNA:true,note:'Capture if mentioned'},
+  {group:'Plan Accumulators',field:'Family OOP Met',status:'OPTIONAL',condition:'Commercial only — capture if mentioned',acceptNA:true,note:'Capture if mentioned'},
+  {group:'Plan Accumulators',field:'True OOP Maximum (TrOOP)',status:'OPTIONAL',condition:'Part D — auto-set, do not ask payer',acceptNA:false,note:'Hardcoded $2,100 for 2026; auto-set at end of call'},
+  // ── Plan Cost Share ──
+  {group:'Plan Cost Share',field:'Copay Amount',status:'CONDITIONAL',condition:'Commercial/FEP plans, S1–S3',acceptNA:false,note:'Copay and coinsurance are fallbacks for each other — at least one required'},
+  {group:'Plan Cost Share',field:'Coinsurance',status:'CONDITIONAL',condition:'Commercial/FEP plans, S1–S3',acceptNA:false,note:'Copay and coinsurance are fallbacks for each other — at least one required'},
+  {group:'Plan Cost Share',field:'Copay Included In OOP',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Optional confirmation'},
+  // ── Payer Call Details ──
+  {group:'Payer Call Details',field:'Representative Name',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:false,note:'First name + last initial (e.g. "Sarah B")'},
+  {group:'Payer Call Details',field:'Call Reference Number',status:'REQUIRED',condition:'All active scenarios (S1–S4)',acceptNA:true,note:'Format: "Name MM-DD-YYYY" or as provided by rep'},
+  {group:'Payer Call Details',field:'PBM Department',status:'OPTIONAL',condition:'Capture if payer mentions',acceptNA:true,note:'Department the rep is calling from'},
+  {group:'Payer Call Details',field:'Member Insurance Additional Notes',status:'OPTIONAL',condition:'Free-text for data not captured elsewhere',acceptNA:true,note:'No call meta'},
+  {group:'Payer Call Details',field:'Representative Fax Number',status:'OPTIONAL',condition:'Capture if payer provides',acceptNA:true,note:'E.164 format'},
+];
+
+function showFieldRef(){
+  currentView='fieldref';currentProgId='';
+  document.querySelectorAll('.sidebar-nav-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));
+  const n=document.getElementById('navFieldRef');if(n)n.classList.add('active');
+  document.getElementById('main').innerHTML=renderFieldRef('');
+}
+
+let _frefSec={mandatory:true,conditional:true,optional:false,naref:true};
+function toggleFrefSection(sec){
+  _frefSec[sec]=!_frefSec[sec];
+  const body=document.getElementById('frefSec_'+sec);
+  const btn=document.getElementById('frefSecBtn_'+sec);
+  if(body) body.style.display=_frefSec[sec]?'':'none';
+  if(btn) btn.textContent=_frefSec[sec]?'▲ Collapse':'▼ Expand';
+}
+function filterFieldRef(){
+  const v=(document.getElementById('frefSearch')||{value:''}).value;
+  const main=document.getElementById('main');
+  if(main) main.innerHTML=renderFieldRef(v);
+  const inp=document.getElementById('frefSearch');if(inp){inp.focus();const l=inp.value.length;inp.setSelectionRange(l,l);}
+}
+
+function renderFieldRef(filter){
+  const q=(filter||'').toLowerCase().trim();
+  const all=FIELD_REF;
+  const visible=q?all.filter(f=>f.field.toLowerCase().includes(q)||f.group.toLowerCase().includes(q)||f.condition.toLowerCase().includes(q)||f.note.toLowerCase().includes(q)):all;
+  const required=visible.filter(f=>f.status==='REQUIRED');
+  const conditional=visible.filter(f=>f.status==='CONDITIONAL');
+  const optional=visible.filter(f=>f.status==='OPTIONAL');
+  const totalVisible=visible.length;
+
+  const statusLabel=s=>s==='REQUIRED'?'Mandatory':s==='CONDITIONAL'?'Conditional':'Optional';
+  const statusClass=s=>s==='REQUIRED'?'req':s==='CONDITIONAL'?'cond':'opt';
+
+  // ── Section 1: Always Mandatory ──
+  const reqRows=required.map(f=>`<tr>
+    <td style="font-weight:600;color:#1e293b">${f.field}</td>
+    <td><span style="font-size:11px;color:#64748b">${f.group}</span></td>
+    <td>${f.acceptNA?'<span class="fref-badge na-yes">✓ Accepted</span>':'<span class="fref-badge na-no">✗ Not Accepted</span>'}</td>
+    <td style="color:#475569;font-size:12px">${f.note||'—'}</td>
+  </tr>`).join('');
+  const reqTable=required.length?`<table class="fref-table"><thead><tr><th>Field</th><th>Data Group</th><th>Accept "N/A"</th><th>Key Rule</th></tr></thead><tbody>${reqRows}</tbody></table>`:`<div style="color:#94a3b8;font-size:13px;padding:10px 0">No mandatory fields match your search.</div>`;
+
+  // ── Section 2: Conditional Fields grouped by Data Group ──
+  const makeGroupedTable=(list,col2hdr)=>{
+    const groups=[...new Set(list.map(f=>f.group))];
+    const html=groups.map(grp=>{
+      const items=list.filter(f=>f.group===grp);
+      const rows=items.map(f=>`<tr>
+        <td style="font-weight:600;color:#1e293b">${f.field}</td>
+        <td style="color:#475569;font-size:12px">${f.condition}</td>
+        <td>${f.acceptNA?'<span class="fref-badge na-yes">✓ Accepted</span>':'<span class="fref-badge na-no">✗ Not Accepted</span>'}</td>
+        <td style="color:#475569;font-size:12px">${f.note||'—'}</td>
+      </tr>`).join('');
+      return `<tr class="fref-group-row"><td colspan="4">📂 ${grp}</td></tr>${rows}`;
+    }).join('');
+    return list.length?`<table class="fref-table"><thead><tr><th>Field</th><th>${col2hdr}</th><th>Accept "N/A"</th><th>Key Rule</th></tr></thead><tbody>${html}</tbody></table>`:`<div style="color:#94a3b8;font-size:13px;padding:10px 0">No fields match your search.</div>`;
+  };
+  const condTable=makeGroupedTable(conditional,'Required When');
+  const optTable=makeGroupedTable(optional,'When to Capture');
+
+  // ── Section 4: N/A Quick Reference ──
+  const naNo=all.filter(f=>!f.acceptNA);
+  const naYes=all.filter(f=>f.acceptNA);
+  const naNoGroups=[...new Set(naNo.map(f=>f.group))];
+  const naYesGroups=[...new Set(naYes.map(f=>f.group))];
+  const naNoHtml=naNoGroups.map(grp=>{
+    const items=naNo.filter(f=>f.group===grp);
+    return `<div class="fref-na-group">${grp}</div>`+items.map(f=>`<div class="fref-na-item"><span>${f.field}</span><span class="fref-badge ${statusClass(f.status)}">${statusLabel(f.status)}</span></div>`).join('');
+  }).join('');
+  const naYesHtml=naYesGroups.map(grp=>{
+    const items=naYes.filter(f=>f.group===grp);
+    return `<div class="fref-na-group">${grp}</div>`+items.map(f=>`<div class="fref-na-item"><span>${f.field}</span><span class="fref-badge ${statusClass(f.status)}">${statusLabel(f.status)}</span></div>`).join('');
+  }).join('');
+
+  const searchBar=`<div class="fref-search-bar"><span style="color:#b0bac9;font-size:15px">&#128269;</span><input class="fref-search-input" id="frefSearch" type="text" placeholder="Search fields, groups, conditions…" value="${(filter||'').replace(/"/g,'&quot;')}" oninput="filterFieldRef()" autocomplete="off"><button class="fref-search-clear" onclick="document.getElementById('frefSearch').value='';filterFieldRef()" title="Clear">&#10005;</button><span class="fref-search-count">${q?`${totalVisible} of ${all.length} fields`:`${all.length} fields`}</span></div>`;
+
+  return `<div class="fref-header"><div><div class="fref-title">📋 PBM Field Reference</div><div class="fref-meta">${all.filter(f=>f.status==='REQUIRED').length} mandatory &middot; ${all.filter(f=>f.status==='CONDITIONAL').length} conditional &middot; ${all.filter(f=>f.status==='OPTIONAL').length} optional &middot; Active scenarios (S1–S4)</div></div></div>${searchBar}<div class="fref-body">
+  <div class="fref-section">
+    <div class="fref-section-hdr mandatory" onclick="toggleFrefSection('mandatory')">🔴 Always Mandatory — Required in Every Active Call<button class="fref-sec-toggle" id="frefSecBtn_mandatory" onclick="event.stopPropagation();toggleFrefSection('mandatory')">${_frefSec.mandatory?'▲ Collapse':'▼ Expand'}</button></div>
+    <div id="frefSec_mandatory" style="display:${_frefSec.mandatory?'':'none'}">${reqTable}</div>
+  </div>
+  <div class="fref-section">
+    <div class="fref-section-hdr conditional" onclick="toggleFrefSection('conditional')">🟡 Conditional Fields — Required Under Specific Scenarios<button class="fref-sec-toggle" id="frefSecBtn_conditional" onclick="event.stopPropagation();toggleFrefSection('conditional')">${_frefSec.conditional?'▲ Collapse':'▼ Expand'}</button></div>
+    <div id="frefSec_conditional" style="display:${_frefSec.conditional?'':'none'}">${condTable}</div>
+  </div>
+  <div class="fref-section">
+    <div class="fref-section-hdr optional" onclick="toggleFrefSection('optional')">🔵 Optional Fields — Capture If Payer Mentions<button class="fref-sec-toggle" id="frefSecBtn_optional" onclick="event.stopPropagation();toggleFrefSection('optional')">${_frefSec.optional?'▲ Collapse':'▼ Expand'}</button></div>
+    <div id="frefSec_optional" style="display:${_frefSec.optional?'':'none'}">${optTable}</div>
+  </div>
+  <div class="fref-section">
+    <div class="fref-section-hdr naref" onclick="toggleFrefSection('naref')">🟢 "Not Available" Acceptance — Quick Reference<button class="fref-sec-toggle" id="frefSecBtn_naref" onclick="event.stopPropagation();toggleFrefSection('naref')">${_frefSec.naref?'▲ Collapse':'▼ Expand'}</button></div>
+    <div id="frefSec_naref" style="display:${_frefSec.naref?'':'none'}">
+    <div style="font-size:12px;color:#475569;margin-bottom:10px">When the payer rep says a value is "not available" — which fields must you push back on vs. which can you accept?</div>
+    <div class="fref-na-grid">
+      <div class="fref-na-col">
+        <div class="fref-na-col-hdr no">❌ Cannot Accept "Not Available" (${naNo.length} fields)</div>
+        ${naNoHtml}
+      </div>
+      <div class="fref-na-col">
+        <div class="fref-na-col-hdr yes">✅ Can Accept "Not Available" (${naYes.length} fields)</div>
+        ${naYesHtml}
+      </div>
+    </div>
+    </div>
+  </div>
+  </div>`;
+}
+
 let _termEditIdx=null;
 function openAddTermModal(){
   if(!editUnlocked){requireAuth(()=>openAddTermModal());return;}
@@ -3009,7 +3366,7 @@ function printToPDF(type){
       const entries=[...(editStore[`${p.id}__daily_log`]||[])].reverse();
       body=entries.length?entries.map(e=>{
         const co=LOG_CATEGORIES.find(x=>x.key===e.category);
-        return `<div class="log-entry"><div class="log-hdr"><span class="log-date">&#128197; ${e.date}</span><span class="log-time">${e.time}</span><span class="log-author">&#128100; ${e.author}</span>${co?`<span class="log-cat ${co.cls}">${co.label}</span>`:''}</div><div class="log-text">${escHtml(e.text)}</div></div>`;
+        return `<div class="log-entry"><div class="log-hdr"><span class="log-date">&#128197; ${e.date}</span><span class="log-time">${e.time}</span>${co?`<span class="log-cat ${co.cls}">${co.label}</span>`:''}</div><div class="log-text">${escHtml(e.text)}</div></div>`;
       }).join(''):`<p style="color:#888;text-align:center;padding:40px 0">No log entries recorded.</p>`;
     }
     else{
