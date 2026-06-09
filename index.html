@@ -506,6 +506,13 @@ function toggleLock(){
 const STORE_KEY = "valeris_edits_v2";
 let editStore = {};
 try { editStore = JSON.parse(localStorage.getItem(STORE_KEY)||"{}"); } catch(e){}
+// Clear any stale saved overrides for Ipsen opening statements so updated text shows correctly
+(function(){
+  const staleKeys=["ipsen__mm__0__0","ipsen__pbm__0__0"];
+  let changed=false;
+  staleKeys.forEach(k=>{ if(editStore[k]){delete editStore[k];changed=true;} });
+  if(changed){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(editStore)); }catch(e){} }
+})();
 function persistStore(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(editStore)); }catch(e){} }
 
 // ══════════════════════════════════════════════════════════════
@@ -522,8 +529,8 @@ const programs = [
       {name:"Tazverik (tablet, LDD)",type:"PBM only",strength:"200mg/tab",supply:"as written",cpt:"—",jcode:"—",ndc:"72607-100-00"},
     ],
     callbacks:[{therapy:"IpsenCares",number:"866-435-5677"}],
-    mm:mmStandard("IpsenCares Program"),
-    pbm:pbmStandard("IpsenCares Program",[{drug:"Onivyde",sps:["CVS Caremark","Humana - Centerwell","BriovaRx - Optum"]},{drug:"Tazverik",sps:["Onco360","On-site Dispensing Pharmacy"]}])
+    mm:ipsenMM(),
+    pbm:ipsenPBM()
   },
   {
     id:"jj-imm",company:"J&J",label:"J&J Immunology",icon:"🔬",type:"both",
@@ -1030,6 +1037,18 @@ function pbmOrgovyx(){
   b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the provider with the <strong>Orgovyx support Team</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> for the medication <span class='placeholder'>[Medication name]</span>.`};
   const ci=b.findIndex(s=>s.title==="Coverage Details");
   b[ci].steps.push({type:"warning",label:"IMPORTANT",text:"<strong>ALWAYS ASK for EPP / Copay / Coinsurance for Biologics and Onco360.</strong> They are the preferred pharmacies for Orgovyx."});
+  return b;
+}
+
+function ipsenMM(){
+  const b=mmStandard("IpsenCares Program");
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the <span class='placeholder'>[Dr. Provider's name]</span> with <strong>IpsenCares Program</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> for the medication <span class='placeholder'>[Medication name]</span>.`};
+  return b;
+}
+
+function ipsenPBM(){
+  const b=pbmStandard("IpsenCares Program",[{drug:"Onivyde",sps:["CVS Caremark","Humana - Centerwell","BriovaRx - Optum"]},{drug:"Tazverik",sps:["Onco360","On-site Dispensing Pharmacy"]}]);
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the <span class='placeholder'>[Dr. Provider's name]</span> with <strong>IpsenCares Program</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> for the medication <span class='placeholder'>[Medication name]</span>.`};
   return b;
 }
 
