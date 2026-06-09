@@ -1474,6 +1474,7 @@ function getPBMNAInfo(field,text){
   // Plan Info
   if(f==='→ insurance type'||f==='→ plan type') return false;
   if(f.includes('plan effective date')||f==='→ plan effective date') return true;
+  if(f.includes('plan term')||f.includes('term/end date')) return true;
   if(f.includes('benefit year type')||f.includes('renewal date')) return true;
   if(f.includes('lis:')&&f.includes('lis level')) return false;
   // BIN / PCN / Group
