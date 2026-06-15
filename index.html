@@ -1095,17 +1095,18 @@ function mmSandoz(){
     {title:"Step 5 — Administration Benefits",hdr:"hdr-coverage",steps:[
       {type:"question",label:"Q",text:"Admin codes: WYOST/Jubbonti 96372 or 96401 — do admin benefits mirror medication benefits?",field:"→ Yes → proceed to PA | No → obtain separate admin cost share (same Step 4 questions)"},
     ]},
-    {title:"Step 6 — Copay Maximizer & AFP",hdr:"hdr-benefit",steps:[
+    {title:"Step 6 — Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
       {type:"question",label:"Q",text:"Is WYOST/Jubbonti billed under the medical or pharmacy benefit?",field:"→ Medical / Pharmacy"},
-      {type:"question",label:"Q",text:"Is a copay maximizer or accumulator program applied to medical benefit drugs?",field:"→ Yes/No"},
-      {type:"instruction",label:"If YES — ask:",text:"Patient plan to participate? WYOST/Jubbonti included? Mandatory or voluntary? Effective date?<br>How is manufacturer copay assistance applied? Counts toward deductible/OOP? Patient copay after assistance? Cost spread evenly or upfront?<br>Pharmacy required to bill manufacturer assistance directly? What happens if assistance exhausted?"},
+      {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
+      {type:"instruction",label:"If rep asks for clarification:",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
+      {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
+      {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
+      {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
       {type:"warning",label:"IMPORTANT",text:"Copay Maximizer information — document in system ONLY. Do NOT include in HCP formal documentation (SOB)."},
-      {type:"question",label:"AFP Q1",text:"Can you confirm whether this plan operates under an alternate funding or carve-out model for specialty medications?",field:"→ AFP: Yes/No"},
-      {type:"question",label:"AFP Q2",text:"Does this plan manage its own specialty drug coverage, or is it administered through a separate funding vendor?",field:"→ Self-managed / Vendor administered"},
-      {type:"question",label:"AFP Q3",text:"When a specialty medication is prescribed, should the claim go directly to the plan or through an alternate funding partner?",field:"→ Direct / AFP partner"},
-      {type:"question",label:"AFP Q4",text:"Does this plan require patients to apply or enroll in an alternate funding program to obtain coverage?",field:"→ Yes/No"},
-      {type:"question",label:"AFP Q5",text:"If a provider submits a PA for this drug — does the plan review internally or redirect to an AFP for evaluation?",field:"→ Internal / AFP redirect"},
-      {type:"question",label:"AFP Q6",text:"If the patient declines AFP options — will the plan deny coverage or can the claim still be processed normally?",field:"→ Deny / Normal processing"},
+      {type:"instruction",label:"6a — AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
+      {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
+      {type:"branch",label:"If NO",text:"Continue with rest of script."},
+      {type:"branch",label:"If YES — ask:",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"},
     ]},
     {title:"Step 7 — AOB / Specialty Pharmacy",hdr:"hdr-coverage",steps:[
       {type:"instruction",label:"AOB Reminder",text:"AOB = provider will NOT be billed for the product — only office visit and admin. Confirm AOB is NOT mandatory and provider CAN purchase the drug."},
@@ -1169,9 +1170,17 @@ function pbmSandoz(){
     {title:"Step 4 — Mail Order",hdr:"hdr-pharmacy",steps:[
       {type:"question",label:"Q",text:"Can the patient obtain the medication via Mail Order?",field:"→ Yes/No | Mail order copay $ / coinsurance %"},
     ]},
-    {title:"Step 5 — Copay Maximizer (Pharmacy)",hdr:"hdr-benefit",steps:[
-      {type:"instruction",label:"Same as Medical Script — additional pharmacy questions:",text:"Annual/lifetime cap on copay assistance? Excluded medications? Does the program reset annually?<br>Alternative coverage if patient can't participate? Can patient appeal? Steps for exception/appeal?"},
-      {type:"warning",label:"IMPORTANT",text:"Copay Maximizer information → document in system ONLY. Do NOT include in HCP formal documentation."},
+    {title:"Step 5 — Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
+      {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
+      {type:"instruction",label:"If rep asks for clarification:",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
+      {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
+      {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
+      {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
+      {type:"warning",label:"IMPORTANT",text:"Copay Maximizer information — document in system ONLY. Do NOT include in HCP formal documentation."},
+      {type:"instruction",label:"5a — AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
+      {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
+      {type:"branch",label:"If NO",text:"Continue with rest of script."},
+      {type:"branch",label:"If YES — ask:",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"},
     ]},
     {title:"Step 6 — Medicare Part D Benefits",hdr:"hdr-pharmacy",steps:[
       {type:"instruction",label:"2025 Extra Help Copay Amounts",text:"No premiums | No deductibles | Up to $12.15 copay/brand drug | Up to $4.90 copay/generic | Once total drug costs reach $2,000 → $0 copay for remainder of year"},
