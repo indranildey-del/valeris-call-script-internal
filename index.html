@@ -831,6 +831,7 @@ function pbmStandard(prog,lddSps){
     ]},
     {title:"Plan Details",hdr:"hdr-plan",steps:[
       {type:"question",label:"Q",text:"Is this a commercial or Medicare Part D plan?",field:"→ Insurance Type"},
+      {type:"question",label:"Q",text:"May I know the plan name?",field:"→ Plan Name"},
       {type:"question",label:"Q",text:"May I know the plan type — Medicare Part D / Commercial / Medicare Advantage / Tricare?",field:"→ Plan Type"},
       {type:"question",label:"Q",text:"What is the effective date of the plan?",field:"→ Plan Effective Date"},
       {type:"question",label:"Q",text:"Is there a termination date on the plan?",field:"→ Plan Term/End Date"},
@@ -1151,6 +1152,7 @@ function pbmSandoz(){
     {title:"Step 1 — General Policy Information",hdr:"hdr-plan",steps:[
       {type:"question",label:"Q",text:"May I have your name and reference # for this call?",field:"→ Contact Name | Reference #"},
       {type:"question",label:"Q",text:"What is the effective date and term date of the plan?",field:"→ Effective Date | Term Date"},
+      {type:"question",label:"Q",text:"May I know the plan name?",field:"→ Plan Name"},
       {type:"question",label:"Q",text:"What is the plan type? Group?",field:"→ Plan Type | Group #"},
       {type:"question",label:"Q",text:"Can you confirm the Rx BIN and PCN #?",field:"→ Rx BIN | PCN"},
       {type:"question",label:"Q",text:"Is WYOST/Jubbonti covered? If not — reason? Is there a Formulary Exception Process?",field:"→ Covered: Yes/No | Reason | FE Process"},
@@ -1501,6 +1503,7 @@ function getPBMNAInfo(field,text){
   const t=(text||'').replace(/<[^>]+>/g,'').toLowerCase();
   // Plan Info
   if(f==='→ insurance type'||f==='→ plan type') return false;
+  if(f==='→ plan name') return true;
   if(f.includes('plan effective date')||f==='→ plan effective date') return true;
   if(f.includes('plan term')||f.includes('term/end date')) return true;
   if(f.includes('benefit year type')||f.includes('renewal date')) return true;
