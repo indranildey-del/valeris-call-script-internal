@@ -90,6 +90,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .step-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;opacity:.6}
 .step-text{font-size:13px;line-height:1.6;padding-right:28px;color:#1f2937}
 .step-field{font-size:11.5px;color:#6b7280;margin-top:4px;font-style:italic;padding-right:28px;line-height:1.4;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.step-answer-wrap{margin-top:8px;padding-right:28px}
+.step-answer{width:100%;padding:6px 10px;font-size:12.5px;font-family:'Inter',sans-serif;color:#1f2937;background:#fff;border:1.5px solid #d1d5db;border-radius:6px;outline:none;resize:none;line-height:1.5;min-height:32px;box-sizing:border-box;transition:border-color .14s,box-shadow .14s}
+.step-answer:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+.step-answer::placeholder{color:#c4c9d4;font-style:italic}
+.btn-clear-answers{background:#fff0f0;color:#dc2626;border:1.5px solid #fca5a5;border-radius:6px;cursor:pointer;font-size:11.5px;font-weight:600;padding:4px 12px;font-family:'Inter',sans-serif;white-space:nowrap;transition:background .12s,color .12s}
+.btn-clear-answers:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+.step-question.step-answered{background:#f0fdf4;border-color:#22c55e}
+.step-question.step-answered .step-answer:focus{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.12)}
 .na-accept-badge{font-style:normal;font-size:10px;font-weight:700;padding:1px 7px;border-radius:3px;white-space:nowrap;letter-spacing:.2px;flex-shrink:0}
 .na-accept-badge.na-ok{background:#dcfce7;color:#15803d}
 .na-accept-badge.na-no{background:#fee2e2;color:#991b1b}
@@ -498,6 +506,26 @@ function toggleLock(){
   } else {
     requireAuth(()=>{});
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ANSWER STORE  (session-only, never persisted)
+// ══════════════════════════════════════════════════════════════
+const answerStore={};
+function saveAnswer(key,val,el){
+  answerStore[key]=val;
+  const step=el?el.closest('.step'):null;
+  if(step) step.classList.toggle('step-answered',val.trim().length>0);
+}
+function getAnswer(key){ return answerStore[key]||''; }
+function clearAllAnswers(){
+  Object.keys(answerStore).forEach(k=>delete answerStore[k]);
+  document.querySelectorAll('.step-answer').forEach(el=>{
+    el.value='';
+    el.style.height='auto';
+    const step=el.closest('.step');
+    if(step) step.classList.remove('step-answered');
+  });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1452,7 +1480,7 @@ function renderScript(sections,progId,tabType){
       </div>
     </div>`;
   }).join("");
-  const searchBar=`<div class="script-search-wrap"><span style="color:#b0bac9;font-size:15px">&#128269;</span><input class="script-search" id="scriptSearchInput" type="text" placeholder="Search sections or questions..." oninput="filterScript(this.value)" autocomplete="off"><button class="script-search-clear" onclick="document.getElementById('scriptSearchInput').value='';filterScript('')" title="Clear">&#10005;</button><div class="script-search-divider"></div><button class="btn-sec-toggle" onclick="expandAllSections()" title="Expand all sections">&#8661; Expand All</button><button class="btn-sec-toggle" onclick="collapseAllSections()" title="Collapse all sections">&#8661; Collapse All</button></div>`;
+  const searchBar=`<div class="script-search-wrap"><span style="color:#b0bac9;font-size:15px">&#128269;</span><input class="script-search" id="scriptSearchInput" type="text" placeholder="Search sections or questions..." oninput="filterScript(this.value)" autocomplete="off"><button class="script-search-clear" onclick="document.getElementById('scriptSearchInput').value='';filterScript('')" title="Clear">&#10005;</button><div class="script-search-divider"></div><button class="btn-sec-toggle" onclick="expandAllSections()" title="Expand all sections">&#8661; Expand All</button><button class="btn-sec-toggle" onclick="collapseAllSections()" title="Collapse all sections">&#8661; Collapse All</button><div class="script-search-divider"></div><button class="btn-clear-answers" onclick="clearAllAnswers()" title="Erase all typed answers">&#10005; Clear Answers</button></div>`;
   const naPanel=tabType==='pbm'?renderNAPanel():'';
   const naLegend=tabType==='pbm'?`<div class="na-legend"><span class="na-legend-label">Badge Legend:</span><div class="na-legend-item"><span class="na-accept-badge na-ok">✓ N/A OK</span><span class="na-legend-desc">Payer saying "not available" is acceptable — record and move on</span></div><div class="na-legend-item"><span class="na-accept-badge na-no">✗ N/A</span><span class="na-legend-desc">Must obtain a value — "not available" is not acceptable for this field</span></div></div>`:'';
   return naLegend+naPanel+searchBar+restoreBar+`<div class="script-container" ondragover="event.preventDefault()" ondrop="dropSection(event,'${progId}','${tabType}')">${sectionsHtml}</div>`;
@@ -1462,11 +1490,14 @@ function renderAddedStep(s,progId,tabType,si,ai,dAttrs=''){
   const addedKey=`${progId}__${tabType}__${si}__added__${ai}`;
   const typeClass={statement:"step-statement",question:"step-question",instruction:"step-instruction",warning:"step-warning",branch:"step-branch"}[s.type]||"step-question";
   const cap=s.type.charAt(0).toUpperCase()+s.type.slice(1);
+  const addedAnswerKey=`ans__${addedKey}`;
+  const addedAnswerHtml=s.type==='question'?`<div class="step-answer-wrap"><textarea class="step-answer" rows="1" placeholder="Type answer here…" oninput="saveAnswer('${addedAnswerKey}',this.value);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(getAnswer(addedAnswerKey))}</textarea></div>`:'';
   return `<div class="step ${typeClass}" ${dAttrs} id="addstep_${CSS.escape(addedKey)}">
     <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">${s.label||cap} <span class="added-badge">Added</span></div>
     <div class="step-text step-content-text">${applyScriptHL(s.text,s.type)}</div>
     ${(()=>{const isPBM=tabType==='pbm';const ns=isPBM&&s.type==='question'?getPBMNAInfo(s.field,s.text):null;const nb=ns===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:ns===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';return s.field?`<div class="step-field step-content-field"><span>${s.field}</span>${nb}</div>`:nb?`<div class="step-field">${nb}</div>`:''})()}
+    ${addedAnswerHtml}
     <button class="edit-btn" onclick="startEditAdded('${progId}','${tabType}',${si},${ai})" title="Edit">&#9999;</button>
     <button class="delete-btn" onclick="deleteAddedStep('${progId}','${tabType}',${si},${ai})" title="Delete">&#10006;</button>
   </div>`;
@@ -1577,11 +1608,14 @@ function renderStep(s,key,dAttrs=''){
   const naStatus=isPBM&&s.type==='question'?getPBMNAInfo(displayField,s.text):null;
   const naBadge=naStatus===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:naStatus===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';
   const fieldHtml=displayField!=null&&displayField!==''?`<div class="step-field step-content-field"><span>${displayField}</span>${naBadge}</div>`:naBadge?`<div class="step-field">${naBadge}</div>`:'';
+  const answerKey=`ans__${key}`;
+  const answerHtml=s.type==='question'?`<div class="step-answer-wrap"><textarea class="step-answer" rows="1" placeholder="Type answer here…" oninput="saveAnswer('${answerKey}',this.value,this);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(getAnswer(answerKey))}</textarea></div>`:'';
   return `<div class="step ${typeClass}" ${dAttrs} id="step_${CSS.escape(key)}" data-key="${key}" data-orig-text="${escHtml(s.text)}" data-orig-field="${escHtml(s.field||'')}">
     <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">${s.label||""} ${editedBadge}</div>
     <div class="step-text step-content-text">${displayText}</div>
     ${fieldHtml}
+    ${answerHtml}
     <button class="edit-btn" onclick="startEdit('${key}')" title="Edit this step">&#9999;</button>
     <button class="delete-btn" onclick="removeStep('${key}')" title="Hide this step">&#10006;</button>
   </div>`;
