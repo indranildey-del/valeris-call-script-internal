@@ -59,6 +59,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .tab.active-pbm{background:#b45309;color:#fff;box-shadow:0 2px 7px rgba(180,83,9,.25)}
 .tab.active-other{background:#047857;color:#fff;box-shadow:0 2px 7px rgba(4,120,87,.25)}
 .tab.active-log{background:#0f1729;color:#fff;box-shadow:0 2px 7px rgba(15,23,41,.28)}
+.tab.active-full{background:#7c3aed;color:#fff;box-shadow:0 2px 7px rgba(124,58,237,.28)}
 
 /* ── SECTIONS ── */
 .section{background:#fff;border-radius:10px;border:1px solid #e5e9f2;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
@@ -80,6 +81,22 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .hdr-pharmacy{background:linear-gradient(90deg,#fff8f0 0,#fffaf5 100%)}
 .hdr-transport{background:linear-gradient(90deg,#f0f8ff 0,#f5fafe 100%)}
 
+/* ── FULL SCRIPT (read-only) ── */
+.fullscript-container{display:flex;flex-direction:column;gap:8px}
+.fullscript-container .step{padding-left:14px}
+.fullscript-papread{border-left:3px solid #4263eb;background:#f0f4ff;border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:8px}
+.fullscript-papread-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#4263eb;margin-bottom:10px;opacity:.8}
+.fullscript-papread-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+@media(max-width:680px){.fullscript-papread-grid{grid-template-columns:1fr}}
+.fullscript-papread-col{background:#fff;border:1px solid #c7d2fe;border-radius:8px;overflow:hidden}
+.fullscript-papread-col-hdr{background:#4263eb;color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:6px 12px}
+.fullscript-papread-scenario{padding:7px 12px;border-top:1px solid #f3f4f6}
+.fullscript-papread-scenario-title{font-size:11.5px;font-weight:700;color:#1f2937;margin-bottom:3px}
+.fullscript-papread-fields{list-style:none;margin:0;padding:0}
+.fullscript-papread-fields li{font-size:11.5px;color:#4b5563;padding:1.5px 0 1.5px 14px;position:relative;line-height:1.4}
+.fullscript-papread-fields li::before{content:"·";position:absolute;left:4px;color:#9ca3af;font-weight:700}
+.fullscript-papread-note{font-size:11px;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:5px;padding:4px 8px;margin-top:4px;line-height:1.4}
+
 /* ── STEP BASE ── */
 .step{position:relative;margin-bottom:8px;padding:11px 14px 11px 32px;border-radius:8px;border-left:3px solid;transition:box-shadow .14s,border-top .1s,border-bottom .1s}
 .step-statement{background:#f8f9ff;border-color:#4263eb}
@@ -94,10 +111,40 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .step-answer{width:100%;padding:6px 10px;font-size:12.5px;font-family:'Inter',sans-serif;color:#1f2937;background:#fff;border:1.5px solid #d1d5db;border-radius:6px;outline:none;resize:none;line-height:1.5;min-height:32px;box-sizing:border-box;transition:border-color .14s,box-shadow .14s}
 .step-answer:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.12)}
 .step-answer::placeholder{color:#c4c9d4;font-style:italic}
+.step-yn-select{margin-top:8px;padding:6px 10px;width:180px;font-size:12.5px;font-family:'Inter',sans-serif;color:#1f2937;background:#fff;border:1.5px solid #d1d5db;border-radius:6px;outline:none;cursor:pointer;transition:border-color .14s,box-shadow .14s}
+.step-yn-select:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+.step-question.step-answered .step-yn-select,.step-branch.step-answered .step-yn-select{border-color:#22c55e}
 .btn-clear-answers{background:#fff0f0;color:#dc2626;border:1.5px solid #fca5a5;border-radius:6px;cursor:pointer;font-size:11.5px;font-weight:600;padding:4px 12px;font-family:'Inter',sans-serif;white-space:nowrap;transition:background .12s,color .12s}
 .btn-clear-answers:hover{background:#dc2626;color:#fff;border-color:#dc2626}
-.step-question.step-answered{background:#f0fdf4;border-color:#22c55e}
-.step-question.step-answered .step-answer:focus{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.12)}
+.step-question.step-answered,.step-branch.step-answered{background:#f0fdf4;border-color:#22c55e}
+.step-question.step-answered .step-answer:focus,.step-branch.step-answered .step-answer:focus{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.12)}
+/* ── PA / PRE-D DYNAMIC SELECTOR ── */
+.step-pa-pread{background:#f0f4ff;border-color:#4263eb;border-radius:10px;padding:14px 16px}
+.step-pa-pread.step-answered{background:#f0fdf4;border-color:#22c55e}
+.pa-pread-dropdowns{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 14px}
+.pa-pread-dd-wrap{display:flex;flex-direction:column;gap:4px;flex:1;min-width:190px}
+.pa-pread-dd-label{font-size:10.5px;font-weight:700;color:#4263eb;text-transform:uppercase;letter-spacing:.5px}
+.pa-pread-dd{padding:7px 10px;border:1.5px solid #c7d2fe;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;background:#fff;color:#111827;outline:none;cursor:pointer;transition:border-color .14s}
+.pa-pread-dd:focus{border-color:#4263eb;box-shadow:0 0 0 3px rgba(66,99,235,.12)}
+.pa-pread-field-list{background:#fff;border-radius:8px;border:1px solid #e0e7ff;padding:14px 16px;margin-top:2px}
+.pa-pread-scenario-badge{display:inline-block;font-size:11px;font-weight:700;background:#4263eb;color:#fff;border-radius:6px;padding:3px 12px;margin-bottom:12px;letter-spacing:.2px}
+.pa-pread-scenario-badge.badge-approved{background:#16a34a}
+.pa-pread-scenario-badge.badge-denied{background:#dc2626}
+.pa-pread-scenario-badge.badge-pending{background:#d97706}
+.pa-pread-scenario-badge.badge-not_on_file{background:#6b7280}
+.pa-pread-field-row{display:flex;flex-direction:row;gap:12px;align-items:flex-start;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #eef0ff}
+.pa-pread-field-row:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.pa-pread-field-q{flex:3;min-width:0;font-size:13px;font-weight:500;color:#1f2937;line-height:1.55;padding-top:5px}
+.pa-pread-field-label{flex:2;min-width:0;font-size:11px;font-weight:700;color:#4263eb;letter-spacing:.2px;padding-top:7px;line-height:1.4}
+.pa-pread-field-row .step-answer{flex:2;min-width:0}
+.pa-pread-yn-select{flex:2;min-width:0;padding:6px 10px;border:1.5px solid #d1d5db;border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;background:#fff;color:#1f2937;outline:none;cursor:pointer;transition:border-color .14s}
+.pa-pread-yn-select:focus{border-color:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.12)}
+.pa-pread-no-fields{padding:10px 0 2px;font-size:12.5px;color:#9ca3af;font-style:italic}
+.pa-pread-notes{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.pa-pread-note{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:7px;font-size:12px;line-height:1.5}
+.pa-pread-note.note-warn{background:#fef3c7;border:1px solid #f59e0b;color:#78350f}
+.pa-pread-note.note-info{background:#eff6ff;border:1px solid #93c5fd;color:#1e40af}
+.pa-pread-note-icon{flex-shrink:0;margin-top:1px;font-size:13px}
 .na-accept-badge{font-style:normal;font-size:10px;font-weight:700;padding:1px 7px;border-radius:3px;white-space:nowrap;letter-spacing:.2px;flex-shrink:0}
 .na-accept-badge.na-ok{background:#dcfce7;color:#15803d}
 .na-accept-badge.na-no{background:#fee2e2;color:#991b1b}
@@ -526,6 +573,19 @@ function clearAllAnswers(){
     const step=el.closest('.step');
     if(step) step.classList.remove('step-answered');
   });
+  document.querySelectorAll('.step-yn-select').forEach(el=>{
+    el.value='';
+    const step=el.closest('.step');
+    if(step) step.classList.remove('step-answered');
+  });
+  // Reset pa-pread dropdowns and clear field panels
+  document.querySelectorAll('.pa-pread-dd').forEach(el=>{el.value='';});
+  document.querySelectorAll('.step-pa-pread').forEach(el=>{
+    const key=el.dataset.key;
+    const fd=key?document.getElementById('papread_fields_'+CSS.escape(key)):null;
+    if(fd) fd.innerHTML='';
+    el.classList.remove('step-answered');
+  });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -534,11 +594,21 @@ function clearAllAnswers(){
 const STORE_KEY = "valeris_edits_v2";
 let editStore = {};
 try { editStore = JSON.parse(localStorage.getItem(STORE_KEY)||"{}"); } catch(e){}
-// Clear any stale saved overrides for Ipsen opening statements so updated text shows correctly
+// Clear stale editStore keys when MM script schema changes (bumping MM_SCHEMA_VERSION forces a reset)
 (function(){
+  const MM_SCHEMA_VERSION="10";
+  const MM_SCHEMA_KEY="__mm_schema_v";
   const staleKeys=["ipsen__mm__0__0","ipsen__pbm__0__0","ocular__mm__0__0"];
   let changed=false;
   staleKeys.forEach(k=>{ if(editStore[k]){delete editStore[k];changed=true;} });
+  if(editStore[MM_SCHEMA_KEY]!==MM_SCHEMA_VERSION){
+    const mmProgs=["ipsen__mm__","jj-imm__mm__","jj-pap__mm__","jj-oncology__mm__","vyepti__mm__","ocular__mm__","sandoz__mm__"];
+    Object.keys(editStore).forEach(k=>{
+      if(mmProgs.some(p=>k.startsWith(p))){ delete editStore[k]; changed=true; }
+    });
+    editStore[MM_SCHEMA_KEY]=MM_SCHEMA_VERSION;
+    changed=true;
+  }
   if(changed){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(editStore)); }catch(e){} }
 })();
 function persistStore(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(editStore)); }catch(e){} }
@@ -683,76 +753,73 @@ function mmStandard(prog){
       {type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the <strong>${prog}</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> for the medication <span class='placeholder'>[Medication name]</span>.`},
       {type:"instruction",label:"HIPAA",text:"Complete HIPAA verification before providing any patient-specific treatment information. Minimum 3 patient identifiers must be verified."},
     ]},
-    {title:"Plan Details",hdr:"hdr-plan",steps:[
-      {type:"question",label:"Q",text:"What is the insurance type?",field:"→ Commercial / Medicare / Medicare Advantage / Tricare"},
-      {type:"question",label:"Q",text:"May I know the plan name and type of the plan the patient is currently enrolled in?",field:"→ Plan Type: HMO / PPO / POS / EPO / Medicare Advantage / Medicaid"},
-      {type:"question",label:"Q",text:"Could you help me with the effective date and termination date of the plan?",field:"→ Plan Effective Date | Plan Term/End Date"},
+    {title:"Eligibility",hdr:"hdr-plan",steps:[
+      {type:"question",label:"Q",text:"Is this plan active?",field:"→ Plan Active: Yes / No"},
+      {type:"question",label:"Q",text:"Could you help me out with the effective date of the plan?",field:"→ Plan Effective Date"},
+      {type:"question",label:"Q",text:"Could you help me out with the termination date of the plan?",field:"→ Plan Term/End Date"},
       {type:"question",label:"Q",text:"Does this plan run on a Calendar Year? Fiscal Year? Plan Year?",field:"→ Benefit Year Type"},
+      {type:"question",label:"Q",text:"May I know the Plan name and type of the plan the patient is currently enrolled in?",field:"→ Plan Type: HMO / PPO / POS / EPO / Medicare Advantage / Medicaid"},
+      {type:"question",label:"Q",text:"What is the Insurance Type?",field:"→ Commercial / Medicare / Medicare Advantage / Tricare"},
       {type:"question",label:"Q",text:"Is this patient the subscriber of the plan?",field:"→ Patient's relationship to subscriber"},
-      {type:"question",label:"Q",text:"Is this an Employer Based Plan?",field:"→ Not required"},
-      {type:"question",label:"Q",text:"Is this plan enrolled in any type of Alternate Funding Plan (e.g., PayerRx, PrudentRx)?",field:"→ Not required"},
-      {type:"question",label:"Q",text:"Coordination of Benefits — is this Primary / Secondary / Tertiary? Any additional insurance on file?",field:"→ COB status"},
-      {type:"question",label:"Q",text:"Is the provider in-network with the policy?",field:"→ HCP Network Status"},
-      {type:"question",label:"Q",text:"Is PCP referral required?",field:"→ Yes/No"},
-      {type:"branch",label:"Referral ON FILE",text:"Referral number | Start and end date | Number of approved visits"},
-      {type:"branch",label:"Referral NOT on file",text:"PCP name | PCP phone number | Referral submission method | Phone, fax, website for referral"},
+      {type:"question",label:"Q",text:"Coordination of Benefits — is this Primary / Secondary / Tertiary? Any additional insurance on file?",field:"→ COB: Primary / Secondary / Tertiary"},
+      {type:"question",label:"Q",text:"Is this patient's primary plan? Is there any other insurance on file?",field:"→ Primary Plan: Yes / No | Other insurance on file"},
+      {type:"question",label:"Q",text:"Is the provider in-network with the policy?",field:"→ HCP Network Status: IN / OON"},
+      {type:"question",label:"Q",text:"Is PCP referral required?",field:"→ Yes / No"},
+      {type:"question",label:"Q",text:"Is there a PCP referral on file?",field:"→ Yes / No"},
+      {type:"question",label:"If PCP referral on file = YES",text:"What is the Referral number?",field:"→ Referral Number"},
+      {type:"question",label:"If PCP referral on file = YES",text:"What is the start and end date of the referral?",field:"→ Referral Start Date | Referral End Date"},
+      {type:"question",label:"If PCP referral on file = YES",text:"How many visits have already been approved?",field:"→ # Approved Visits"},
+    ]},
+    {title:"Benefits Details",hdr:"hdr-benefit",steps:[
+      {type:"statement",label:"Script",text:`The provider would like to know — is <span class='placeholder'>[Drug J-code]</span> with <span class='placeholder'>[DX code]</span> covered under the patient's plan? Services are being rendered outpatient in the specialist office with no office visit being billed.`},
+      {type:"question",label:"Q",text:"Is the drug covered?",field:"→ Is Drug Covered: Yes / No"},
+      {type:"question",label:"Q",text:"How much would be the copay or coinsurance for the drug?",field:"→ J-code Copay / Coinsurance"},
+      {type:"question",label:"Q",text:"Is the drug and CPT code covered at 100% after the OOP is met?",field:"→ Covered @ 100% once OOP met: Yes / No"},
+      {type:"question",label:"Q",text:"What is the Individual Deductible? How much has been met?",field:"→ Individual Deductible: $ | Individual Deductible Met: $ / Met"},
+      {type:"question",label:"Q",text:"What is the Family Deductible? How much has been met?",field:"→ Family Deductible: $ | Family Deductible Met: $ / Met"},
+      {type:"question",label:"Q",text:"What is the Individual OOP Max? How much has been met?",field:"→ Individual OOP Max: $ | Individual OOP Max Met: $ / Met"},
+      {type:"question",label:"Q",text:"What is the Family OOP Max? How much has been met?",field:"→ Family OOP Max: $ | Family OOP Max Met: $ / Met"},
+      {type:"question",label:"Q",text:"Is the deductible included in OOP?",field:"→ Yes / No"},
+      {type:"question",label:"Q",text:"Is the deductible applicable on [J-code] and [CPT code]?",field:"→ Yes / No"},
+      {type:"statement",label:"Script",text:`The provider would like to know — is <span class='placeholder'>[CPT code]</span> with <span class='placeholder'>[DX code]</span> covered under the patient's plan? Services are being rendered outpatient in the specialist office with no office visit being billed.`},
+      {type:"question",label:"Q",text:"What is the Admin (CPT code) copay / coinsurance?",field:"→ Admin (CPT code) Copay / Coinsurance"},
+      {type:"instruction",label:"NOTE",text:"If providing the J-Code and CPT code together — inform the payer rep you would like to get the benefits when the codes are being billed separately."},
+    ]},
+    {title:"Office Visit Benefits",hdr:"hdr-coverage",steps:[
+      {type:"question",label:"Q",text:"Could you help me with the specialist office visit copay for the [J-Code]?",field:"→ Specialist Office Visit Copay"},
+      {type:"question",label:"Q",text:"Is the deductible applicable to the office visit copay?",field:"→ Yes / No"},
+      {type:"question",label:"Q",text:"Is the OOP max applicable to the office visit copay?",field:"→ Yes / No"},
+      {type:"question",label:"Q",text:"Does copay / coinsurance always apply after the OOP max is met?",field:"→ Yes / No"},
+      {type:"question",label:"Q",text:"Is the office visit copay covered at 100% once the OOP max is met?",field:"→ Yes / No"},
+    ]},
+    {title:"Prior Authorization",hdr:"hdr-auth",steps:[
+      {type:"question",label:"Q",text:"Is there an authorization required for [J-code and CPT code]?",field:"→ Authorization Required: Yes / No"},
+      {type:"pa-pread",label:"PA / Pre-D Details",text:""},
+    ]},
+    {title:"Step Therapy",hdr:"hdr-benefit",steps:[
+      {type:"question",label:"Q",text:"Is step therapy required?",field:"→ Step Therapy Required: Yes / No"},
+      {type:"question",label:"Q",text:"What is the step therapy process?",field:"→ Step Therapy Drug Name(s) / Process"},
+    ]},
+    {title:"Copay Accumulator / Maximizer",hdr:"hdr-benefit",steps:[
+      {type:"question",label:"Q",text:"Is there a Copay Accumulator / Maximizer attached to the policy?",field:"→ Yes / No"},
+    ]},
+    {title:"Drug Acquisition",hdr:"hdr-coverage",steps:[
+      {type:"question",label:"Q",text:"Can the provider do buy and bill?",field:"→ Buy and Bill Permitted: Yes / No"},
+      {type:"question",label:"Q",text:"Are there any limitations or exclusions?",field:"→ Limitations / Exclusions"},
+      {type:"question",label:"Q",text:"If the drug is obtained through SP, will it still be covered under Major Medical benefits?",field:"→ SP + Major Medical Coverage"},
+      {type:"question",label:"Q",text:"Is a Specialty Pharmacy required for AOB? What are the AOB coverage specifics?",field:"→ Specialty Pharmacy Required for AOB: Yes / No | AOB Coverage Specifics"},
+      {type:"question",label:"Q",text:"Who is the preferred SP that can dispense [J-Code]?",field:"→ Preferred Specialty Pharmacy | SP Phone | SP Fax"},
+      {type:"question",label:"Q",text:"Is this SP preferred / open / mandated?",field:"→ Preferred / Open / Mandated"},
+      {type:"question",label:"Q",text:"What is the name of the PBM and their phone number and fax number?",field:"→ PBM Name | PBM Phone | PBM Fax"},
     ]},
     {title:"Site of Care Policy",hdr:"hdr-plan",steps:[
-      {type:"question",label:"Q",text:"Is administration covered at the following locations? (If SOC is selected on PEF confirm that SOC; otherwise confirm all)",field:"→ Provider's office | Hospital Outpatient | Home Infusion"},
-      {type:"question",label:"Q",text:"Are the following locations in-network with member's policy?",field:"→ HCP Office | Hospital/Outpatient Infusion Center"},
-      {type:"question",label:"Q",text:"What is the coinsurance / copay for the administration codes at each location?",field:"→ HCP Office rate | Hospital/Outpatient rate"},
-    ]},
-    {title:"Coverage Details",hdr:"hdr-coverage",steps:[
-      {type:"question",label:"Q",text:"The provider would like to know — is [Drug J-code] with [DX code] covered under patient's plan? Services rendered outpatient in specialist office, no office visit billed.",field:"→ Is Drug Covered: Yes/No"},
-      {type:"question",label:"Q",text:"How much would be the copay or coinsurance for the drug?",field:"→ J-code Copay / Coinsurance"},
-      {type:"question",label:"Q",text:"Could you help me with the office visit copay for the [J-Code]?",field:"→ Specialist Office Visit Copay"},
-      {type:"question",label:"Q",text:"Is deductible applicable to the office visit copay?",field:"→ Yes/No"},
-      {type:"question",label:"Q",text:"Is OOP max applicable to the office visit copay?",field:"→ Yes/No"},
-      {type:"question",label:"Q",text:"Is office visit copay covered at 100% once the OOP max is met?",field:"→ Yes/No"},
-      {type:"question",label:"Q",text:"Is the [CPT code] with [DX code] covered under patient's plan? Services rendered outpatient in specialist office, no office visit billed.",field:"→ Admin (CPT code) Copay"},
-      {type:"instruction",label:"NOTE",text:"If providing J-Code and CPT code together — inform payer rep you would like to get benefits when codes are billed separately."},
-    ]},
-    {title:"Benefit Details",hdr:"hdr-benefit",steps:[
-      {type:"question",label:"Q",text:"What is the Individual Deductible? How much has been met?",field:"→ Individual Deductible: $ | Met: $"},
-      {type:"question",label:"Q",text:"What is the Family Deductible? How much has been met?",field:"→ Family Deductible: $ | Met: $"},
-      {type:"question",label:"Q",text:"What is the Individual OOP Max? How much has been met?",field:"→ Individual OOP Max: $ | Met: $"},
-      {type:"question",label:"Q",text:"What is the Family OOP Max? How much has been met?",field:"→ Family OOP Max: $ | Met: $"},
-      {type:"question",label:"Q",text:"Is the deductible included in OOP?",field:"→ Yes/No"},
-      {type:"question",label:"Q",text:"Is the deductible applicable on [J-code] and [CPT code]?",field:"→ Yes/No"},
-      {type:"question",label:"Q",text:"Is the drug and CPT code covered at 100% after OOP is met?",field:"→ Covered @ 100% once OOP met: Yes/No"},
-    ]},
-    {title:"Authorization (PA / Pre-Determination)",hdr:"hdr-auth",steps:[
-      {type:"question",label:"Q",text:"Is there an authorization required for [J-code and CPT code]?",field:"→ Authorization required: Yes / No"},
-      {type:"branch",label:"PA REQUIRED → On file",text:"PA reference # | Start &amp; end date | Number of approved units / treatments"},
-      {type:"branch",label:"PA REQUIRED → NOT on file",text:"Which dept handles PA? Phone number | Submission methods (phone / fax / portal) | Standard &amp; urgent TAT"},
-      {type:"instruction",label:"If PA NOT Required",text:"If PA is <strong>not required</strong> — ask about pre-determination:"},
-      {type:"question",label:"Pre-D",text:"Is pre-determination recommended?",field:"→ Pre-D Recommended: Yes / No &nbsp;&nbsp;<em>(If No → move to next section)</em>"},
-      {type:"branch",label:"Pre-D Recommended → ON FILE",text:"Pre-D is on file — collect the following:"},
-      {type:"question",label:"Q",text:"Can you please help me out with the approved pre-determination reference number?",field:"→ Pre-D Ref #"},
-      {type:"question",label:"Q",text:"Can you please help me out with the start and end date and the number of units or the treatments that have been approved?",field:"→ Start Date | End Date | Approved Units / Treatments"},
-      {type:"question",label:"Q",text:"Pre-determination department name and number?",field:"→ Pre-D Dept Name | Pre-D Dept Phone #"},
-      {type:"warning",label:"⚠ CONFIRM",text:"<strong>Please confirm the authorization on file consists the J-Code and DX code.</strong>"},
-      {type:"branch",label:"Pre-D Recommended → NOT ON FILE",text:"Pre-D recommended but NOT on file — collect the following:"},
-      {type:"question",label:"Q",text:"Which department handles the Pre-determination and what's their phone number?",field:"→ Pre-D Dept Name | Pre-D Dept Phone #"},
-      {type:"question",label:"Q",text:"What are the different ways the provider can submit a Pre-determination?",field:"→ Submission Methods: Phone | Fax | Portal"},
-      {type:"instruction",label:"Collect Info",text:"Collect phone, fax, and portal details if available:<br>→ Phone: _____ | Fax: _____ | Portal URL: _____"},
-      {type:"question",label:"Q",text:"What is the standard / urgent turnaround time?",field:"→ Standard TAT | Urgent TAT"},
-    ]},
-    {title:"Step Therapy & Accumulators",hdr:"hdr-benefit",steps:[
-      {type:"question",label:"Q",text:"Is step therapy required?",field:"→ Step Therapy Required: Yes/No"},
-      {type:"question",label:"Q",text:"What are the step therapy drugs?",field:"→ Step Therapy Drug Name(s)"},
-      {type:"question",label:"Q",text:"Is there a Copay Accumulator / Maximizer attached to the policy?",field:"→ Yes/No"},
-    ]},
-    {title:"Drug Access / Specialty Pharmacy",hdr:"hdr-coverage",steps:[
-      {type:"question",label:"Q",text:"How is the drug reimbursed?",field:"→ Reimbursement method"},
-      {type:"question",label:"Q",text:"Can the provider do buy and bill?",field:"→ Buy and Bill permitted: Yes/No"},
-      {type:"question",label:"Q",text:"If the drug is obtained through SP, will it still be covered under Major Medical benefits?",field:"→ SP + Medical Benefit coverage"},
-      {type:"question",label:"Q",text:"Is a Specialty Pharmacy required for AOB?",field:"→ AOB: Yes/No | AOB Coverage specifics"},
-      {type:"question",label:"Q",text:"Who is the preferred SP that can dispense [J-Code]?",field:"→ Preferred SP name | SP Phone | SP Fax"},
-      {type:"question",label:"Q",text:"What is the name of the PBM and their phone number and fax number?",field:"→ PBM name | Phone | Fax"},
+      {type:"instruction",label:"NOTE",text:"If SOC is selected on PEF, confirm that SOC only. If no selection is made, confirm for all the following locations:"},
+      {type:"question",label:"Q",text:"Is administration covered at the HCP office?",field:"→ HCP Office: Network Status only"},
+      {type:"question",label:"Q",text:"Is administration covered at the Hospital / Outpatient Infusion Center?",field:"→ Hospital / Outpatient Infusion Center: Network Status only"},
+      {type:"question",label:"Q",text:"How much would be the copay or coinsurance for the drug at each site?",field:"→ Copay / Coinsurance"},
     ]},
     {title:"Original Medicare Template (if applicable)",hdr:"hdr-plan",steps:[
-      {type:"instruction",label:"Medicare Part B",text:"Coverage: 80/20% after deductible is met | 2026 Deductible: $283 | Deductible met: $ | Patient responsibility (20%): $"},
+      {type:"instruction",label:"Medicare Part B",text:"Coverage: Medicare Part B (80/20% after deductible is met) | 2026 Deductible: $283 | Deductible met: $ / Met | Patient responsibility (20%): $"},
     ]},
     {title:"Closing Statement",hdr:"hdr-closing",steps:[
       {type:"statement",label:"Script",text:`I do appreciate you <span class='placeholder'>(Payer representative name)</span> assisting me with this inquiry today. Is there a reference number for this call? Thank you, have a great rest of your day.`},
@@ -939,9 +1006,9 @@ function mmVyepti(){
   const b=mmStandard("Lundbeck Support Center");
   b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling from the <strong>Lundbeck Support Center</strong>, authorized by a patient's healthcare provider to confirm eligibility and benefits for a patient. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> for the medication <span class='placeholder'>[Medication name]</span>.`};
   b[0].steps.splice(1,0,{type:"instruction",label:"Benefits Collection Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; patient has OON benefits:</strong> only OON benefits collected<br><strong>If Provider network status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> INN benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`});
-  const ci=b.findIndex(s=>s.title==="Coverage Details");
+  const ci=b.findIndex(s=>s.title==="Benefits Details");
   b[ci].steps.push({type:"warning",label:"IMPORTANT",text:"Collect benefits based on provider's network status. If IN — collect IN benefit. If OON — collect OON benefit."});
-  const dai=b.findIndex(s=>s.title==="Drug Access / Specialty Pharmacy");
+  const dai=b.findIndex(s=>s.title==="Drug Acquisition");
   b[dai].steps.push({type:"question",label:"Q",text:"Can this medication be dispensed through Orsini or Option Care?",field:"→ Orsini: Yes / No &nbsp;&nbsp;|&nbsp;&nbsp; Option Care: Yes / No"});
   return b;
 }
@@ -1010,55 +1077,18 @@ function nemtScript(){
 }
 
 function mmOcular(){
-  return [
-    {title:"Opening Statement",hdr:"hdr-opening",steps:[
-      {type:"statement",label:"Script",text:`Hello, this is <span class='placeholder'>[Patient Access Manager's name]</span>, calling on behalf of the <strong>OcuCare Service Program</strong>, on a recorded line to verify benefits for member <span class='placeholder'>[Patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span>.`},
-      {type:"instruction",label:"HIPAA",text:"Complete HIPAA verification before providing any patient-specific treatment information. Minimum 3 patient identifiers."},
-      {type:"instruction",label:"Benefits Collection Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; patient has OON benefits:</strong> only OON benefits collected<br><strong>If Provider network status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> INN benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`},
-    ]},
-    {title:"Site of Care & Codes",hdr:"hdr-plan",steps:[
-      {type:"statement",label:"Script",text:`This patient is having an injection done in an <span class='placeholder'>ASC (ambulatory surgical center)</span> or <span class='placeholder'>Specialist office setting</span> and I have 2 codes to check.`},
-      {type:"instruction",label:"Code Notes",text:"<strong>If ASC or Hospital:</strong> Facility outpatient benefits<br><strong>If Specialist Office:</strong> Professional benefits — always outpatient, never inpatient<br><br><strong>J1096</strong> = physician administered only drug<br><strong>68841</strong> = administration code (surgical code)"},
-      {type:"question",label:"Q",text:"Check the network status of the physician and site of care — are they in-network?",field:"→ IN / OON | OON benefits available?"},
-    ]},
-    {title:"Coverage & Benefit Details",hdr:"hdr-coverage",steps:[
-      {type:"question",label:"Q",text:"Is there a deductible? How much has been met? Does it apply to J1096 and 68841?",field:"→ Deductible: $ | Met: $ | Applies to codes: Yes/No"},
-      {type:"question",label:"Q",text:"Does it apply to the out-of-pocket maximum?",field:"→ Applies to OOP: Yes/No"},
-      {type:"question",label:"Q",text:"What is the OOP max? How much has been met? Patient covered 100% once met?",field:"→ OOP Max: $ | Met: $ | 100% after OOP: Yes/No"},
-      {type:"question",label:"Q",text:"What is the coinsurance/copay? (If one benefit level for both codes — confirm it applies to both J1096 and 68841)",field:"→ Coinsurance % | Copay $"},
-      {type:"question",label:"Q",text:"Do coinsurance and copay apply to the OOP max?",field:"→ Yes/No"},
-      {type:"question",label:"Q",text:"Is buy and bill allowed? (SP required by payer = not allowed. Buy and bill = provider stocks drug, bills for what is provided to patient.)",field:"→ Buy and Bill: Yes/No"},
-    ]},
-    {title:"Authorization (PA / Pre-Determination)",hdr:"hdr-auth",steps:[
-      {type:"question",label:"Q",text:"Is prior authorization required?",field:"→ PA Required: Yes / No"},
-      {type:"instruction",label:"NOTE",text:"If a phone # is given for PA initiation — call to verify PA is actually required. Get agent name and ref # for that call."},
-      {type:"branch",label:"PA REQUIRED → On file",text:"PA ref ID | Start date | End date | PA dept name and number | Where can provider initiate PA (phone / fax / portal)? TAT?"},
-      {type:"branch",label:"PA REQUIRED → NOT on file",text:"PA dept phone / fax / portal | TAT"},
-      {type:"instruction",label:"If PA NOT Required",text:"If PA is <strong>not required</strong> — ask about pre-determination:"},
-      {type:"question",label:"Pre-D",text:"Is pre-determination recommended?",field:"→ Pre-D Recommended: Yes / No &nbsp;&nbsp;<em>(If No → move to next section)</em>"},
-      {type:"branch",label:"Pre-D Recommended → ON FILE",text:"Pre-D is on file — collect the following:"},
-      {type:"question",label:"Q",text:"Can you please help me out with the approved pre-determination reference number?",field:"→ Pre-D Ref #"},
-      {type:"question",label:"Q",text:"Can you please help me out with the start and end date and the number of units or the treatments that have been approved?",field:"→ Start Date | End Date | Approved Units / Treatments"},
-      {type:"question",label:"Q",text:"Pre-determination department name and number?",field:"→ Pre-D Dept Name | Pre-D Dept Phone #"},
-      {type:"warning",label:"⚠ CONFIRM",text:"<strong>Please confirm the authorization on file consists the J-Code and DX code.</strong>"},
-      {type:"branch",label:"Pre-D Recommended → NOT ON FILE",text:"Pre-D recommended but NOT on file — collect the following:"},
-      {type:"question",label:"Q",text:"Which department handles the Pre-determination and what's their phone number?",field:"→ Pre-D Dept Name | Pre-D Dept Phone #"},
-      {type:"question",label:"Q",text:"What are the different ways the provider can submit a Pre-determination?",field:"→ Submission Methods: Phone | Fax | Portal"},
-      {type:"instruction",label:"Collect Info",text:"Collect phone, fax, and portal details if available:<br>→ Phone: _____ | Fax: _____ | Portal URL: _____"},
-      {type:"question",label:"Q",text:"What is the standard / urgent turnaround time?",field:"→ Standard TAT | Urgent TAT"},
-      {type:"question",label:"Q",text:"If PCP referral is required — is a referral already on file?",field:"→ Referral # | Valid dates | If not on file: PCP name &amp; phone"},
-    ]},
-    {title:"Eligibility Details",hdr:"hdr-plan",steps:[
-      {type:"question",label:"Q",text:"What is the effective date of the plan?",field:"→ Plan Effective Date"},
-      {type:"question",label:"Q",text:"What is the plan type and name?",field:"→ Plan type | Plan name"},
-      {type:"question",label:"Q",text:"What is the group number for billing? (Verify even if on PEF)",field:"→ Group #"},
-      {type:"question",label:"Q",text:"Is there any other active insurance on file? If Medicare — Part A&B or only Part A?",field:"→ Other insurance | Medicare Part A & B"},
-    ]},
-    {title:"Closing",hdr:"hdr-closing",steps:[
-      {type:"question",label:"Q",text:"Can I have a reference number for the call? (Name + today's date is also acceptable.)",field:"→ Call Reference #"},
-      {type:"instruction",label:"NOTE",text:"Enter benefits into patient account as soon as possible. If verifying multiple patients on one call — gather 3–4 benefits, then stop to enter them."},
-    ]},
-  ];
+  const b=mmStandard("OcuCare Service Program");
+  // Custom opening
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, this is <span class='placeholder'>[Patient Access Manager's name]</span>, calling on behalf of the <strong>OcuCare Service Program</strong>, on a recorded line to verify benefits for member <span class='placeholder'>[Patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span>.`};
+  // Insert Benefits Collection Rule after HIPAA (index 2)
+  b[0].steps.splice(2,0,{type:"instruction",label:"Benefits Collection Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; patient has OON benefits:</strong> only OON benefits collected<br><strong>If Provider network status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> INN benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`});
+  // Add Dextenza-specific code notes to Site of Care Policy section
+  const soci=b.findIndex(s=>s.title==="Site of Care Policy");
+  b[soci].steps.unshift(
+    {type:"statement",label:"Script",text:`This patient is having an injection done in an <span class='placeholder'>ASC (ambulatory surgical center)</span> or <span class='placeholder'>Specialist office setting</span> and I have 2 codes to check.`},
+    {type:"instruction",label:"Code Notes",text:"<strong>J1096</strong> = physician administered only drug<br><strong>68841</strong> = administration code (surgical code)<br><br><strong>If ASC or Hospital:</strong> Facility outpatient benefits<br><strong>If Specialist Office:</strong> Professional benefits — always outpatient, never inpatient"}
+  );
+  return b;
 }
 
 function pbmOrgovyx(){
@@ -1082,93 +1112,28 @@ function ipsenPBM(){
 }
 
 function mmSandoz(){
-  return [
-    {title:"Pre-Call Preparation",hdr:"hdr-plan",steps:[
-      {type:"instruction",label:"Patient Details Needed",text:"Patient Name | Date of Birth | Diagnosis"},
-      {type:"instruction",label:"Provider Details Needed",text:"HCP Name | NPI | Tax ID # | Address | PTAN (for Medicare)"},
-      {type:"warning",label:"IMPORTANT",text:"Always confirm that codes are valid and billable. Capture this in the CRM for future reference."},
-      {type:"instruction",label:"Benefits Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; OON benefits exist:</strong> only OON benefits collected<br><strong>If Provider status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> no benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`},
-    ]},
-    {title:"Opening (TC Scripts Greeting)",hdr:"hdr-opening",steps:[
-      {type:"statement",label:"Script",text:`Hello, I am <span class='placeholder'>[Insert Name]</span> from <strong>Sandoz One Source™</strong>. I am calling on behalf of TC Scripts to verify insurance benefits for a patient; before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes. I am calling to verify member eligibility for benefits specific to <span class='placeholder'>WYOST/Jubbonti</span> and its administration, which will be done in the <span class='placeholder'>[physician office / hospital outpatient facility / site of care]</span>. First, I have some general questions about the policy. Are you able to assist me?`},
-      {type:"instruction",label:"NOTE",text:"Be prepared to provide: patient ID, patient DOB, provider number, practice name, Tax ID, and phone number."},
-    ]},
-    {title:"Step 1 — Call Reference",hdr:"hdr-plan",steps:[
-      {type:"question",label:"Q",text:"May I have your name and the reference number for this call?",field:"→ Payer Rep Name | Call Reference #"},
-    ]},
-    {title:"Step 2 — General Policy Information",hdr:"hdr-plan",steps:[
-      {type:"question",label:"Q",text:"Is this the patient's primary insurance?",field:"→ Yes → proceed | No → confirm primary insurance name and when primary status changed"},
-      {type:"question",label:"Q",text:"What is the policy type?",field:"→ Commercial / Medicare Advantage / Medicaid / Tricare"},
-      {type:"question",label:"Q",text:"What is the plan type?",field:"→ PPO / HMO / POS / EPO / Indemnity / Medicare/Medicaid Managed Care / Dual Eligible"},
-      {type:"question",label:"Q",text:"What is the plan name and group number?",field:"→ Plan Name | Group #"},
-      {type:"question",label:"Q",text:"Does the plan follow Medicare guidelines? [If Medicare Replacement/Advantage]",field:"→ Yes/No | How are Part B drugs covered?"},
-      {type:"question",label:"Q",text:"When did the policy become effective? What is the term date?",field:"→ Effective Date | Term Date"},
-      {type:"question",label:"Q",text:"Are benefits renewed on a calendar or fiscal year? (If fiscal — what month?)",field:"→ Calendar / Fiscal | Renewal month"},
-      {type:"question",label:"Q",text:"Is the provider/site in-network with this plan? (Provide provider name + NPI)",field:"→ In-network: Yes/No | OON benefits: Yes/No"},
-      {type:"instruction",label:"Network Verification Note",text:"Network status checked with: provider name, NPI, Tax ID, site name, site NPI, Tax ID, site address.<br><strong>BCBS:</strong> Blue Card Access Line 800-810-2583 → Option 2 → Option 1.<br>If no OON benefits and both provider AND site are OON → no coverage.<br>SOC Rule: If any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit. POS = 11: Provider OON + Facility OON + SOC IN → OON benefit for drug + IN benefit for SOC → Benefit Network Status = Out-of-network. POS = 19/22: Provider OON + Facility OON + SOC IN → IN benefit for drug &amp; SOC → Benefit Network Status = In-network."},
-    ]},
-    {title:"Step 3 — Drug Coverage",hdr:"hdr-coverage",steps:[
-      {type:"question",label:"Q",text:"Is WYOST/Jubbonti covered?",field:"→ Yes/No | If No: reason | OON exception process?"},
-      {type:"question",label:"Q",text:"Can you confirm that Q5136 for medication is valid and billable?",field:"→ Valid & billable: Yes/No"},
-      {type:"question",label:"Q",text:"By what means can the provider access WYOST/Jubbonti? Can the provider purchase and then bill?",field:"→ Buy and Bill: Yes/No | If No: available options / exception process"},
-      {type:"question",label:"Q",text:"Is there a preferred specialty pharmacy the provider can triage to?",field:"→ Preferred SP name"},
-    ]},
-    {title:"Step 4 — Medication Cost Share",hdr:"hdr-benefit",steps:[
-      {type:"question",label:"Q",text:"Is there an Individual Deductible? Amount? How much met? Included or excluded in OOP?",field:"→ Indiv. Deductible: $ | Met: $ | In OOP: Yes/No"},
-      {type:"question",label:"Q",text:"Is there a Family Deductible? Amount? How much met?",field:"→ Family Deductible: $ | Met: $"},
-      {type:"question",label:"Q",text:"Is there an Individual OOP Maximum? Amount? How much met? Coverage 100% once met?",field:"→ Indiv. OOP Max: $ | Met: $ | 100% after: Yes/No"},
-      {type:"question",label:"Q",text:"Is there a Family OOP Maximum? Amount? How much met?",field:"→ Family OOP Max: $ | Met: $"},
-      {type:"question",label:"Q",text:"Is there Coinsurance? What is the %?",field:"→ Coinsurance %"},
-      {type:"question",label:"Q",text:"Is there a Copay? Amount? Does it apply to OOP? Waived once OOP is met?",field:"→ Copay $ | Applies to OOP | Waived: Yes/No"},
-    ]},
-    {title:"Step 5 — Administration Benefits",hdr:"hdr-coverage",steps:[
-      {type:"question",label:"Q",text:"Admin codes: WYOST/Jubbonti 96372 or 96401 — do admin benefits mirror medication benefits?",field:"→ Yes → proceed to PA | No → obtain separate admin cost share (same Step 4 questions)"},
-    ]},
-    {title:"Step 6 — Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
-      {type:"question",label:"Q",text:"Is WYOST/Jubbonti billed under the medical or pharmacy benefit?",field:"→ Medical / Pharmacy"},
-      {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
-      {type:"instruction",label:"If rep asks for clarification:",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
-      {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
-      {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
-      {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
-      {type:"warning",label:"IMPORTANT",text:"Copay Maximizer information — document in system ONLY. Do NOT include in HCP formal documentation (SOB)."},
-      {type:"instruction",label:"6a — AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
-      {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
-      {type:"branch",label:"If NO",text:"Continue with rest of script."},
-      {type:"branch",label:"If YES — ask:",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"},
-    ]},
-    {title:"Step 7 — AOB / Specialty Pharmacy",hdr:"hdr-coverage",steps:[
-      {type:"instruction",label:"AOB Reminder",text:"AOB = provider will NOT be billed for the product — only office visit and admin. Confirm AOB is NOT mandatory and provider CAN purchase the drug."},
-      {type:"question",label:"Q",text:"Is WYOST/Jubbonti required to be filled through a specific specialty pharmacy?",field:"→ Yes/No"},
-      {type:"question",label:"Q",text:"Can you confirm WYOST/Jubbonti's list of approved specialty pharmacies?",field:"→ SP Name | SP Phone"},
-      {type:"question",label:"Q",text:"If provider chooses not to buy and bill — can it be obtained through a specialty distributor?",field:"→ Yes/No | SPP Name | Phone"},
-    ]},
-    {title:"Step 8 — Prior Authorization",hdr:"hdr-auth",steps:[
-      {type:"instruction",label:"Authorization Types",text:"<strong>Step Edit:</strong> Try lower-cost treatments first<br><strong>Plan Referral:</strong> PCP approval (HMO/POS)<br><strong>Prior Authorization:</strong> Approval before covering medication<br><strong>Pre-Determination:</strong> Review of coverage before service is provided"},
-      {type:"branch",label:"PA REQUIRED & ON FILE",text:"PA Approval # | PA valid dates (From/To) | Is admin included? | # approved injections | # injections used"},
-      {type:"branch",label:"PA REQUIRED & NOT ON FILE",text:"PA Form | Submission Process | Document requirements (medical notes) | TAT | Provider notification method<br><em>CM/RCMs obtain PA form, complete patient demographics, fax to HCP.</em>"},
-      {type:"instruction",label:"If PA NOT Required",text:"If PA is <strong>not required</strong> — ask about pre-determination:"},
-      {type:"question",label:"Pre-D",text:"Is pre-determination recommended?",field:"→ Pre-D Recommended: Yes / No &nbsp;&nbsp;<em>(If No → move to next section)</em>"},
-      {type:"branch",label:"Pre-D Recommended → ON FILE",text:"Pre-D is on file — collect the following:"},
-      {type:"question",label:"Q",text:"Can you please help me out with the approved pre-determination reference number?",field:"→ Pre-D Ref #"},
-      {type:"question",label:"Q",text:"Can you please help me out with the start and end date and the number of units or the treatments that have been approved?",field:"→ Start Date | End Date | Approved Units / Treatments"},
-      {type:"question",label:"Q",text:"Pre-determination department name and number?",field:"→ Pre-D Dept Name | Pre-D Dept Phone #"},
-      {type:"warning",label:"⚠ CONFIRM",text:"<strong>Please confirm the authorization on file consists the J-Code and DX code.</strong>"},
-      {type:"branch",label:"Pre-D Recommended → NOT ON FILE",text:"Pre-D recommended but NOT on file — collect the following:"},
-      {type:"question",label:"Q",text:"Which department handles the Pre-determination and what's their phone number?",field:"→ Pre-D Dept Name | Pre-D Dept Phone #"},
-      {type:"question",label:"Q",text:"What are the different ways the provider can submit a Pre-determination?",field:"→ Submission Methods: Phone | Fax | Portal"},
-      {type:"instruction",label:"Collect Info",text:"Collect phone, fax, and portal details if available:<br>→ Phone: _____ | Fax: _____ | Portal URL: _____"},
-      {type:"question",label:"Q",text:"What is the standard / urgent turnaround time?",field:"→ Standard TAT | Urgent TAT"},
-      {type:"question",label:"Step Edit",text:"Is there a process requiring patient to have tried and failed another medication before coverage will be approved?",field:"→ Step Edit Required: Yes/No | Required drugs to try/fail"},
-      {type:"branch",label:"Referral Required (HMO/POS) — ON FILE",text:"Referral # | Valid dates | # visits approved | # visits used"},
-      {type:"branch",label:"Referral Required — NOT ON FILE",text:"PCP Name | PCP Phone Number"},
-    ]},
-    {title:"Ending the Call",hdr:"hdr-closing",steps:[
-      {type:"instruction",label:"Recap",text:"Recap the call with payer rep to ensure all benefits captured accurately. Clarify any details that don't align."},
-      {type:"instruction",label:"Pushback",text:"Ask Why, When & How: Why was the change put in place? When did it take place? How does it impact benefits?"},
-      {type:"instruction",label:"PA/Pre-D Action",text:"If PA / Pre-D / Step Edit / Plan Referral required → open a PA Case in the CRM and document the approval process details."},
-    ]},
-  ];
+  const b=mmStandard("Sandoz One Source™");
+  // Override opening statement
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, I am <span class='placeholder'>[Insert Name]</span> from <strong>Sandoz One Source™</strong>. I am calling <strong>on behalf of the provider's office</strong> to verify insurance benefits for a patient; before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes. I am calling to verify member eligibility for benefits specific to <span class='placeholder'>WYOST/Jubbonti</span> and its administration, which will be done in the <span class='placeholder'>[physician office / hospital outpatient facility / site of care]</span>. First, I have some general questions about the policy. Are you able to assist me?`};
+  // Remove the generic "Copay Accumulator / Maximizer" section
+  const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
+  if(accIdx!==-1) b.splice(accIdx,1);
+  // Insert Sandoz-specific "Copay Maximizer Programs & AFPs" section after Drug Acquisition
+  const daiIdx=b.findIndex(s=>s.title==="Drug Acquisition");
+  b.splice(daiIdx+1,0,{title:"Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
+    {type:"question",label:"Q",text:"Is there a Copay Accumulator / Maximizer attached to the policy?",field:"→ Yes / No"},
+    {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
+    {type:"instruction",label:"If rep asks for clarification",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
+    {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
+    {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
+    {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
+    {type:"warning",label:"IMPORTANT",text:"Copay Maximizer information — document in system ONLY. Do NOT include in HCP formal documentation (SOB)."},
+    {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
+    {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
+    {type:"branch",label:"If NO",text:"Continue with rest of script."},
+    {type:"branch",label:"If YES — ask",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"},
+  ]});
+  return b;
 }
 
 function pbmSandoz(){
@@ -1316,9 +1281,11 @@ function renderProgram(p){
   </div>`;
   // Tabs
   const logTab=`<div class="tab ${currentTab==="log"?"active-log":""}" onclick="switchTab('log','${p.id}')">&#128203; Daily Log</div>`;
+  const fullTab=p.mm?`<div class="tab ${currentTab==="full"?"active-full":""}" onclick="switchTab('full','${p.id}')">&#128196; Full Script MM</div>`:'';
   if(p.type==="both"){
     html+=`<div class="tabs">
       <div class="tab ${currentTab==="mm"?"active-mm":""}" onclick="switchTab('mm','${p.id}')">Medical Benefit (MM)</div>
+      ${fullTab}
       <div class="tab ${currentTab==="pbm"?"active-pbm":""}" onclick="switchTab('pbm','${p.id}')">&#128138; Pharmacy Benefit (PBM)</div>
       <div class="tab ${currentTab==="compliance"?"active-other":""}" onclick="switchTab('compliance','${p.id}')">&#9432; Compliance</div>
       ${logTab}
@@ -1326,6 +1293,7 @@ function renderProgram(p){
   } else if(p.type==="mm"){
     html+=`<div class="tabs">
       <div class="tab ${currentTab==="mm"?"active-mm":""}" onclick="switchTab('mm','${p.id}')">Medical Benefit (MM)</div>
+      ${fullTab}
       <div class="tab ${currentTab==="compliance"?"active-other":""}" onclick="switchTab('compliance','${p.id}')">&#9432; Compliance</div>
       ${logTab}
     </div>`;
@@ -1346,6 +1314,9 @@ function renderProgram(p){
     html+=renderCompliance();
   } else if(currentTab==="log"){
     html+=renderDailyLog(p);
+  } else if(currentTab==="full"){
+    if(p.mm) html+=renderFullScript(p.mm,p.id);
+    else html+=`<div class="section"><div class="section-body" style="color:#aaa;text-align:center;padding:30px">No MM script available for this program.</div></div>`;
   } else {
     const script=currentTab==="pbm"?p.pbm:currentTab==="other"?p.other:p.mm;
     if(script) html+=renderScript(script,p.id,currentTab);
@@ -1486,12 +1457,117 @@ function renderScript(sections,progId,tabType){
   return naLegend+naPanel+searchBar+restoreBar+`<div class="script-container" ondragover="event.preventDefault()" ondrop="dropSection(event,'${progId}','${tabType}')">${sectionsHtml}</div>`;
 }
 
+// ── Full Script (read-only, no interactive elements) ──
+function renderFullScript(sections,progId){
+  const tabType='mm';
+  const removedSec=new Set(editStore[`${progId}__${tabType}__removed_sections`]||[]);
+  const storedSecOrder=editStore[`${progId}__${tabType}__section_order`];
+  const allSecIdx=sections.map((_,i)=>i).filter(i=>!removedSec.has(i));
+  let orderedSecIdx=allSecIdx;
+  if(storedSecOrder&&storedSecOrder.length){
+    const valid=new Set(allSecIdx);
+    orderedSecIdx=storedSecOrder.filter(i=>valid.has(i));
+    const inOrd=new Set(orderedSecIdx);
+    allSecIdx.forEach(i=>{if(!inOrd.has(i))orderedSecIdx.push(i);});
+  }
+  const sectionsHtml=orderedSecIdx.map((si,displayIdx)=>{
+    const sec=sections[si];
+    const secTitle=editStore[`${progId}__${tabType}__${si}__title`]||sec.title;
+    const removedSteps=new Set(editStore[`${progId}__${tabType}__${si}__removed_steps`]||[]);
+    const added=editStore[`${progId}__${tabType}__${si}__added`]||[];
+    const visibleItems=[];
+    sec.steps.forEach((s,idx)=>{if(!removedSteps.has(idx))visibleItems.push({kind:'orig',idx,data:s});});
+    added.forEach((s,idx)=>visibleItems.push({kind:'add',idx,data:s}));
+    const storedOrder=editStore[`${progId}__${tabType}__${si}__order`];
+    let orderedItems=visibleItems;
+    if(storedOrder&&storedOrder.length){
+      const idMap=new Map(visibleItems.map(it=>[`${it.kind}-${it.idx}`,it]));
+      orderedItems=storedOrder.filter(id=>idMap.has(id)).map(id=>idMap.get(id));
+      const inOrder=new Set(storedOrder);
+      visibleItems.forEach(it=>{if(!inOrder.has(`${it.kind}-${it.idx}`))orderedItems.push(it);});
+    }
+    const stepsHtml=orderedItems.map(it=>{
+      let s=it.data;
+      if(it.kind==='orig'){const saved=editStore[`${progId}__${tabType}__${si}__${it.idx}`];if(saved)s={...s,text:saved.text!==undefined?saved.text:s.text,field:saved.field!==undefined?saved.field:s.field};}
+      return renderFullStepClean(s);
+    }).join('');
+    return `<div class="section">
+      <div class="section-header ${sec.hdr||'hdr-plan'}" onclick="toggleSection(this)">
+        <span style="color:#667;font-size:12px">${displayIdx+1}</span>
+        <span style="margin-left:6px">${secTitle}</span>
+        <span class="chevron open">&#9654;</span>
+      </div>
+      <div class="section-body">${stepsHtml}</div>
+    </div>`;
+  }).join('');
+  return `<div class="fullscript-container">${sectionsHtml}</div>`;
+}
+
+function renderFullStepClean(s){
+  if(s.type==='pa-pread') return renderFullPAPread();
+  const typeClass={statement:"step-statement",question:"step-question",instruction:"step-instruction",warning:"step-warning",branch:"step-branch"}[s.type]||"step-question";
+  const displayText=applyScriptHL(s.text||'',s.type);
+  const fieldHtml=s.field?`<div class="step-field">${s.field}</div>`:'';
+  return `<div class="step ${typeClass}">
+    <div class="step-label">${s.label||''}</div>
+    <div class="step-text">${displayText}</div>
+    ${fieldHtml}
+  </div>`;
+}
+
+function renderFullPAPread(){
+  const SCENS={
+    pa:[
+      {badge:'approved',hdr:'Approved on File'},
+      {badge:'denied',hdr:'Denied'},
+      {badge:'pending',hdr:'Pending'},
+      {badge:'not_on_file',hdr:'Not on File'},
+    ],
+    pred:[
+      {badge:'approved',hdr:'Approved on File'},
+      {badge:'denied',hdr:'Denied'},
+      {badge:'pending',hdr:'Pending'},
+      {badge:'not_on_file',hdr:'Not on File'},
+    ],
+  };
+  const makeCol=(colHdr,typeKey)=>{
+    const scenHtml=SCENS[typeKey].map(sc=>{
+      const fields=(PA_PREAD_FIELDS[typeKey]||{})[sc.badge]||[];
+      const notes=(PA_PREAD_NOTES[`${typeKey}_${sc.badge}`]||[]).filter(n=>n.type==='warn');
+      const fieldsHtml=fields.map(f=>`<li>${f.q?`<span style="display:block;font-weight:500;color:#1f2937">${f.q}</span>`:''}→ ${f.label}</li>`).join('');
+      const notesHtml=notes.map(n=>`<div class="fullscript-papread-note">⚠ ${n.text.replace(/^[⚠ℹ]\s*/,'')}</div>`).join('');
+      return `<div class="fullscript-papread-scenario">
+        <div class="fullscript-papread-scenario-title">${sc.hdr}</div>
+        ${fields.length?`<ul class="fullscript-papread-fields">${fieldsHtml}</ul>`:'<span style="font-size:11px;color:#9ca3af;font-style:italic">No additional fields required.</span>'}
+        ${notesHtml}
+      </div>`;
+    }).join('');
+    return `<div class="fullscript-papread-col">
+      <div class="fullscript-papread-col-hdr">${colHdr}</div>
+      ${scenHtml}
+    </div>`;
+  };
+  return `<div class="fullscript-papread">
+    <div class="fullscript-papread-title">PA / Pre-D Details — Collect based on scenario</div>
+    <div class="fullscript-papread-grid">
+      ${makeCol('Prior Authorization',  'pa')}
+      ${makeCol('Pre-Determination','pred')}
+    </div>
+  </div>`;
+}
+
 function renderAddedStep(s,progId,tabType,si,ai,dAttrs=''){
   const addedKey=`${progId}__${tabType}__${si}__added__${ai}`;
   const typeClass={statement:"step-statement",question:"step-question",instruction:"step-instruction",warning:"step-warning",branch:"step-branch"}[s.type]||"step-question";
   const cap=s.type.charAt(0).toUpperCase()+s.type.slice(1);
   const addedAnswerKey=`ans__${addedKey}`;
-  const addedAnswerHtml=s.type==='question'?`<div class="step-answer-wrap"><textarea class="step-answer" rows="1" placeholder="Type answer here…" oninput="saveAnswer('${addedAnswerKey}',this.value);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(getAnswer(addedAnswerKey))}</textarea></div>`:'';
+  const _addedSavedVal=getAnswer(addedAnswerKey);
+  const _addedIsYN=s.type==='question'&&s.field&&/yes\s*\/\s*no/i.test(s.field);
+  const addedAnswerHtml=(s.type==='question'||s.type==='branch')
+    ?(_addedIsYN
+      ?`<select class="step-yn-select" onchange="saveAnswer('${addedAnswerKey}',this.value,this)"><option value="">— Select —</option><option value="Yes"${_addedSavedVal==='Yes'?' selected':''}>Yes</option><option value="No"${_addedSavedVal==='No'?' selected':''}>No</option><option value="Unknown"${_addedSavedVal==='Unknown'?' selected':''}>Unknown</option></select>`
+      :`<div class="step-answer-wrap"><textarea class="step-answer" rows="1" placeholder="Type answer here…" oninput="saveAnswer('${addedAnswerKey}',this.value,this);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(_addedSavedVal)}</textarea></div>`)
+    :'';
   return `<div class="step ${typeClass}" ${dAttrs} id="addstep_${CSS.escape(addedKey)}">
     <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">${s.label||cap} <span class="added-badge">Added</span></div>
@@ -1596,7 +1672,237 @@ function getPBMNAInfo(field,text){
   if(f.includes('calendar / fiscal')||f.includes('renewal month')) return true;
   return null;
 }
+// ══════════════════════════════════════════════════════════════
+//  PA / PRE-D DYNAMIC SELECTOR
+// ══════════════════════════════════════════════════════════════
+const PA_PREAD_FIELDS={
+  pa:{
+    approved:[
+      {q:"What is the PA department name?",label:"PA Dept Name",ph:"Enter PA dept name"},
+      {q:"What is the PA department phone number?",label:"PA Dept Number",ph:"Enter PA dept phone number"},
+      {q:"What is the PA reference ID?",label:"PA Reference ID",ph:"Enter PA ref ID"},
+      {q:"What is the effective date of the authorization?",label:"Effective Date",ph:"MM/DD/YYYY"},
+      {q:"What is the end date of the authorization?",label:"End Date",ph:"MM/DD/YYYY"},
+      {q:"How many total units were approved?",label:"Total Approved Units",ph:"e.g. 4 infusions / 12 units"},
+      {q:"Does the provider name on the authorization match the provider name in the BV request?",label:"Provider name matches BV request?",ph:"Yes / No"},
+      {q:"Does the authorization include the J-Code, CPT code, and DX code submitted in the BV request?",label:"Auth includes J-Code / CPT / DX code?",ph:"Yes / No — note any discrepancies"},
+    ],
+    denied:[
+      {q:"What is the PA department name?",label:"PA Dept Name",ph:"Enter PA dept name"},
+      {q:"What is the PA department phone number?",label:"PA Dept Number",ph:"Enter PA dept phone number"},
+      {q:"What is the date the PA was denied?",label:"Denial Date",ph:"MM/DD/YYYY"},
+      {q:"What is the reason for the denial?",label:"Denial Reason",ph:"Enter denial reason"},
+      {q:"What is the phone number to submit the PA?",label:"Submission — Phone",ph:"Phone number for PA"},
+      {q:"What is the fax number to submit the PA?",label:"Submission — Fax",ph:"Fax number for PA"},
+      {q:"What is the portal URL or process to submit the PA?",label:"Submission — Portal",ph:"Portal URL / instructions"},
+      {q:"What is the standard turnaround time for the PA?",label:"Standard TAT",ph:"e.g. 3–5 business days"},
+      {q:"What is the urgent turnaround time for the PA?",label:"Urgent TAT",ph:"e.g. 24–72 hours"},
+      {q:"Is there any other active authorization on file apart from the denied one?",label:"Other active auth on file?",ph:"Yes / No"},
+    ],
+    pending:[
+      {q:"What is the PA department name?",label:"PA Dept Name",ph:"Enter PA dept name"},
+      {q:"What is the PA department phone number?",label:"PA Dept Number",ph:"Enter PA dept phone number"},
+      {q:"What is the reference number for the pending PA?",label:"Reference Number",ph:"Enter pending reference number"},
+      {q:"When was the PA submitted?",label:"Submitted On",ph:"MM/DD/YYYY"},
+      {q:"What is the phone number to follow up on the PA?",label:"Submission — Phone",ph:"Phone number for PA"},
+      {q:"What is the fax number for the PA?",label:"Submission — Fax",ph:"Fax number for PA"},
+      {q:"What is the portal URL or process for the PA?",label:"Submission — Portal",ph:"Portal URL / instructions"},
+      {q:"What is the standard turnaround time for the PA?",label:"Standard TAT",ph:"e.g. 3–5 business days"},
+      {q:"What is the urgent turnaround time for the PA?",label:"Urgent TAT",ph:"e.g. 24–72 hours"},
+      {q:"Is there any other active authorization on file apart from the pending one?",label:"Other active auth on file?",ph:"Yes / No"},
+      {q:"Does the authorization on file include the J-Code, CPT code, and DX code submitted in the BV request?",label:"Auth includes J-Code / CPT / DX code?",ph:"Yes / No — note any discrepancies"},
+      {q:"Does the provider name on the authorization match the provider name in the BV request?",label:"Provider name matches BV request?",ph:"Yes / No"},
+    ],
+    not_on_file:[
+      {q:"What is the PA department name?",label:"PA Dept Name",ph:"Enter PA dept name"},
+      {q:"What is the PA department phone number?",label:"PA Dept Number",ph:"Enter PA dept phone number"},
+      {q:"What is the phone number to submit the PA?",label:"Submission — Phone",ph:"Phone number for PA"},
+      {q:"What is the fax number to submit the PA?",label:"Submission — Fax",ph:"Fax number for PA"},
+      {q:"What is the portal URL or process to submit the PA?",label:"Submission — Portal",ph:"Portal URL / instructions"},
+      {q:"What is the standard turnaround time for the PA?",label:"Standard TAT",ph:"e.g. 3–5 business days"},
+      {q:"What is the urgent turnaround time for the PA?",label:"Urgent TAT",ph:"e.g. 24–72 hours"},
+    ],
+  },
+  pred:{
+    approved:[
+      {q:"What is the pre-determination department name?",label:"Pre-D Dept Name",ph:"Enter Pre-D dept name"},
+      {q:"What is the pre-determination department phone number?",label:"Pre-D Dept Number",ph:"Enter Pre-D dept phone number"},
+      {q:"What is the pre-determination reference ID?",label:"Pre-D Reference ID",ph:"Enter Pre-D ref ID"},
+      {q:"What is the effective date of the pre-determination?",label:"Effective Date",ph:"MM/DD/YYYY"},
+      {q:"What is the end date of the pre-determination?",label:"End Date",ph:"MM/DD/YYYY"},
+      {q:"How many total units were approved under the pre-determination?",label:"Total Approved Units",ph:"e.g. 4 infusions / 12 units"},
+      {q:"Does the provider name on the pre-determination match the provider name in the BV request?",label:"Provider name matches BV request?",ph:"Yes / No"},
+      {q:"Does the pre-determination include the J-Code, CPT code, and DX code submitted in the BV request?",label:"Pre-D includes J-Code / CPT / DX code?",ph:"Yes / No — note any discrepancies"},
+    ],
+    denied:[
+      {q:"What is the pre-determination department name?",label:"Pre-D Dept Name",ph:"Enter Pre-D dept name"},
+      {q:"What is the pre-determination department phone number?",label:"Pre-D Dept Number",ph:"Enter Pre-D dept phone number"},
+      {q:"What is the date the pre-determination was denied?",label:"Denial Date",ph:"MM/DD/YYYY"},
+      {q:"What is the reason for the denial?",label:"Denial Reason",ph:"Enter denial reason"},
+      {q:"What is the phone number to submit the pre-determination?",label:"Submission — Phone",ph:"Phone number for Pre-D"},
+      {q:"What is the fax number to submit the pre-determination?",label:"Submission — Fax",ph:"Fax number for Pre-D"},
+      {q:"What is the portal URL or process to submit the pre-determination?",label:"Submission — Portal",ph:"Portal URL / instructions"},
+      {q:"What is the standard turnaround time for the pre-determination?",label:"Standard TAT",ph:"e.g. 3–5 business days"},
+      {q:"What is the urgent turnaround time for the pre-determination?",label:"Urgent TAT",ph:"e.g. 24–72 hours"},
+      {q:"Is there any other active pre-determination on file apart from the denied one?",label:"Other active auth on file?",ph:"Yes / No"},
+    ],
+    pending:[
+      {q:"What is the pre-determination department name?",label:"Pre-D Dept Name",ph:"Enter Pre-D dept name"},
+      {q:"What is the pre-determination department phone number?",label:"Pre-D Dept Number",ph:"Enter Pre-D dept phone number"},
+      {q:"What is the reference number for the pending pre-determination?",label:"Reference Number",ph:"Enter pending reference number"},
+      {q:"When was the pre-determination submitted?",label:"Submitted On",ph:"MM/DD/YYYY"},
+      {q:"What is the phone number to follow up on the pre-determination?",label:"Submission — Phone",ph:"Phone number for Pre-D"},
+      {q:"What is the fax number for the pre-determination?",label:"Submission — Fax",ph:"Fax number for Pre-D"},
+      {q:"What is the portal URL or process for the pre-determination?",label:"Submission — Portal",ph:"Portal URL / instructions"},
+      {q:"What is the standard turnaround time for the pre-determination?",label:"Standard TAT",ph:"e.g. 3–5 business days"},
+      {q:"What is the urgent turnaround time for the pre-determination?",label:"Urgent TAT",ph:"e.g. 24–72 hours"},
+      {q:"Is there any other active pre-determination on file apart from the pending one?",label:"Other active auth on file?",ph:"Yes / No"},
+      {q:"Does the pre-determination on file include the J-Code, CPT code, and DX code submitted in the BV request?",label:"Auth includes J-Code / CPT / DX code?",ph:"Yes / No — note any discrepancies"},
+      {q:"Does the provider name on the pre-determination match the provider name in the BV request?",label:"Provider name matches BV request?",ph:"Yes / No"},
+    ],
+    not_on_file:[
+      {q:"What is the pre-determination department name?",label:"Pre-D Dept Name",ph:"Enter Pre-D dept name"},
+      {q:"What is the pre-determination department phone number?",label:"Pre-D Dept Number",ph:"Enter Pre-D dept phone number"},
+      {q:"What is the phone number to submit the pre-determination?",label:"Submission — Phone",ph:"Phone number for Pre-D"},
+      {q:"What is the fax number to submit the pre-determination?",label:"Submission — Fax",ph:"Fax number for Pre-D"},
+      {q:"What is the portal URL or process to submit the pre-determination?",label:"Submission — Portal",ph:"Portal URL / instructions"},
+      {q:"What is the standard turnaround time for the pre-determination?",label:"Standard TAT",ph:"e.g. 3–5 business days"},
+      {q:"What is the urgent turnaround time for the pre-determination?",label:"Urgent TAT",ph:"e.g. 24–72 hours"},
+    ],
+  },
+};
+
+const PA_PREAD_NOTES={
+  pa_approved:[
+    {type:'warn',text:'⚠ Confirm the authorization on file includes the J-Code, CPT code, and DX code submitted in the BV request.'},
+    {type:'warn',text:'⚠ Verify the provider name on the authorization matches the provider name in the BV request.'},
+  ],
+  pa_denied:[
+    {type:'info',text:'ℹ Check if any other active auth is on file apart from the denied / expired authorization.'},
+  ],
+  pa_pending:[
+    {type:'info',text:'ℹ Check if any other active auth is on file apart from the pending authorization.'},
+    {type:'warn',text:'⚠ Confirm the authorization on file includes the J-Code, CPT code, and DX code submitted in the BV request.'},
+    {type:'warn',text:'⚠ Verify the provider name on the authorization matches the provider name in the BV request.'},
+  ],
+  pa_not_on_file:[],
+  pred_approved:[
+    {type:'warn',text:'⚠ Confirm the pre-determination on file includes the J-Code, CPT code, and DX code submitted in the BV request.'},
+    {type:'warn',text:'⚠ Verify the provider name on the pre-determination matches the provider name in the BV request.'},
+  ],
+  pred_denied:[
+    {type:'info',text:'ℹ Check if any other active auth is on file apart from the denied / expired pre-determination.'},
+  ],
+  pred_pending:[
+    {type:'info',text:'ℹ Check if any other active auth is on file apart from the pending pre-determination.'},
+    {type:'warn',text:'⚠ Confirm the authorization on file includes the J-Code, CPT code, and DX code submitted in the BV request.'},
+    {type:'warn',text:'⚠ Verify the provider name on the pre-determination matches the provider name in the BV request.'},
+  ],
+  pred_not_on_file:[],
+};
+
+function _papreadFKey(stepKey,tv,sv,fi){return `ans__${stepKey}__fv__${tv}__${sv}__${fi}`;}
+
+function _buildPAPreadFields(key,tv,sv){
+  if(!tv||tv==='no'||tv==='unknown')return`<div class="pa-pread-no-fields">No PA / Pre-D questions required for this selection.</div>`;
+  if(!sv||sv==='no'||sv==='unknown')return`<div class="pa-pread-no-fields">No further details required for this status.</div>`;
+  const fields=PA_PREAD_FIELDS[tv]&&PA_PREAD_FIELDS[tv][sv];
+  if(!fields)return'';
+  const typeLabel=tv==='pa'?'Prior Authorization':'Pre-Determination';
+  const statusLabel={approved:'Approved on file',denied:'Denied',pending:'Pending',not_on_file:'Not on file'}[sv]||sv;
+  const badgeClass=`badge-${sv}`;
+  const notes=PA_PREAD_NOTES[`${tv}_${sv}`]||[];
+  const notesHtml=notes.length?`<div class="pa-pread-notes">${notes.map(n=>`<div class="pa-pread-note note-${n.type}"><span class="pa-pread-note-icon">${n.type==='warn'?'⚠️':'ℹ️'}</span><span>${n.text.replace(/^[⚠ℹ]\s*/,'')}</span></div>`).join('')}</div>`:'';
+  return`<div class="pa-pread-field-list">
+    <div class="pa-pread-scenario-badge ${badgeClass}">${typeLabel} — ${statusLabel}</div>
+    ${notesHtml}
+    ${fields.map((f,i)=>{
+      const fKey=_papreadFKey(key,tv,sv,i);
+      const fVal=answerStore[fKey]||'';
+      const isYesNo=f.ph.startsWith('Yes');
+      const inputHtml=isYesNo
+        ?`<select class="pa-pread-yn-select" onchange="savePAPreadField('${key}','${tv}','${sv}',${i},this)">
+            <option value="">— Select —</option>
+            <option value="Yes"${fVal==='Yes'?' selected':''}>Yes</option>
+            <option value="No"${fVal==='No'?' selected':''}>No</option>
+            <option value="Unknown"${fVal==='Unknown'?' selected':''}>Unknown</option>
+          </select>`
+        :`<textarea class="step-answer" rows="1" placeholder="${f.ph}" oninput="savePAPreadField('${key}','${tv}','${sv}',${i},this)">${escHtml(fVal)}</textarea>`;
+      return`<div class="pa-pread-field-row">
+        ${f.q?`<div class="pa-pread-field-q">${f.q}</div>`:''}
+        <div class="pa-pread-field-label">→ ${f.label}</div>
+        ${inputHtml}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderPAPreadStep(key,dAttrs){
+  const tv=answerStore[`ans__${key}__dd_type`]||'';
+  const sv=answerStore[`ans__${key}__dd_status`]||'';
+  const hasAny=tv&&tv!=='';
+  const STATUS_OPTS=[
+    {v:'approved',l:'Approved on file'},
+    {v:'denied',l:'Denied'},
+    {v:'not_on_file',l:'Not on file'},
+    {v:'pending',l:'Pending'},
+    {v:'no',l:'No'},
+    {v:'unknown',l:'Unknown'},
+  ];
+  const TYPE_OPTS=[
+    {v:'pa',l:'Prior Authorization Required'},
+    {v:'pred',l:'Pre-Determination Recommended'},
+    {v:'no',l:'No'},
+    {v:'unknown',l:'Unknown'},
+  ];
+  return`<div class="step step-pa-pread${hasAny?' step-answered':''}" ${dAttrs} id="step_${CSS.escape(key)}" data-key="${key}" data-orig-text="" data-orig-field="">
+    <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
+    <div class="step-label">PA / Pre-D Details</div>
+    <div class="pa-pread-dropdowns">
+      <div class="pa-pread-dd-wrap">
+        <label class="pa-pread-dd-label">PA / Pre-D</label>
+        <select class="pa-pread-dd pa-pread-dd-type" onchange="onPAPreadChange('${key}')">
+          <option value="">— Select —</option>
+          ${TYPE_OPTS.map(o=>`<option value="${o.v}"${tv===o.v?' selected':''}>${o.l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="pa-pread-dd-wrap">
+        <label class="pa-pread-dd-label">Status / Reason</label>
+        <select class="pa-pread-dd pa-pread-dd-status" onchange="onPAPreadChange('${key}')">
+          <option value="">— Select —</option>
+          ${STATUS_OPTS.map(o=>`<option value="${o.v}"${sv===o.v?' selected':''}>${o.l}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div id="papread_fields_${CSS.escape(key)}">${_buildPAPreadFields(key,tv,sv)}</div>
+    <button class="delete-btn" onclick="removeStep('${key}')" title="Hide this step">&#10006;</button>
+  </div>`;
+}
+
+function onPAPreadChange(key){
+  const el=document.getElementById('step_'+CSS.escape(key));
+  if(!el)return;
+  const tv=el.querySelector('.pa-pread-dd-type').value;
+  const sv=el.querySelector('.pa-pread-dd-status').value;
+  answerStore[`ans__${key}__dd_type`]=tv;
+  answerStore[`ans__${key}__dd_status`]=sv;
+  const fd=document.getElementById('papread_fields_'+CSS.escape(key));
+  if(fd){
+    fd.innerHTML=_buildPAPreadFields(key,tv,sv);
+    fd.querySelectorAll('textarea').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});
+  }
+  el.classList.toggle('step-answered',!!(tv&&tv!==''));
+}
+
+function savePAPreadField(key,tv,sv,fi,el){
+  answerStore[_papreadFKey(key,tv,sv,fi)]=el.value;
+  if(el.tagName==='TEXTAREA'){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+  const step=el.closest('.step');
+  if(step) step.classList.add('step-answered');
+}
+
 function renderStep(s,key,dAttrs=''){
+  if(s.type==='pa-pread') return renderPAPreadStep(key,dAttrs);
   const saved=editStore[key];
   const rawText=saved?saved.text:s.text;
   const displayText=applyScriptHL(rawText,s.type);
@@ -1609,7 +1915,13 @@ function renderStep(s,key,dAttrs=''){
   const naBadge=naStatus===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:naStatus===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';
   const fieldHtml=displayField!=null&&displayField!==''?`<div class="step-field step-content-field"><span>${displayField}</span>${naBadge}</div>`:naBadge?`<div class="step-field">${naBadge}</div>`:'';
   const answerKey=`ans__${key}`;
-  const answerHtml=s.type==='question'?`<div class="step-answer-wrap"><textarea class="step-answer" rows="1" placeholder="Type answer here…" oninput="saveAnswer('${answerKey}',this.value,this);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(getAnswer(answerKey))}</textarea></div>`:'';
+  const _savedVal=getAnswer(answerKey);
+  const _isYN=s.type==='question'&&displayField&&/yes\s*\/\s*no/i.test(displayField);
+  const answerHtml=(s.type==='question'||s.type==='branch')
+    ?(_isYN
+      ?`<select class="step-yn-select" onchange="saveAnswer('${answerKey}',this.value,this)"><option value="">— Select —</option><option value="Yes"${_savedVal==='Yes'?' selected':''}>Yes</option><option value="No"${_savedVal==='No'?' selected':''}>No</option><option value="Unknown"${_savedVal==='Unknown'?' selected':''}>Unknown</option></select>`
+      :`<div class="step-answer-wrap"><textarea class="step-answer" rows="1" placeholder="Type answer here…" oninput="saveAnswer('${answerKey}',this.value,this);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(_savedVal)}</textarea></div>`)
+    :'';
   return `<div class="step ${typeClass}" ${dAttrs} id="step_${CSS.escape(key)}" data-key="${key}" data-orig-text="${escHtml(s.text)}" data-orig-field="${escHtml(s.field||'')}">
     <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">${s.label||""} ${editedBadge}</div>
@@ -3410,7 +3722,7 @@ function printToPDF(type){
   /* ══ CALL SCRIPT ══ */
   if(type==='script'){
     const p=programs.find(x=>x.id===currentProgId);if(!p)return;
-    const TAB={mm:'Medical Benefit (MM)',pbm:'Pharmacy Benefit (PBM)',compliance:'Compliance',log:'Daily Log',other:'Call Flow'};
+    const TAB={mm:'Medical Benefit (MM)',pbm:'Pharmacy Benefit (PBM)',compliance:'Compliance',log:'Daily Log',other:'Call Flow',full:'Full Script'};
     const tabLabel=TAB[currentTab]||currentTab.toUpperCase();
     title=`${p.label} — ${tabLabel}`;
     const jcodes=p.drugs?[...new Set(p.drugs.map(d=>d.jcode).filter(j=>j&&j!=='—'))]:[];
