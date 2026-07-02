@@ -668,6 +668,19 @@ const programs = [
       {name:"Nucala (PFS 40mg)",type:"PBM",strength:"40mg/0.4mL",supply:"varies",cpt:"—",jcode:"J2182",ndc:"00173-0904-42"},
     ],
     mm:mmNucala(),pbm:pbmNucala()
+  },
+  {
+    id:"spravato",company:"J&J",label:"Spravato (J&J)",icon:"🧠",type:"both",
+    subtitle:"Spravato (esketamine) — REMS Program | Nasal Spray | Office-Administered",
+    programName:"J&J Innovative Medicine sponsored patient support program",
+    callbacks:[{therapy:"Spravato",number:"844-479-4846"}],
+    drugs:[
+      {name:"Spravato",type:"MM",strength:"28mg nasal spray",supply:"1 treatment session",cpt:"99222",jcode:"J3490 / J3590",ndc:"50458-0028-03"},
+      {name:"Spravato",type:"MM",strength:"56mg nasal spray",supply:"1 treatment session",cpt:"99222",jcode:"J3490 / J3590",ndc:"50458-0056-03"},
+      {name:"Spravato",type:"PBM",strength:"28mg nasal spray",supply:"1 day",cpt:"—",jcode:"—",ndc:"50458-0028-03"},
+      {name:"Spravato",type:"PBM",strength:"56mg nasal spray",supply:"1 day",cpt:"—",jcode:"—",ndc:"50458-0056-03"},
+    ],
+    mm:mmSpravato(),pbm:pbmSpravato()
   }
 ];
 
@@ -1081,6 +1094,70 @@ function pbmNucala(){
     {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
     {type:"branch",label:"If NO",text:"Continue with rest of script."},
     {type:"branch",label:"If YES — ask",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"}
+  );
+  return b;
+}
+
+function mmSpravato(){
+  const b=mmStandard("J&J Innovative Medicine sponsored patient support program");
+  // Custom opening — identifies patient and doctor (Spravato MM format)
+  b[0].steps[0]={type:"statement",label:"Script",text:`This is <span class='placeholder'>[Insert Name]</span> with <strong>J&amp;J Innovative Medicine sponsored patient support program</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <strong>Spravato</strong>. Would you please assist me with a determination of coverage?`};
+  // Replace generic Copay Accumulator/Maximizer section with full vendor-list version
+  const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
+  if(accIdx!==-1) b.splice(accIdx,1,{title:"Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
+    {type:"question",label:"Q",text:"Is there a Copay Accumulator / Maximizer attached to the policy?",field:"→ Yes / No"},
+    {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
+    {type:"instruction",label:"If rep asks for clarification",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
+    {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
+    {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
+    {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
+    {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
+    {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
+    {type:"branch",label:"If NO",text:"Continue with rest of script."},
+    {type:"branch",label:"If YES — ask",text:"Answer each question below:"},
+    {type:"question",label:"AFP a.",text:"Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?",field:"→ AFP Type"},
+    {type:"question",label:"AFP b.",text:"What is the name of the program, vendor, or organization administering this requirement?",field:"→ Program / Vendor Name"},
+    {type:"question",label:"AFP c.",text:"Is there a dedicated phone number, website, or contact department for this program?",field:"→ Phone | Website | Department"},
+    {type:"question",label:"AFP d.",text:"Is member enrollment or participation required before coverage can be approved or paid?",field:"→ Enrollment Required: Yes / No"},
+    {type:"question",label:"AFP e.",text:"Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",field:"→ Requirements / Next Steps"},
+  ]});
+  // Add REMS question in Drug Acquisition (Spravato-specific — unique REMS requirement)
+  const daiIdx=b.findIndex(s=>s.title==="Drug Acquisition");
+  if(daiIdx!==-1){
+    const spIdx=b[daiIdx].steps.findIndex(s=>s.field&&s.field.includes("Preferred / Open / Mandated"));
+    if(spIdx!==-1) b[daiIdx].steps.splice(spIdx+1,0,{type:"question",label:"⚠️ REMS",text:"Is this Specialty Pharmacy REMS-certified for Spravato?",field:"→ REMS Certified: Yes / No"});
+  }
+  return b;
+}
+
+function pbmSpravato(){
+  const b=pbmStandard("J&J Innovative Medicine sponsored patient support program",[]);
+  // JJ-style opening (Spravato PBM)
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling from a <strong>Johnson &amp; Johnson Innovative Medicine sponsored patient support program</strong> on behalf of <span class='placeholder'>[Insert Provider office / pharmacy / patient name, as applicable]</span> to verify insurance benefits for a patient. Before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes.`};
+  // Add REMS question after preferred SP in Coverage Details (Spravato-specific)
+  const ci=b.findIndex(s=>s.title==="Coverage Details");
+  if(ci!==-1){
+    const spStep=b[ci].steps.findIndex(s=>s.text&&s.text.includes("preferred SP"));
+    if(spStep!==-1) b[ci].steps.splice(spStep+1,0,{type:"question",label:"⚠️ REMS",text:"Is this Specialty Pharmacy REMS-certified for Spravato?",field:"→ REMS Certified: Yes / No"});
+  }
+  // Replace the single Copay Accumulator step in Benefit Details with full vendor-list version
+  const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
+  const caIdx=b[bdIdx].steps.findIndex(s=>s.field&&s.field.includes("Accumulator"));
+  if(caIdx!==-1) b[bdIdx].steps.splice(caIdx,1,
+    {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
+    {type:"instruction",label:"If rep asks for clarification",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
+    {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
+    {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
+    {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
+    {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
+    {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
+    {type:"branch",label:"If NO",text:"Continue with rest of script."},
+    {type:"branch",label:"If YES — ask",text:"Answer each question below:"},
+    {type:"question",label:"AFP a.",text:"Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?",field:"→ AFP Type"},
+    {type:"question",label:"AFP b.",text:"What is the name of the program, vendor, or organization administering this requirement?",field:"→ Program / Vendor Name"},
+    {type:"question",label:"AFP c.",text:"Is there a dedicated phone number, website, or contact department for this program?",field:"→ Phone | Website | Department"},
+    {type:"question",label:"AFP d.",text:"Is member enrollment or participation required before coverage can be approved or paid?",field:"→ Enrollment Required: Yes / No"},
+    {type:"question",label:"AFP e.",text:"Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",field:"→ Requirements / Next Steps"}
   );
   return b;
 }
