@@ -98,7 +98,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .fullscript-papread-note{font-size:11px;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:5px;padding:4px 8px;margin-top:4px;line-height:1.4}
 
 /* ── STEP BASE ── */
-.step{position:relative;margin-bottom:8px;padding:11px 14px 11px 32px;border-radius:8px;border-left:3px solid;transition:box-shadow .14s,border-top .1s,border-bottom .1s}
+.step{position:relative;margin-bottom:8px;padding:11px 14px 11px 14px;border-radius:8px;border-left:3px solid;transition:box-shadow .14s,border-top .1s,border-bottom .1s;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .step-statement{background:#f8f9ff;border-color:#4263eb}
 .step-question{background:#fffbf0;border-color:#f59e0b}
 .step-instruction{background:#f0fdf5;border-color:#10b981}
@@ -153,9 +153,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .hl-recorded{background:#fee2e2;color:#991b1b;border-radius:3px;padding:1px 5px;font-weight:500}
 
 /* ── DRAG HANDLE ── */
-.drag-handle{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:#d1d5db;cursor:grab;font-size:13px;line-height:1;opacity:0;transition:opacity .14s;user-select:none;letter-spacing:-1px}
-.step:hover .drag-handle{opacity:.65}
-.drag-handle:active{cursor:grabbing}
+.drag-handle{cursor:grab;color:#a5b4fc;font-size:15px;letter-spacing:-2px;user-select:none;padding:5px 6px;flex-shrink:0;align-self:center;background:rgba(66,99,235,.08);border:1px solid rgba(66,99,235,.15);border-radius:6px;transition:background .15s,color .15s,transform .1s;line-height:1}
+.drag-handle:hover{background:rgba(66,99,235,.15);color:#4263eb;transform:scale(1.05)}
+.drag-handle:active{cursor:grabbing;transform:scale(.96)}
+.step-body{flex:1;min-width:0}
+.copy-btn{flex-shrink:0;align-self:center;background:none;border:none;cursor:pointer;font-size:15px;color:#cbd5e1;padding:3px 6px;border-radius:4px;transition:color .15s,background .15s;opacity:0}
+.step:hover .copy-btn{opacity:1}
+.copy-btn:hover{color:#4263eb;background:#eff2ff}
 .step.dragging{opacity:.3;border-style:dashed}
 .step.drag-over-top{border-top:2px solid #4263eb}
 .step.drag-over-bottom{border-bottom:2px solid #4263eb}
@@ -183,12 +187,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .sec-title-cancel-btn:hover{background:#dc2626}
 
 /* ── RESTORE BARS ── */
-.restore-bar{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#fffbeb;border:1px dashed #fbbf24;border-radius:8px;margin-bottom:10px;font-size:12px;color:#92400e}
-.btn-restore-all{padding:4px 12px;background:#f59e0b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;margin-left:auto;font-family:'Inter',sans-serif}
-.btn-restore-all:hover{background:#d97706}
-.restore-step-bar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:#fef2f2;border:1px dashed #fca5a5;border-radius:6px;margin-bottom:6px;font-size:11px;color:#dc2626}
-.btn-restore-steps{padding:3px 10px;background:#ef4444;color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;margin-left:auto;font-family:'Inter',sans-serif}
-.btn-restore-steps:hover{background:#dc2626}
 .script-search-wrap{display:flex;align-items:center;background:#fff;border:1.5px solid #e2e8f4;border-radius:8px;padding:0 12px;margin-bottom:12px;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .script-search{flex:1;border:none;outline:none;padding:9px 0;font-size:13.5px;font-family:'Inter',sans-serif;color:#2d3a55;background:transparent}
 .script-search::placeholder{color:#b0bac9}
@@ -201,9 +199,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .step.search-hidden{display:none!important}
 
 /* ── EDIT BUTTON ── */
-.edit-btn{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:5px;border:1px solid #e5e9f2;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;opacity:0;transition:opacity .14s;z-index:2;color:#6b7280}
-.step:hover .edit-btn{opacity:1}
-.edit-btn:hover{background:#eff2ff;border-color:#4263eb;color:#4263eb}
 .edited-badge{font-size:9px;font-weight:700;background:#4263eb;color:#fff;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle;letter-spacing:.3px}
 .step.editing{box-shadow:0 0 0 2px #4263eb;background:#f8f9ff !important}
 .edit-textarea{width:100%;min-height:60px;padding:8px 10px;border:1.5px solid #e5e9f2;border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;line-height:1.55;resize:vertical;outline:none;color:#111827;margin-bottom:6px;background:#fff}
@@ -220,15 +215,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .edit-field-label{font-size:10px;font-weight:700;text-transform:uppercase;color:#9ca3af;letter-spacing:.5px;margin-bottom:3px}
 
 /* ── ADD STEP ── */
-.btn-add-step{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;padding:7px 0;background:#f8f9ff;color:#4263eb;border:1.5px dashed #c7d2fe;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;margin-top:8px;transition:all .14s;font-family:'Inter',sans-serif}
-.btn-add-step:hover{background:#eff2ff;border-color:#4263eb}
 .add-step-form{background:#f8f9ff;border:1px solid #c7d2fe;border-radius:9px;padding:12px 14px;margin-top:8px}
 .add-step-form .form-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
 .add-step-form select{padding:6px 9px;border:1.5px solid #e5e9f2;border-radius:7px;font-size:12px;color:#374151;background:#fff;outline:none;font-family:'Inter',sans-serif}
 .added-badge{font-size:9px;font-weight:700;background:#10b981;color:#fff;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle;letter-spacing:.3px}
-.delete-btn{position:absolute;top:8px;right:36px;width:24px;height:24px;border-radius:5px;border:1px solid #fecaca;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;opacity:0;transition:opacity .14s;z-index:2;color:#dc2626}
-.step:hover .delete-btn{opacity:1}
-.delete-btn:hover{background:#fef2f2;border-color:#dc2626}
 
 /* ── DRUG TABLE ── */
 .drug-table{width:100%;border-collapse:collapse;min-width:700px}
@@ -373,24 +363,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .term-modal-textarea:focus{border-color:#4263eb;background:#f8fafc}
 .term-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
 
-/* ── AUTH MODAL ── */
-.auth-overlay{position:fixed;inset:0;background:rgba(15,23,41,.6);z-index:9999;display:none;align-items:center;justify-content:center}
-.auth-overlay.show{display:flex}
-.auth-box{background:#fff;border-radius:16px;padding:32px;width:340px;box-shadow:0 24px 64px rgba(0,0,0,.18);text-align:center}
-.auth-box .lock-icon{font-size:32px;margin-bottom:12px}
-.auth-box h3{font-size:17px;font-weight:700;color:#111827;margin-bottom:4px}
-.auth-box p{font-size:12px;color:#6b7280;margin-bottom:20px}
-.auth-box input{width:100%;padding:10px 14px;border:1.5px solid #e5e9f2;border-radius:8px;font-size:15px;text-align:center;letter-spacing:3px;outline:none;color:#111827;background:#f8fafc;font-family:'Inter',sans-serif}
-.auth-box input:focus{border-color:#4263eb;background:#fff}
-.auth-error{font-size:12px;color:#dc2626;margin-top:8px;min-height:18px}
-.auth-actions{display:flex;gap:8px;margin-top:18px}
-.auth-actions button{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif}
-.btn-auth-cancel{background:#f3f4f6;color:#374151}
-.btn-auth-submit{background:#4263eb;color:#fff}
-.btn-auth-submit:hover{background:#3451d1}
-.lock-btn{margin-left:10px;padding:5px 14px;background:rgba(255,255,255,.08);color:#94a3b8;border:1px solid rgba(255,255,255,.12);border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.3px;transition:all .14s;font-family:'Inter',sans-serif}
-.lock-btn:hover{background:rgba(255,255,255,.16);color:#f1f5f9}
-.lock-btn.unlocked{color:#34d399;border-color:rgba(52,211,153,.3)}
 
 /* ── DOWNLOAD BUTTON & DROPDOWN ── */
 .btn-pdf{padding:6px 14px;background:#f1f5f9;color:#4263eb;border:1.5px solid #c7d2fe;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .14s;white-space:nowrap;font-family:'Inter',sans-serif}
@@ -483,23 +455,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </style>
 </head>
 <body>
-<div class="auth-overlay" id="authModal">
-  <div class="auth-box">
-    <div class="lock-icon">&#128274;</div>
-    <h3>Access Required</h3>
-    <p>Enter the access code to make changes.</p>
-    <input type="password" id="authInput" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" onkeydown="if(event.key==='Enter')submitAuth()">
-    <div class="auth-error" id="authError"></div>
-    <div class="auth-actions">
-      <button class="btn-auth-cancel" onclick="closeAuth()">Cancel</button>
-      <button class="btn-auth-submit" onclick="submitAuth()">Unlock</button>
-    </div>
-  </div>
-</div>
 <div class="topbar">
   <h1>&#9635; Valeris</h1>
   <input class="search-bar" id="searchInput" placeholder="&#128269; Search programs..." oninput="filterSidebar(this.value)">
-  <button class="lock-btn" id="lockBtn" onclick="toggleLock()">&#128274; Locked</button>
 </div>
 <div class="layout">
   <div class="sidebar" id="sidebar"></div>
@@ -509,51 +467,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </div>
 <script>
 // ══════════════════════════════════════════════════════════════
-//  AUTH
-// ══════════════════════════════════════════════════════════════
-const EDIT_CODE = "V@ler!s25";
-let editUnlocked = false;
-let _pendingAuth = null;
-
-function requireAuth(fn){
-  if(editUnlocked){fn();return;}
-  _pendingAuth=fn;
-  const m=document.getElementById("authModal");
-  const inp=document.getElementById("authInput");
-  m.classList.add("show");
-  inp.value="";
-  document.getElementById("authError").textContent="";
-  setTimeout(()=>inp.focus(),80);
-}
-
-function submitAuth(){
-  const inp=document.getElementById("authInput");
-  if(inp.value===EDIT_CODE){
-    editUnlocked=true;
-    document.getElementById("authModal").classList.remove("show");
-    document.getElementById("lockBtn").innerHTML=`&#128275; Unlocked`;
-    document.getElementById("lockBtn").classList.add("unlocked");
-    if(_pendingAuth){_pendingAuth();_pendingAuth=null;}
-  } else {
-    document.getElementById("authError").textContent="Incorrect code. Try again.";
-    inp.value="";inp.focus();
-  }
-}
-
-function closeAuth(){
-  document.getElementById("authModal").classList.remove("show");
-  _pendingAuth=null;
-}
-
-function toggleLock(){
-  if(editUnlocked){
-    editUnlocked=false;
-    document.getElementById("lockBtn").innerHTML="&#128274; Locked";
-    document.getElementById("lockBtn").classList.remove("unlocked");
-  } else {
-    requireAuth(()=>{});
-  }
-}
 
 // ══════════════════════════════════════════════════════════════
 //  ANSWER STORE  (session-only, never persisted)
@@ -821,7 +734,6 @@ function mmStandard(prog){
       {type:"question",label:"Q",text:"Can the provider do buy and bill?",field:"→ Buy and Bill Permitted: Yes / No"},
       {type:"question",label:"Q",text:"Are there any limitations or exclusions?",field:"→ Limitations / Exclusions"},
       {type:"question",label:"Q",text:"If the drug is obtained through SP, will it still be covered under Major Medical benefits?",field:"→ SP + Major Medical Coverage"},
-      {type:"question",label:"Q",text:"Is a Specialty Pharmacy required for AOB? What are the AOB coverage specifics?",field:"→ Specialty Pharmacy Required for AOB: Yes / No | AOB Coverage Specifics"},
       {type:"question",label:"Q",text:"Who is the preferred SP that can dispense [J-Code]?",field:"→ Preferred Specialty Pharmacy | SP Phone | SP Fax"},
       {type:"question",label:"Q",text:"Is this SP preferred / open / mandated?",field:"→ Preferred / Open / Mandated"},
       {type:"question",label:"Q",text:"What is the name of the PBM and their phone number and fax number?",field:"→ PBM Name | PBM Phone | PBM Fax"},
@@ -1128,7 +1040,7 @@ function ipsenPBM(){
 function mmNucala(){
   const b=mmStandard("Nucala Support Program");
   // Custom opening — identifies patient by name and doctor
-  b[0].steps[0]={type:"statement",label:"Script",text:`This is <span class='placeholder'>[Insert Name]</span> with <strong>Nucala Support Program</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <span class='placeholder'>[Drug Name]</span>. Would you please assist me with a determination of coverage?`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Name]</span> from <strong>Together With GSK</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of doctor <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <strong>Nucala</strong>. Would you please assist me with a determination of coverage?`};
   // Replace generic Copay Accumulator/Maximizer section with full vendor-list version
   const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
   if(accIdx!==-1) b.splice(accIdx,1,{title:"Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
@@ -1141,7 +1053,12 @@ function mmNucala(){
     {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
     {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
     {type:"branch",label:"If NO",text:"Continue with rest of script."},
-    {type:"branch",label:"If YES — ask",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"},
+    {type:"branch",label:"If YES — ask",text:"Answer each question below:"},
+    {type:"question",label:"AFP a.",text:"Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?",field:"→ AFP Type"},
+    {type:"question",label:"AFP b.",text:"What is the name of the program, vendor, or organization administering this requirement?",field:"→ Program / Vendor Name"},
+    {type:"question",label:"AFP c.",text:"Is there a dedicated phone number, website, or contact department for this program?",field:"→ Phone | Website | Department"},
+    {type:"question",label:"AFP d.",text:"Is member enrollment or participation required before coverage can be approved or paid?",field:"→ Enrollment Required: Yes / No"},
+    {type:"question",label:"AFP e.",text:"Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",field:"→ Requirements / Next Steps"},
   ]});
   return b;
 }
@@ -1149,7 +1066,7 @@ function mmNucala(){
 function pbmNucala(){
   const b=pbmStandard("Nucala Support Program",[]);
   // Custom opening — same format as MM (mentions patient and doctor)
-  b[0].steps[0]={type:"statement",label:"Script",text:`This is <span class='placeholder'>[Insert Name]</span> with <strong>Nucala Support Program</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <span class='placeholder'>[Drug Name]</span>. Would you please assist me with a determination of coverage?`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Name]</span> from <strong>Together With GSK</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of doctor <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <strong>Nucala</strong>. Would you please assist me with a determination of coverage?`};
   // Add LIS Level question after LIS Yes/No in Plan Details
   const pdIdx=b.findIndex(s=>s.title==="Plan Details");
   const lisStep=b[pdIdx].steps.findIndex(s=>s.field&&s.field.includes("LIS"));
@@ -1191,7 +1108,12 @@ function mmSandoz(){
     {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
     {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
     {type:"branch",label:"If NO",text:"Continue with rest of script."},
-    {type:"branch",label:"If YES — ask",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"},
+    {type:"branch",label:"If YES — ask",text:"Answer each question below:"},
+    {type:"question",label:"AFP a.",text:"Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?",field:"→ AFP Type"},
+    {type:"question",label:"AFP b.",text:"What is the name of the program, vendor, or organization administering this requirement?",field:"→ Program / Vendor Name"},
+    {type:"question",label:"AFP c.",text:"Is there a dedicated phone number, website, or contact department for this program?",field:"→ Phone | Website | Department"},
+    {type:"question",label:"AFP d.",text:"Is member enrollment or participation required before coverage can be approved or paid?",field:"→ Enrollment Required: Yes / No"},
+    {type:"question",label:"AFP e.",text:"Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",field:"→ Requirements / Next Steps"},
   ]});
   return b;
 }
@@ -1237,7 +1159,12 @@ function pbmSandoz(){
       {type:"instruction",label:"5a — AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
       {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
       {type:"branch",label:"If NO",text:"Continue with rest of script."},
-      {type:"branch",label:"If YES — ask:",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"},
+      {type:"branch",label:"If YES — ask",text:"Answer each question below:"},
+      {type:"question",label:"AFP a.",text:"Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?",field:"→ AFP Type"},
+      {type:"question",label:"AFP b.",text:"What is the name of the program, vendor, or organization administering this requirement?",field:"→ Program / Vendor Name"},
+      {type:"question",label:"AFP c.",text:"Is there a dedicated phone number, website, or contact department for this program?",field:"→ Phone | Website | Department"},
+      {type:"question",label:"AFP d.",text:"Is member enrollment or participation required before coverage can be approved or paid?",field:"→ Enrollment Required: Yes / No"},
+      {type:"question",label:"AFP e.",text:"Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",field:"→ Requirements / Next Steps"},
     ]},
     {title:"Step 6 — Medicare Part D Benefits",hdr:"hdr-pharmacy",steps:[
       {type:"instruction",label:"2025 Extra Help Copay Amounts",text:"No premiums | No deductibles | Up to $12.15 copay/brand drug | Up to $4.90 copay/generic | Once total drug costs reach $2,000 → $0 copay for remainder of year"},
@@ -1440,26 +1367,12 @@ function renderScript(sections,progId,tabType){
   const hasCustomSecOrder=!!(storedSecOrder&&storedSecOrder.length);
   // Count edited section titles
   const editedTitleCount=allSecIdx.filter(i=>!!editStore[`${progId}__${tabType}__${i}__title`]).length;
-  // ── Top restore bar ──
-  const showBar=hiddenSecCount||hasCustomSecOrder||editedTitleCount;
-  const restoreBar=showBar?`<div class="restore-bar">
-    ${hiddenSecCount?`&#128065; <strong>${hiddenSecCount}</strong> section${hiddenSecCount>1?"s":""} hidden`:""}
-    ${hiddenSecCount&&(hasCustomSecOrder||editedTitleCount)?" &middot; ":""}
-    ${hasCustomSecOrder?"&#8645; Custom section order":""}
-    ${hasCustomSecOrder&&editedTitleCount?" &middot; ":""}
-    ${editedTitleCount?`&#9999; <strong>${editedTitleCount}</strong> title${editedTitleCount>1?"s":""} renamed`:""}
-    <div style="display:flex;gap:6px;margin-left:auto">
-      ${hiddenSecCount?`<button class="btn-restore-all" onclick="restoreSections('${progId}','${tabType}')">&#8635; Restore Hidden</button>`:""}
-      ${hasCustomSecOrder?`<button class="btn-restore-all" style="background:#667" onclick="resetSectionOrder('${progId}','${tabType}')">&#8645; Reset Order</button>`:""}
-      ${editedTitleCount?`<button class="btn-restore-all" style="background:#4361ee" onclick="resetAllSectionTitles('${progId}','${tabType}')">&#8635; Reset Titles</button>`:""}
-    </div>
-  </div>`:"";
+  const restoreBar='';
   const sectionsHtml=orderedSecIdx.map((si,displayIdx)=>{
     const sec=sections[si];
     const removedStepKey=`${progId}__${tabType}__${si}__removed_steps`;
     const removedSteps=new Set(editStore[removedStepKey]||[]);
     const hiddenStepCount=removedSteps.size;
-    const stepRestoreBar=hiddenStepCount?`<div class="restore-step-bar">&#128065; <strong>${hiddenStepCount}</strong> step${hiddenStepCount>1?"s":""} hidden &nbsp;<button class="btn-restore-steps" onclick="restoreStepsInSection('${progId}','${tabType}',${si})">&#8635; Restore</button></div>`:"";
     const addKey=`${progId}__${tabType}__${si}__added`;
     const added=editStore[addKey]||[];
     const visibleItems=[];
@@ -1492,22 +1405,13 @@ function renderScript(sections,progId,tabType){
     <div class="section" data-secidx="${si}"
          ondragover="dragOverSection(event)">
       <div class="section-header ${sec.hdr}" onclick="toggleSection(this)">
-        <div class="section-drag-handle" draggable="true"
-             ondragstart="dragStartSection(event,'${progId}','${tabType}',${si})"
-             ondragend="dragEndSection(event)"
-             title="Drag to reorder section">&#8942;&#8942;</div>
         <span style="color:#667;font-size:12px">${displayIdx+1}</span>
         <span id="sectitle_${progId}_${tabType}_${si}" style="margin-left:6px">${displayTitle}</span>
-        ${titleEditedBadge}
-        <button class="sec-title-edit-btn" onclick="event.stopPropagation();editSectionTitle('${progId}','${tabType}',${si})" title="Edit section title">&#9999;</button>
         <span class="chevron">&#9654;</span>
-        <button class="section-remove-btn" onclick="event.stopPropagation();removeSection('${progId}','${tabType}',${si})" title="Hide section">&#10006;</button>
       </div>
       <div class="section-body" ondragover="event.preventDefault()" ondrop="dropStep(event,'${progId}','${tabType}',${si})">
-        ${stepRestoreBar}
         ${allStepsHtml}
         <div id="${areaId}" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <button class="btn-add-step" onclick="showAddStep('${progId}','${tabType}',${si})" style="flex:1">&#43; Add Question / Step</button>
           ${resetBtn}
         </div>
       </div>
@@ -1631,13 +1535,11 @@ function renderAddedStep(s,progId,tabType,si,ai,dAttrs=''){
       :`<div class="step-answer-wrap"><textarea class="step-answer" rows="1" placeholder="Type answer here…" oninput="saveAnswer('${addedAnswerKey}',this.value,this);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(_addedSavedVal)}</textarea></div>`)
     :'';
   return `<div class="step ${typeClass}" ${dAttrs} id="addstep_${CSS.escape(addedKey)}">
-    <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">${s.label||cap} <span class="added-badge">Added</span></div>
     <div class="step-text step-content-text">${applyScriptHL(s.text,s.type)}</div>
     ${(()=>{const isPBM=tabType==='pbm';const ns=isPBM&&s.type==='question'?getPBMNAInfo(s.field,s.text):null;const nb=ns===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:ns===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';return s.field?`<div class="step-field step-content-field"><span>${s.field}</span>${nb}</div>`:nb?`<div class="step-field">${nb}</div>`:''})()}
     ${addedAnswerHtml}
-    <button class="edit-btn" onclick="startEditAdded('${progId}','${tabType}',${si},${ai})" title="Edit">&#9999;</button>
-    <button class="delete-btn" onclick="deleteAddedStep('${progId}','${tabType}',${si},${ai})" title="Delete">&#10006;</button>
+    <button class="copy-btn" onclick="(function(btn){const el=btn.closest('.step');if(!el)return;const textEl=el.querySelector('.step-content-text');const fieldEl=el.querySelector('.step-content-field span');let txt='';if(textEl)txt+=textEl.innerText||textEl.textContent||'';if(fieldEl)txt+='\\n'+(fieldEl.innerText||fieldEl.textContent||'');navigator.clipboard.writeText(txt.trim()).then(()=>{const orig=btn.innerHTML;btn.innerHTML='✓ Copied';btn.style.color='#10b981';setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';},1500)});})(this)" title="Copy question">&#128203;</button>
   </div>`;
 }
 
@@ -1918,7 +1820,6 @@ function renderPAPreadStep(key,dAttrs){
     {v:'unknown',l:'Unknown'},
   ];
   return`<div class="step step-pa-pread${hasAny?' step-answered':''}" ${dAttrs} id="step_${CSS.escape(key)}" data-key="${key}" data-orig-text="" data-orig-field="">
-    <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
     <div class="step-label">PA / Pre-D Details</div>
     <div class="pa-pread-dropdowns">
       <div class="pa-pread-dd-wrap">
@@ -1937,7 +1838,7 @@ function renderPAPreadStep(key,dAttrs){
       </div>
     </div>
     <div id="papread_fields_${CSS.escape(key)}">${_buildPAPreadFields(key,tv,sv)}</div>
-    <button class="delete-btn" onclick="removeStep('${key}')" title="Hide this step">&#10006;</button>
+    <button class="copy-btn" onclick="copyStepText('${key}')" title="Copy question">&#128203;</button>
   </div>`;
 }
 
@@ -1979,27 +1880,42 @@ function renderStep(s,key,dAttrs=''){
   const answerKey=`ans__${key}`;
   const _savedVal=getAnswer(answerKey);
   const _isYN=s.type==='question'&&displayField&&/yes\s*\/\s*no/i.test(displayField);
-  const answerHtml=(s.type==='question'||s.type==='branch')
+  const answerHtml=(s.type==='question'||s.type==='branch'||s.type==='statement')
     ?(_isYN
       ?`<select class="step-yn-select" onchange="saveAnswer('${answerKey}',this.value,this)"><option value="">— Select —</option><option value="Yes"${_savedVal==='Yes'?' selected':''}>Yes</option><option value="No"${_savedVal==='No'?' selected':''}>No</option><option value="Unknown"${_savedVal==='Unknown'?' selected':''}>Unknown</option></select>`
       :`<div class="step-answer-wrap"><textarea class="step-answer" rows="1" placeholder="Type answer here…" oninput="saveAnswer('${answerKey}',this.value,this);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(_savedVal)}</textarea></div>`)
     :'';
   return `<div class="step ${typeClass}" ${dAttrs} id="step_${CSS.escape(key)}" data-key="${key}" data-orig-text="${escHtml(s.text)}" data-orig-field="${escHtml(s.field||'')}">
     <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
-    <div class="step-label">${s.label||""} ${editedBadge}</div>
-    <div class="step-text step-content-text">${displayText}</div>
-    ${fieldHtml}
-    ${answerHtml}
-    <button class="edit-btn" onclick="startEdit('${key}')" title="Edit this step">&#9999;</button>
-    <button class="delete-btn" onclick="removeStep('${key}')" title="Hide this step">&#10006;</button>
+    <div class="step-body">
+      <div class="step-label">${s.label||""} ${editedBadge}</div>
+      <div class="step-text step-content-text">${displayText}</div>
+      ${fieldHtml}
+      ${answerHtml}
+    </div>
+    <button class="copy-btn" onclick="copyStepText('${key}')" title="Copy question">&#128203;</button>
   </div>`;
+}
+
+function copyStepText(key){
+  const el=document.getElementById('step_'+CSS.escape(key))||document.getElementById(key);
+  if(!el) return;
+  const textEl=el.querySelector('.step-content-text');
+  const fieldEl=el.querySelector('.step-content-field span');
+  let txt='';
+  if(textEl) txt+=textEl.innerText||textEl.textContent||'';
+  if(fieldEl) txt+='\n'+(fieldEl.innerText||fieldEl.textContent||'');
+  navigator.clipboard.writeText(txt.trim()).then(()=>{
+    const btn=el.querySelector('.copy-btn');
+    if(btn){const orig=btn.innerHTML;btn.innerHTML='✓ Copied';btn.style.color='#10b981';setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';},1500);}
+  });
 }
 
 function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function unescHtml(s){return (s||'').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>');}
 
 function startEdit(key){
-  if(!editUnlocked){requireAuth(()=>startEdit(key));return;}
+
   const el=document.getElementById("step_"+CSS.escape(key));
   if(!el||el.classList.contains("editing"))return;
   el.classList.add("editing");
@@ -2025,7 +1941,6 @@ function startEdit(key){
     </div>`;
   if(textEl) textEl.style.display="none";
   if(fieldEl) fieldEl.style.display="none";
-  el.querySelector(".edit-btn").style.display="none";
   el.appendChild(editUI);
 }
 
@@ -2052,12 +1967,11 @@ function cancelEdit(key){
   if(textEl)textEl.style.display="";
   if(fieldEl)fieldEl.style.display="";
   if(editUI)editUI.remove();
-  el.querySelector(".edit-btn").style.display="";
   el.classList.remove("editing");
 }
 
 function resetEdit(key){
-  if(!editUnlocked){requireAuth(()=>resetEdit(key));return;}
+
   if(!confirm("Reset this step to the original text?"))return;
   delete editStore[key];
   persistStore();
@@ -2088,13 +2002,12 @@ function finishEdit(el,key,newText,newField){
     labelEl.appendChild(badge);
   }
   if(editUI)editUI.remove();
-  el.querySelector(".edit-btn").style.display="";
   el.classList.remove("editing");
 }
 
 // ── ADD STEP FUNCTIONS ──
 function showAddStep(progId,tabType,si){
-  if(!editUnlocked){requireAuth(()=>showAddStep(progId,tabType,si));return;}
+
   const areaId=CSS.escape(`addarea__${progId}__${tabType}__${si}`);
   const area=document.getElementById(areaId);
   if(!area)return;
@@ -2151,7 +2064,7 @@ function cancelAddStep(progId,tabType,si){
 }
 
 function removeSection(progId,tabType,si){
-  if(!editUnlocked){requireAuth(()=>removeSection(progId,tabType,si));return;}
+
   if(!confirm("Hide this section? You can restore it from the top of the script."))return;
   const removedKey=`${progId}__${tabType}__removed_sections`;
   const arr=editStore[removedKey]||[];
@@ -2171,7 +2084,7 @@ function restoreSections(progId,tabType){
 }
 
 function removeStep(key){
-  if(!editUnlocked){requireAuth(()=>removeStep(key));return;}
+
   if(!confirm("Hide this step? You can restore it from the section."))return;
   const parts=key.split('__');
   const stepIdx=parseInt(parts[parts.length-1]);
@@ -2196,7 +2109,7 @@ function restoreStepsInSection(progId,tabType,si){
 }
 
 function deleteAddedStep(progId,tabType,si,ai){
-  if(!editUnlocked){requireAuth(()=>deleteAddedStep(progId,tabType,si,ai));return;}
+
   if(!confirm("Delete this added step?"))return;
   const addKey=`${progId}__${tabType}__${si}__added`;
   if(editStore[addKey]){
@@ -2209,7 +2122,7 @@ function deleteAddedStep(progId,tabType,si,ai){
 }
 
 function startEditAdded(progId,tabType,si,ai){
-  if(!editUnlocked){requireAuth(()=>startEditAdded(progId,tabType,si,ai));return;}
+
   const addedKey=`${progId}__${tabType}__${si}__added__${ai}`;
   const el=document.getElementById("addstep_"+CSS.escape(addedKey));
   if(!el||el.classList.contains("editing"))return;
@@ -2233,8 +2146,6 @@ function startEditAdded(progId,tabType,si,ai){
     </div>`;
   if(textEl)textEl.style.display="none";
   if(fieldEl)fieldEl.style.display="none";
-  el.querySelector(".edit-btn").style.display="none";
-  el.querySelector(".delete-btn").style.display="none";
   el.appendChild(editUI);
 }
 
@@ -2263,8 +2174,6 @@ function cancelEditAdded(progId,tabType,si,ai){
   if(textEl)textEl.style.display="";
   if(fieldEl)fieldEl.style.display="";
   if(editUI)editUI.remove();
-  el.querySelector(".edit-btn").style.display="";
-  el.querySelector(".delete-btn").style.display="";
   el.classList.remove("editing");
 }
 
@@ -2274,7 +2183,7 @@ function cancelEditAdded(progId,tabType,si,ai){
 let _dragItem=null, _dragOverEl=null, _dragOverPos='bottom';
 
 function dragStartStep(event,progId,tabType,si,itemId){
-  if(!editUnlocked){event.preventDefault();requireAuth(()=>{});return;}
+
   _dragItem={progId,tabType,si,itemId};
   event.dataTransfer.effectAllowed='move';
   event.dataTransfer.setData('text/plain',itemId);
@@ -2340,7 +2249,7 @@ function dropStep(event,progId,tabType,si){
 }
 
 function resetStepOrder(progId,tabType,si){
-  if(!editUnlocked){requireAuth(()=>resetStepOrder(progId,tabType,si));return;}
+
   delete editStore[`${progId}__${tabType}__${si}__order`];
   persistStore();
   const p=programs.find(x=>x.id===progId);
@@ -2351,7 +2260,7 @@ function resetStepOrder(progId,tabType,si){
 let _dragSection=null, _dragOverSec=null, _dragOverSecPos='bottom';
 
 function dragStartSection(event,progId,tabType,si){
-  if(!editUnlocked){event.preventDefault();requireAuth(()=>{});return;}
+
   _dragSection={progId,tabType,si};
   event.dataTransfer.effectAllowed='move';
   event.dataTransfer.setData('text/plain','sec-'+si);
@@ -2418,7 +2327,7 @@ function dropSection(event,progId,tabType){
 }
 
 function resetSectionOrder(progId,tabType){
-  if(!editUnlocked){requireAuth(()=>resetSectionOrder(progId,tabType));return;}
+
   delete editStore[`${progId}__${tabType}__section_order`];
   persistStore();
   const p=programs.find(x=>x.id===progId);
@@ -2429,7 +2338,7 @@ function resetSectionOrder(progId,tabType){
 //  SECTION TITLE EDIT
 // ══════════════════════════════════════════════════════════════
 function editSectionTitle(progId,tabType,si){
-  if(!editUnlocked){requireAuth(()=>editSectionTitle(progId,tabType,si));return;}
+
   const titleKey=`${progId}__${tabType}__${si}__title`;
   const p=programs.find(x=>x.id===progId);
   if(!p)return;
@@ -2476,7 +2385,7 @@ function cancelSectionTitleEdit(progId,tabType,si){
 }
 
 function resetAllSectionTitles(progId,tabType){
-  if(!editUnlocked){requireAuth(()=>resetAllSectionTitles(progId,tabType));return;}
+
   const p=programs.find(x=>x.id===progId);
   if(!p)return;
   const sections=tabType==='pbm'?p.pbm:tabType==='other'?p.other:p.mm;
@@ -2547,7 +2456,7 @@ function selectLogCat(btn,progId){
 }
 
 function showLogEntry(progId){
-  if(!editUnlocked){requireAuth(()=>showLogEntry(progId));return;}
+
   const form=document.getElementById(`logForm_${progId}`);
   if(form){form.style.display="";document.getElementById(`logText_${progId}`)?.focus();}
 }
@@ -2575,7 +2484,7 @@ function saveLogEntry(progId){
 }
 
 function deleteLogEntry(progId,entryId){
-  if(!editUnlocked){requireAuth(()=>deleteLogEntry(progId,entryId));return;}
+
   if(!confirm("Delete this log entry?"))return;
   const logKey=`${progId}__daily_log`;
   if(editStore[logKey]){
@@ -2686,7 +2595,7 @@ function _focusCompInput(id){
 }
 
 function editComplianceItem(idx){
-  if(!editUnlocked){requireAuth(()=>editComplianceItem(idx));return;}
+
   _editingCompIdx=idx;_editingCompType="orig";
   _reRenderCompliance();
   _focusCompInput(`compedith_${idx}`);
@@ -2707,19 +2616,19 @@ function resetComplianceItem(idx){
   _reRenderCompliance();
 }
 function removeComplianceItem(idx){
-  if(!editUnlocked){requireAuth(()=>removeComplianceItem(idx));return;}
+
   const arr=editStore['compliance__removed']||[];
   if(!arr.includes(idx))arr.push(idx);
   editStore['compliance__removed']=arr;
   persistStore();_reRenderCompliance();
 }
 function restoreComplianceItems(){
-  if(!editUnlocked){requireAuth(()=>restoreComplianceItems());return;}
+
   delete editStore['compliance__removed'];
   persistStore();_reRenderCompliance();
 }
 function editAddedComplianceItem(idx){
-  if(!editUnlocked){requireAuth(()=>editAddedComplianceItem(idx));return;}
+
   _editingCompIdx=idx;_editingCompType="add";
   _reRenderCompliance();
   _focusCompInput(`compedith_add_${idx}`);
@@ -2736,7 +2645,7 @@ function saveAddedComplianceItem(idx){
   _reRenderCompliance();
 }
 function deleteAddedComplianceItem(idx){
-  if(!editUnlocked){requireAuth(()=>deleteAddedComplianceItem(idx));return;}
+
   const arr=editStore['compliance__added']||[];
   arr.splice(idx,1);
   editStore['compliance__added']=arr;
@@ -2745,7 +2654,7 @@ function deleteAddedComplianceItem(idx){
   _reRenderCompliance();
 }
 function showAddComplianceItem(){
-  if(!editUnlocked){requireAuth(()=>showAddComplianceItem());return;}
+
   _editingCompIdx=null;_editingCompType="new";
   _reRenderCompliance();
   _focusCompInput("compedith_new");
@@ -3105,7 +3014,7 @@ function renderDrugInfo(){
 }
 
 function showAddColForm(){
-  if(!editUnlocked){requireAuth(()=>showAddColForm());return;}
+
   const f=document.getElementById("addColForm");
   if(f){f.classList.add("show");const inp=document.getElementById("addColInput");if(inp){inp.value="";inp.focus();}}
 }
@@ -3120,7 +3029,7 @@ function confirmAddCol(){
   document.getElementById("main").innerHTML=renderDrugInfo();
 }
 function removeDrugColumn(ci){
-  if(!editUnlocked){requireAuth(()=>removeDrugColumn(ci));return;}
+
   const data=getDrugData();
   if(data.columns.length<=1){alert("At least one column is required.");return;}
   if(!confirm('Remove column "'+data.columns[ci]+'"?\nAll data in this column will be deleted.'))return;
@@ -3130,7 +3039,7 @@ function removeDrugColumn(ci){
   document.getElementById("main").innerHTML=renderDrugInfo();
 }
 function editColHeader(ci){
-  if(!editUnlocked){requireAuth(()=>editColHeader(ci));return;}
+
   const span=document.getElementById("thLabel_"+ci);if(!span)return;
   const data=getDrugData();
   const cur=(data.columns[ci]||"").replace(/"/g,"&quot;");
@@ -3149,7 +3058,7 @@ function cancelColHeader(ci){
   inp.outerHTML=`<span id="thLabel_${ci}" class="th-label" onclick="editColHeader(${ci})" title="Click to rename">${val}</span>`;
 }
 function editDrugCell(rowId,ci){
-  if(!editUnlocked){requireAuth(()=>editDrugCell(rowId,ci));return;}
+
   const wrap=document.getElementById("dc_"+rowId+"_"+ci);if(!wrap)return;
   const data=getDrugData();
   const row=data.rows.find(r=>r.id===rowId);
@@ -3174,7 +3083,7 @@ function cancelDrugCell(rowId,ci){
   const wrap=document.getElementById("dc_"+rowId+"_"+ci);if(wrap)wrap.innerHTML=display;
 }
 function addDrugRow(){
-  if(!editUnlocked){requireAuth(()=>addDrugRow());return;}
+
   const data=getDrugData();
   const newRow={id:Date.now(),cells:new Array(data.columns.length).fill("")};
   data.rows.push(newRow);saveDrugData(data);
@@ -3182,7 +3091,7 @@ function addDrugRow(){
   setTimeout(()=>editDrugCell(newRow.id,0),60);
 }
 function removeDrugRow(rowId){
-  if(!editUnlocked){requireAuth(()=>removeDrugRow(rowId));return;}
+
   if(!confirm("Remove this drug entry?"))return;
   const data=getDrugData();
   data.rows=data.rows.filter(r=>r.id!==rowId);
@@ -3598,7 +3507,7 @@ function renderFieldRef(filter){
 
 let _termEditIdx=null;
 function openAddTermModal(){
-  if(!editUnlocked){requireAuth(()=>openAddTermModal());return;}
+
   _termEditIdx=null;
   document.getElementById('termModalHeading').textContent='Add Term';
   document.getElementById('tmName').value='';
@@ -3610,7 +3519,7 @@ function openAddTermModal(){
   setTimeout(()=>document.getElementById('tmName').focus(),60);
 }
 function openEditTermModal(idx){
-  if(!editUnlocked){requireAuth(()=>openEditTermModal(idx));return;}
+
   const data=getTermsData();
   const t=data.terms[idx];if(!t)return;
   _termEditIdx=idx;
@@ -3635,7 +3544,7 @@ function saveTermModal(){
   document.getElementById('main').innerHTML=renderTerminology((document.getElementById('termSearchInput')||{value:''}).value);
 }
 function deleteTermEntry(idx){
-  if(!editUnlocked){requireAuth(()=>deleteTermEntry(idx));return;}
+
   if(!confirm('Delete this term?'))return;
   const data=getTermsData();
   data.terms.splice(idx,1);
@@ -3902,4 +3811,3 @@ selectProgram(programs[0].id);
 </div>
 </body>
 </html>
-
