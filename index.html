@@ -741,6 +741,20 @@ const programs = [
       {name:"Jubbonti",type:"PBM",strength:"60mg/1mL prefilled syringe",supply:"180 days",cpt:"96372 / 96401",jcode:"Q5136",ndc:"61314-0240-63"},
     ],
     mm:mmSandoz(),pbm:pbmSandoz()
+  },
+  {
+    id:"nucala",company:"GSK",label:"GSK (Nucala)",icon:"🫁",type:"both",
+    subtitle:"Nucala (mepolizumab) — Pulmonology / Allergy & Immunology | J2182",
+    programName:"Nucala Support Program",
+    callbacks:[{therapy:"Nucala Support",number:"844-225-5894"}],
+    drugs:[
+      {name:"Nucala (LYO Vial)",type:"MM",strength:"100mg",supply:"varies",cpt:"96372 / 96401",jcode:"J2182",ndc:"00173-0881-01"},
+      {name:"Nucala (PFS 40mg)",type:"MM",strength:"40mg/0.4mL",supply:"varies",cpt:"96372 / 96401",jcode:"J2182",ndc:"00173-0904-42"},
+      {name:"Nucala (Autoinjector)",type:"PBM",strength:"100mg",supply:"varies",cpt:"—",jcode:"J2182",ndc:"00173-0892-01"},
+      {name:"Nucala (PFS 100mg)",type:"PBM",strength:"100mg",supply:"varies",cpt:"—",jcode:"J2182",ndc:"00173-0892-42"},
+      {name:"Nucala (PFS 40mg)",type:"PBM",strength:"40mg/0.4mL",supply:"varies",cpt:"—",jcode:"J2182",ndc:"00173-0904-42"},
+    ],
+    mm:mmNucala(),pbm:pbmNucala()
   }
 ];
 
@@ -1108,6 +1122,52 @@ function ipsenMM(){
 function ipsenPBM(){
   const b=pbmStandard("IpsenCares Program",[{drug:"Onivyde",sps:["CVS Caremark","Humana - Centerwell","BriovaRx - Optum"]},{drug:"Tazverik",sps:["Onco360","On-site Dispensing Pharmacy"]}]);
   b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient access manager's name]</span> calling on behalf of the <span class='placeholder'>[Dr. Provider's name]</span> with <strong>IpsenCares Program</strong>. Please note this call is being recorded for quality and training purposes. I am calling to verify the coverage for <span class='placeholder'>[patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> for the medication <span class='placeholder'>[Medication name]</span>.`};
+  return b;
+}
+
+function mmNucala(){
+  const b=mmStandard("Nucala Support Program");
+  // Custom opening — identifies patient by name and doctor
+  b[0].steps[0]={type:"statement",label:"Script",text:`This is <span class='placeholder'>[Insert Name]</span> with <strong>Nucala Support Program</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <span class='placeholder'>[Drug Name]</span>. Would you please assist me with a determination of coverage?`};
+  // Replace generic Copay Accumulator/Maximizer section with full vendor-list version
+  const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
+  if(accIdx!==-1) b.splice(accIdx,1,{title:"Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
+    {type:"question",label:"Q",text:"Is there a Copay Accumulator / Maximizer attached to the policy?",field:"→ Yes / No"},
+    {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
+    {type:"instruction",label:"If rep asks for clarification",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
+    {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
+    {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
+    {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
+    {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
+    {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
+    {type:"branch",label:"If NO",text:"Continue with rest of script."},
+    {type:"branch",label:"If YES — ask",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"},
+  ]});
+  return b;
+}
+
+function pbmNucala(){
+  const b=pbmStandard("Nucala Support Program",[]);
+  // Custom opening — same format as MM (mentions patient and doctor)
+  b[0].steps[0]={type:"statement",label:"Script",text:`This is <span class='placeholder'>[Insert Name]</span> with <strong>Nucala Support Program</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <span class='placeholder'>[Drug Name]</span>. Would you please assist me with a determination of coverage?`};
+  // Add LIS Level question after LIS Yes/No in Plan Details
+  const pdIdx=b.findIndex(s=>s.title==="Plan Details");
+  const lisStep=b[pdIdx].steps.findIndex(s=>s.field&&s.field.includes("LIS"));
+  if(lisStep!==-1) b[pdIdx].steps.splice(lisStep+1,0,{type:"question",label:"Q",text:"What is the level of LIS? [Medicare Part D]",field:"→ LIS Level: Level 1 / 2 / 3 / 4"});
+  // Replace the single Copay Accumulator step in Benefit Details with full vendor-list version
+  const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
+  const caIdx=b[bdIdx].steps.findIndex(s=>s.field&&s.field.includes("Accumulator"));
+  if(caIdx!==-1) b[bdIdx].steps.splice(caIdx,1,
+    {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
+    {type:"instruction",label:"If rep asks for clarification",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
+    {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
+    {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
+    {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
+    {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
+    {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
+    {type:"branch",label:"If NO",text:"Continue with rest of script."},
+    {type:"branch",label:"If YES — ask",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"}
+  );
   return b;
 }
 
