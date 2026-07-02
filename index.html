@@ -859,6 +859,7 @@ function pbmStandard(prog,lddSps){
       {type:"question",label:"Q",text:"Does this plan run on a Calendar Year / Fiscal Year / Plan Year? (If fiscal — get renewal date)",field:"→ Benefit Year Type | Renewal Date"},
       {type:"question",label:"Q",text:"Is the member the subscriber of the plan? If not — patient's relationship to subscriber?",field:"→ Subscriber relationship"},
       {type:"question",label:"Q",text:"Does this patient have Low Income Subsidy? [Medicare Part D only]",field:"→ LIS: Yes/No | LIS Level"},
+      {type:"question",label:"Q",text:"What is the level of LIS? [Medicare Part D]",field:"→ LIS Level: Level 1 / 2 / 3 / 4"},
     ]},
     {title:"Pharmacy Processing Information",hdr:"hdr-pharmacy",steps:[
       {type:"question",label:"Q",text:"May I know the BIN, PCN, and Rx Group#?",field:"→ Rx BIN | PCN | Rx Group #"},
@@ -1067,10 +1068,6 @@ function pbmNucala(){
   const b=pbmStandard("Nucala Support Program",[]);
   // Custom opening — same format as MM (mentions patient and doctor)
   b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Name]</span> from <strong>Together With GSK</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of doctor <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <strong>Nucala</strong>. Would you please assist me with a determination of coverage?`};
-  // Add LIS Level question after LIS Yes/No in Plan Details
-  const pdIdx=b.findIndex(s=>s.title==="Plan Details");
-  const lisStep=b[pdIdx].steps.findIndex(s=>s.field&&s.field.includes("LIS"));
-  if(lisStep!==-1) b[pdIdx].steps.splice(lisStep+1,0,{type:"question",label:"Q",text:"What is the level of LIS? [Medicare Part D]",field:"→ LIS Level: Level 1 / 2 / 3 / 4"});
   // Replace the single Copay Accumulator step in Benefit Details with full vendor-list version
   const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
   const caIdx=b[bdIdx].steps.findIndex(s=>s.field&&s.field.includes("Accumulator"));
@@ -1133,6 +1130,8 @@ function pbmSandoz(){
       {type:"question",label:"Q",text:"What is the plan type? Group?",field:"→ Plan Type | Group #"},
       {type:"question",label:"Q",text:"Can you confirm the Rx BIN and PCN #?",field:"→ Rx BIN | PCN"},
       {type:"question",label:"Q",text:"Is WYOST/Jubbonti covered? If not — reason? Is there a Formulary Exception Process?",field:"→ Covered: Yes/No | Reason | FE Process"},
+      {type:"question",label:"Q",text:"Does this patient have Low Income Subsidy? [Medicare Part D]",field:"→ LIS: Yes/No"},
+      {type:"question",label:"Q",text:"What is the level of LIS? [Medicare Part D]",field:"→ LIS Level: Level 1 / 2 / 3 / 4"},
     ]},
     {title:"Step 2 — Drug Tier",hdr:"hdr-benefit",steps:[
       {type:"question",label:"Q",text:"What tier does the medication fall under?",field:"→ Tier 1 Generic | Tier 2 Preferred Brand | Tier 3 Non-Preferred | Tier 4 Specialty | Other"},
@@ -1579,6 +1578,7 @@ function getPBMNAInfo(field,text){
   if(f.includes('plan term')||f.includes('term/end date')) return true;
   if(f.includes('benefit year type')||f.includes('renewal date')) return true;
   if(f.includes('lis:')&&f.includes('lis level')) return false;
+  if(f.includes('lis level:')) return true;
   // BIN / PCN / Group
   if(f.includes('rx bin')||f.includes('pcn')||f.includes('rx group')) return true;
   // Coverage
