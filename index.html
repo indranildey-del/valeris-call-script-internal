@@ -1097,6 +1097,12 @@ function pbmNucala(){
     {type:"branch",label:"If NO",text:"Continue with rest of script."},
     {type:"branch",label:"If YES — ask",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"}
   );
+  // Add Tier Exception questions after Drug Tier in Benefit Details (Nucala-specific)
+  const tierIdx=b[bdIdx].steps.findIndex(s=>s.field&&s.field.includes("Drug Tier"));
+  if(tierIdx!==-1) b[bdIdx].steps.splice(tierIdx+1,0,
+    {type:"question",label:"Q",text:"Is a Tiering Exception available?",field:"→ Tiering Exception Available: Yes / No"},
+    {type:"branch",label:"If YES",text:"What is the tier exception process?",field:"→ Phone | Fax | Online"}
+  );
   return b;
 }
 
