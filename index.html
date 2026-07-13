@@ -6,6 +6,7 @@
 <title>Valeris — Call Script Dashboard</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f1729'/><rect x='18' y='18' width='64' height='64' rx='8' fill='%234263eb'/><rect x='30' y='30' width='40' height='40' rx='4' fill='%230f1729'/><rect x='38' y='38' width='24' height='24' rx='2' fill='%23f1f5f9'/></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -198,6 +199,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .btn-sec-toggle:hover{background:#4263eb;color:#fff;border-color:#4263eb}
 .section.search-hidden{display:none!important}
 .step.search-hidden{display:none!important}
+.qc-row.search-hidden{display:none!important}
 
 /* ── EDIT BUTTON ── */
 .edited-badge{font-size:9px;font-weight:700;background:#4263eb;color:#fff;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle;letter-spacing:.3px}
@@ -453,12 +455,84 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .fref-na-item:last-child{border-bottom:none}
 .fref-na-item:hover{background:#f8f9ff}
 .fref-na-group{font-size:10px;color:#94a3b8;font-weight:600;padding:5px 14px 3px;text-transform:uppercase;letter-spacing:.5px;background:#fafbff}
+
+/* ── QC SCORECARD ── */
+.qc-header{background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:18px;border:1px solid #e5e9f2;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.qc-header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.qc-title{font-size:19px;font-weight:700;color:#111827;letter-spacing:-.2px}
+.qc-subtitle{font-size:12px;color:#6b7280;margin-top:3px;line-height:1.5}
+.qc-toolbar{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.qc-btn{padding:7px 14px;border-radius:7px;font-size:12.5px;font-weight:600;border:1px solid #e2e6f0;background:#fff;cursor:pointer;color:#374151;font-family:'Inter',sans-serif;white-space:nowrap}
+.qc-btn:hover{background:#f5f7ff;border-color:#c7d2fe}
+.qc-btn.primary{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+.qc-btn.primary:hover{background:#1e40af}
+.qc-btn.danger{color:#dc2626;border-color:#fecaca}
+.qc-btn.danger:hover{background:#fef2f2}
+.qc-score-strip{display:flex;gap:22px;align-items:center;margin-bottom:16px;padding:14px 18px;background:#f8faff;border-radius:10px;border:1px solid #eef1ff;flex-wrap:wrap}
+.qc-score-big{text-align:center}
+.qc-score-num{font-size:26px;font-weight:800;line-height:1}
+.qc-score-num.na{color:#94a3b8}
+.qc-score-num.pass{color:#15803d}
+.qc-score-num.warn{color:#b45309}
+.qc-score-num.fail{color:#dc2626}
+.qc-score-caption{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-top:2px;font-weight:700}
+.qc-score-divider{width:1px;height:34px;background:#e2e6f0}
+.qc-egregious-banner{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.qc-fields-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:980px){.qc-fields-grid{grid-template-columns:repeat(2,1fr)}}
+.qc-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:4px}
+.qc-field input,.qc-field select{width:100%;padding:7px 10px;border:1px solid #e2e6f0;border-radius:6px;font-size:12.5px;font-family:'Inter',sans-serif;color:#1f2937;background:#fbfbfe}
+.qc-field input:focus,.qc-field select:focus{outline:none;border-color:#4263eb}
+.qc-section-count{font-size:11px;color:#94a3b8;font-weight:600;margin-left:auto;padding-right:8px}
+.qc-table-hdr{display:grid;grid-template-columns:180px 1fr 100px 100px 50px 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
+@media(max-width:1100px){.qc-table-hdr{display:none}}
+.qc-row{display:grid;grid-template-columns:180px 1fr 100px 100px 50px 1fr;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid #f1f4fb}
+.qc-row:last-child{border-bottom:none}
+@media(max-width:1100px){.qc-row{grid-template-columns:1fr 1fr;gap:6px;padding:12px 0}
+  .qc-row-label,.qc-row-question,.qc-comment-input{grid-column:1 / -1}}
+.qc-row-label{font-size:12.5px;font-weight:700;color:#374151}
+.qc-row-question{font-size:12.5px;color:#4b5563;line-height:1.5}
+.qc-row-question .fatal-tag{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#b91c1c;background:#fee2e2;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+.qc-score-cell{display:flex;flex-direction:column;gap:2px}
+.qc-score-mini-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#b0bac9}
+.qc-score-select{padding:6px 8px;border-radius:6px;font-size:12px;font-weight:700;border:1px solid #e2e6f0;width:100%;font-family:'Inter',sans-serif;background:#fbfbfe;color:#374151}
+.qc-score-select.v-pass{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}
+.qc-score-select.v-fail{background:#fef2f2;color:#dc2626;border-color:#fecaca}
+.qc-score-select.v-na{background:#f8fafc;color:#64748b;border-color:#e2e8f0}
+.qc-weight{font-size:11.5px;color:#94a3b8;text-align:center;padding-top:7px;font-weight:600}
+.qc-comment-input{width:100%;padding:6px 8px;border:1px solid #e2e6f0;border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;color:#334155}
+.qc-comment-input:focus{outline:none;border-color:#4263eb}
+.qc-empty-note{font-size:11.5px;color:#94a3b8;padding:10px 0 2px}
+.qc-signedin-chip{display:inline-flex;align-items:center;gap:6px;background:#1e293b;color:#dcfce7;border:1px solid #334155;border-radius:20px;padding:5px 10px 5px 12px;font-size:12px;font-weight:600;white-space:nowrap}
+.qc-signout-btn{background:none;border:none;color:#94a3b8;font-size:14px;cursor:pointer;line-height:1;padding:0 2px}
+.qc-signout-btn:hover{color:#f87171}
+.qc-save-status{font-size:11.5px;font-weight:600;min-height:14px}
+.qc-save-status.ok{color:#15803d}
+.qc-save-status.err{color:#dc2626}
+/* ── QC ANALYTICS ── */
+.qc-analytics-row{display:grid;grid-template-columns:160px 1fr 60px 180px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid #f1f4fb}
+.qc-analytics-row:last-child{border-bottom:none}
+@media(max-width:900px){.qc-analytics-row{grid-template-columns:1fr;gap:4px}}
+.qc-analytics-name{font-size:12.5px;font-weight:700;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qc-analytics-bar-track{height:10px;border-radius:6px;background:#f1f4fb;overflow:hidden}
+.qc-analytics-bar-fill{height:100%;border-radius:6px}
+.qc-analytics-bar-fill.pass{background:#22c55e}
+.qc-analytics-bar-fill.warn{background:#f59e0b}
+.qc-analytics-bar-fill.fail{background:#ef4444}
+.qc-analytics-bar-fill.na{background:#cbd5e1}
+.qc-analytics-score{font-size:13px;font-weight:800;text-align:right}
+.qc-analytics-score.pass{color:#15803d}
+.qc-analytics-score.warn{color:#b45309}
+.qc-analytics-score.fail{color:#dc2626}
+.qc-analytics-score.na{color:#94a3b8}
+.qc-analytics-meta{font-size:11px;color:#94a3b8;white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="topbar">
   <h1>&#9635; Valeris</h1>
   <input class="search-bar" id="searchInput" placeholder="&#128269; Search programs..." oninput="filterSidebar(this.value)">
+  <div id="qcAuthContainer" style="margin-left:12px;display:flex;gap:6px"></div>
 </div>
 <div class="layout">
   <div class="sidebar" id="sidebar"></div>
@@ -1281,6 +1355,218 @@ const complianceItems = [
 ];
 
 // ══════════════════════════════════════════════════════════════
+//  QC SCORECARD — MM (Major Medical) CASES
+//  Every row below is one literal question/field from the MM call script
+//  (mmStandard() builder + PA/Pre-D field set + AFP confirmation flow used
+//  across Spravato, Ipsen, J&J Immunology, J&J PAP, J&J Oncology/Darzalex,
+//  Vyepti, Dextenza/Ocular, Nucala, Sandoz DENO), plus the compliance/
+//  behavior checks from the BOTOX ONE Internal BV/PA Audit Scorecard.
+//  Each row is scored on TWO axes — Asked (on the call) and Documented
+//  (in the case record) — each worth 50% of that row's weight.
+// ══════════════════════════════════════════════════════════════
+const QC_SECTIONS_MM=[
+  {title:"Greeting & Opening Statement",hdr:"hdr-opening",items:[
+    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:1},
+    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:1,fatal:true},
+    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:1},
+    {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
+  ]},
+  {title:"Call Attempts & Pushback",hdr:"hdr-compliance",items:[
+    {label:"Call Attempt Limits",q:"Total combined AI + Human call attempts did not exceed 4 per case (3 AI + 1 Human); any additional follow-up call was limited strictly to the disconnected-call / partial-information exception.",w:1},
+    {label:"Pushback Policy",q:"No more than one (1) professional pushback attempt made when the payer rep refused to provide requested information; agent remained professional and non-confrontational.",w:1},
+    {label:"Question Response",q:"Every payer rep question received a direct, clearly acknowledged response; agent did not talk over, interrupt, or bypass payer inquiries.",w:1},
+    {label:"Information Handling",q:"Provided the exact information requested (did not substitute an alternate identifier — e.g., Member ID for name — unless explicitly requested); clearly stated when information was unavailable.",w:1},
+    {label:"Missing Information",q:"Followed the appropriate Missing Information (MI) protocol when required information was missing from the case file.",w:1},
+  ]},
+  {title:"Eligibility",hdr:"hdr-plan",items:[
+    {label:"Plan Active",q:"Is this plan active?",w:1},
+    {label:"Plan Effective Date",q:"Could you help me out with the effective date of the plan?",w:1},
+    {label:"Plan Term/End Date",q:"Could you help me out with the termination date of the plan?",w:1},
+    {label:"Benefit Year Type",q:"Does this plan run on a Calendar Year? Fiscal Year? Plan Year?",w:1},
+    {label:"Plan Name & Type",q:"May I know the Plan name and type of the plan the patient is currently enrolled in? (HMO/PPO/POS/EPO/Medicare Advantage/Medicaid)",w:1},
+    {label:"Insurance Type",q:"What is the Insurance Type? (Commercial / Medicare / Medicare Advantage / Tricare)",w:1},
+    {label:"Subscriber Relationship",q:"Is this patient the subscriber of the plan? What is the patient's relationship to the subscriber?",w:1},
+    {label:"Coordination of Benefits",q:"Coordination of Benefits — is this Primary / Secondary / Tertiary? Any additional insurance on file?",w:1},
+    {label:"Primary Plan Confirmation",q:"Is this the patient's primary plan? Is there any other insurance on file?",w:1},
+    {label:"Network Status",q:"Is the provider in-network with the policy?",w:1},
+    {label:"PCP Referral Requirement",q:"Is PCP referral required?",w:1},
+    {label:"PCP Referral on File",q:"Is there a PCP referral on file?",w:1},
+    {label:"Referral Number",q:"If PCP referral on file = Yes: What is the referral number?",w:1},
+    {label:"Referral Dates",q:"If PCP referral on file = Yes: What is the start and end date of the referral?",w:1},
+    {label:"Approved Visit Count",q:"If PCP referral on file = Yes: How many visits have already been approved?",w:1},
+  ]},
+  {title:"Benefits Details",hdr:"hdr-benefit",items:[
+    {label:"Drug Coverage (J-code/DX)",q:"Is the drug (J-code) covered under the patient's plan for the diagnosis billed, rendered outpatient in the specialist office with no office visit billed?",w:1},
+    {label:"Drug Copay/Coinsurance",q:"How much would be the copay or coinsurance for the drug?",w:1},
+    {label:"100% After OOP",q:"Is the drug and CPT code covered at 100% after the OOP is met?",w:1},
+    {label:"Individual Deductible",q:"What is the Individual Deductible amount, and how much has been met?",w:1},
+    {label:"Family Deductible",q:"What is the Family Deductible amount, and how much has been met?",w:1},
+    {label:"Individual OOP Max",q:"What is the Individual OOP Max amount, and how much has been met?",w:1},
+    {label:"Family OOP Max",q:"What is the Family OOP Max amount, and how much has been met?",w:1},
+    {label:"Deductible Included in OOP",q:"Is the deductible included in the OOP max?",w:1},
+    {label:"Deductible Applicability",q:"Is the deductible applicable on the J-code and the CPT code?",w:1},
+    {label:"Admin (CPT) Copay",q:"What is the Admin (CPT code) copay / coinsurance?",w:1},
+    {label:"Codes Billed Separately",q:"If the J-code and CPT code were provided together, informed the payer rep that benefits are needed for the codes billed separately.",w:1},
+  ]},
+  {title:"Office Visit Benefits",hdr:"hdr-coverage",items:[
+    {label:"Office Visit Copay",q:"Could you help me with the specialist office visit copay for the J-code?",w:1},
+    {label:"Deductible on Office Visit",q:"Is the deductible applicable to the office visit copay?",w:1},
+    {label:"OOP Max on Office Visit",q:"Is the OOP max applicable to the office visit copay?",w:1},
+    {label:"Copay After OOP Met",q:"Does copay / coinsurance always apply after the OOP max is met?",w:1},
+    {label:"Office Visit 100% After OOP",q:"Is the office visit copay covered at 100% once the OOP max is met?",w:1},
+  ]},
+  {title:"Prior Authorization / Pre-Determination",hdr:"hdr-auth",items:[
+    {label:"Authorization Required",q:"Is there an authorization required for the J-code and CPT code?",w:1},
+    {label:"Pre-D Fallback",q:"If authorization is not required, is pre-determination recommended?",w:1},
+    {label:"PA/Pre-D Dept & Phone",q:"What is the PA/Pre-D department name and phone number?",w:1},
+    {label:"PA/Pre-D Reference ID",q:"If on file: what is the PA/Pre-D reference or approval ID?",w:1},
+    {label:"PA/Pre-D Effective & End Date",q:"If approved: what are the effective date and end date of the authorization?",w:1},
+    {label:"Approved Units/Treatments",q:"If approved: how many total units or treatments were approved?",w:1},
+    {label:"Provider Name Match",q:"Does the provider name on the PA/Pre-D match the provider name in the BV request?",w:1},
+    {label:"J-Code/CPT/DX Match",q:"Does the PA/Pre-D on file include the J-Code, CPT code, and DX code submitted in the BV request?",w:1},
+    {label:"Denial Date & Reason",q:"If denied: what is the denial date and the reason for the denial?",w:1},
+    {label:"Submission Method",q:"What are the available submission methods (phone / fax / portal) and their contact details?",w:1},
+    {label:"Standard & Urgent TAT",q:"What is the standard and urgent turnaround time (TAT) for the PA/Pre-D?",w:1},
+    {label:"Pending Reference & Date",q:"If pending: what is the reference number, and when was it submitted?",w:1},
+    {label:"Other Active Authorization",q:"Is there any other active authorization/pre-determination on file apart from the one being discussed?",w:1},
+  ]},
+  {title:"Step Therapy",hdr:"hdr-benefit",items:[
+    {label:"Step Therapy Required",q:"Is step therapy required?",w:1},
+    {label:"Step Therapy Process",q:"What is the step therapy process — which drug(s) must be tried and failed first?",w:1},
+  ]},
+  {title:"Copay Maximizer & AFP",hdr:"hdr-benefit",items:[
+    {label:"Copay Accumulator",q:"Is there a Copay Accumulator attached to the policy — i.e., does manufacturer copay assistance NOT count toward the member's deductible or OOP max (e.g. SaveOnSP, PrudentRx, SHARx, Payer Matrix)?",w:1},
+    {label:"Copay Maximizer",q:"Is there a Copay Maximizer attached to the policy — i.e., is the drug placed on a specialty tier to inflate the member's cost-share and draw down the full manufacturer assistance amount?",w:1},
+    {label:"AFP Required",q:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment is provided for this medication?",w:1},
+    {label:"AFP Type",q:"If yes: is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?",w:1},
+    {label:"AFP Program/Vendor Name",q:"If yes: what is the name of the program, vendor, or organization administering this requirement?",w:1},
+    {label:"AFP Contact Info",q:"If yes: is there a dedicated phone number, website, or contact department for this program?",w:1},
+    {label:"AFP Enrollment Required",q:"If yes: is member enrollment or participation required before coverage can be approved or paid?",w:1},
+    {label:"AFP Requirements/Next Steps",q:"If yes: are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",w:1},
+  ]},
+  {title:"Drug Acquisition & PBM Information",hdr:"hdr-drug",items:[
+    {label:"Buy & Bill Permitted",q:"Can the provider do buy and bill?",w:1},
+    {label:"Limitations/Exclusions",q:"Are there any limitations or exclusions to buy and bill?",w:1},
+    {label:"SP + Major Medical Coverage",q:"If the drug is obtained through SP, will it still be covered under Major Medical benefits?",w:1},
+    {label:"Benefits Same (SP vs Buy&Bill)",q:"Are the benefits and prior authorization the same whether the drug is purchased through a specialty pharmacy or through buy and bill?",w:1},
+    {label:"Preferred SP Details",q:"Who is the preferred SP that can dispense the J-code? (Name / Phone / Fax)",w:1},
+    {label:"SP Preferred/Open/Mandated",q:"Is this SP preferred / open / mandated?",w:1},
+    {label:"PBM Information",q:"What is the name of the PBM and their phone number and fax number?",w:1},
+  ]},
+  {title:"Site of Care Policy",hdr:"hdr-plan",items:[
+    {label:"HCP Office Coverage",q:"Is administration covered at the HCP office? (Network Status)",w:1},
+    {label:"Hospital/Outpatient Coverage",q:"Is administration covered at the Hospital / Outpatient Infusion Center? (Network Status)",w:1},
+    {label:"Site of Care Cost Share",q:"How much would be the copay or coinsurance for the drug at each applicable site of care?",w:1},
+  ]},
+  {title:"Closing & Internal Documentation",hdr:"hdr-closing",items:[
+    {label:"Closing Statement",q:"Thanked the payer rep by name and obtained a call reference number before ending the call.",w:1},
+    {label:"Case Record Updates",q:"Pulled through the correct contact and/or updated all new information in the case record.",w:1},
+    {label:"SR / Case Summary Notes",q:"Documented effective, accurate SR/case summary notes (SOB).",w:1},
+    {label:"FUN Quality",q:"FUNs / notes free of significant formatting and spelling errors.",w:1},
+  ]},
+  {title:"Effective Communication",hdr:"hdr-opening",items:[
+    {label:"White Glove Service",q:"Demonstrated professionalism through appropriate tone, disposition, pace, word choice, enunciation, and active listening (focused, did not interrupt, questioned unclear responses).",w:1},
+    {label:"Demonstrated Expertise",q:"Demonstrated expertise of the program, drug, and payer terminology throughout the call.",w:1},
+  ]},
+  {title:"Egregious",hdr:"hdr-compliance",items:[
+    {label:"HIPAA Privacy",q:"Adhered to HIPAA privacy rules — no PHI relayed to a third party without valid consent on file.",w:1,fatal:true},
+    {label:"Misrepresentation",q:"Did not misrepresent identity, program affiliation, or role on the call.",w:1,fatal:true},
+    {label:"Call Recording Disclaimer",q:"Stated the mandatory call-recording disclaimer with every representative on the call.",w:1,fatal:true},
+  ]},
+];
+
+// ══════════════════════════════════════════════════════════════
+//  QC SCORECARD — PBM (Pharmacy Benefit Manager) CASES
+//  Every row below is one literal question/field from the PBM call script
+//  (pbmStandard() builder + pbmNotCoveredFlow() PA/Formulary Exception &
+//  Appeal flow used across Spravato, Ipsen, J&J Immunology, J&J PAP,
+//  J&J Oncology/Erleada, Orgovyx, Nucala, Sandoz DENO), plus the same
+//  compliance/behavior checks used on the MM scorecard.
+//  Each row is scored on TWO axes — Asked (on the call) and Documented
+//  (in the case record) — each worth 50% of that row's weight.
+// ══════════════════════════════════════════════════════════════
+const QC_SECTIONS_PBM=[
+  {title:"Greeting & Opening Statement",hdr:"hdr-opening",items:[
+    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:1},
+    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:1,fatal:true},
+    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:1},
+    {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
+  ]},
+  {title:"Call Attempts & Pushback",hdr:"hdr-compliance",items:[
+    {label:"Call Attempt Limits",q:"Total combined AI + Human call attempts did not exceed 4 per case (3 AI + 1 Human); any additional follow-up call was limited strictly to the disconnected-call / partial-information exception.",w:1},
+    {label:"Pushback Policy",q:"No more than one (1) professional pushback attempt made when the payer rep refused to provide requested information; agent remained professional and non-confrontational.",w:1},
+    {label:"Question Response",q:"Every payer rep question received a direct, clearly acknowledged response; agent did not talk over, interrupt, or bypass payer inquiries.",w:1},
+    {label:"Information Handling",q:"Provided the exact information requested (did not substitute an alternate identifier — e.g., Member ID for name — unless explicitly requested); clearly stated when information was unavailable.",w:1},
+    {label:"Missing Information",q:"Followed the appropriate Missing Information (MI) protocol when required information was missing from the case file.",w:1},
+  ]},
+  {title:"Plan Details",hdr:"hdr-plan",items:[
+    {label:"Insurance Type",q:"Is this a commercial or Medicare Part D plan?",w:1},
+    {label:"Plan Name",q:"May I know the plan name?",w:1},
+    {label:"Plan Type",q:"May I know the plan type — Medicare Part D / Commercial / Medicare Advantage / Tricare?",w:1},
+    {label:"Plan Effective Date",q:"What is the effective date of the plan?",w:1},
+    {label:"Plan Term/End Date",q:"Is there a termination date on the plan?",w:1},
+    {label:"Benefit Year Type",q:"Does this plan run on a Calendar Year, Fiscal Year, or Plan Year? If fiscal, what is the renewal date?",w:1},
+    {label:"Subscriber Relationship",q:"Is the member the subscriber of the plan? If not, what is the patient's relationship to the subscriber?",w:1},
+    {label:"LIS Status",q:"Does this patient have Low Income Subsidy (LIS)? (Medicare Part D only)",w:1},
+    {label:"LIS Level",q:"What is the level of LIS — Level 1 / 2 / 3 / 4? (Medicare Part D only)",w:1},
+  ]},
+  {title:"Pharmacy Processing Information",hdr:"hdr-pharmacy",items:[
+    {label:"BIN / PCN / Rx Group",q:"May I know the BIN, PCN, and Rx Group number?",w:1},
+  ]},
+  {title:"Coverage Details",hdr:"hdr-coverage",items:[
+    {label:"Drug Coverage (NDC)",q:"Is the patient covered for the specific drug (verified by NDC), strength, and quantity/day supply — can you run a test claim?",w:1},
+  ]},
+  {title:"Prior Authorization / Formulary Exception & Appeal",hdr:"hdr-auth",items:[
+    {label:"PA/FE Required",q:"Is there a PA required for the drug? If not, is there a Formulary Exception?",w:1},
+    {label:"PA/FE On File",q:"Is there a PA/Formulary Exception currently on file?",w:1},
+    {label:"PA/FE Reference/Approval #",q:"May I have the PA/Formulary Exception reference or approval number?",w:1},
+    {label:"PA/FE Effective & End Date",q:"What are the start and end dates of the active authorization?",w:1},
+    {label:"PA/FE Dept Name & Phone",q:"What is the PA/Formulary Exception department name and phone number?",w:1},
+    {label:"Submission Method",q:"What are the available submission methods (phone / fax / portal) for the PA/Formulary Exception, and is there a form or website location?",w:1},
+    {label:"Standard & Urgent TAT",q:"What is the standard and urgent turnaround time for the PA/Formulary Exception?",w:1},
+    {label:"Denial Date & Reason",q:"If denied: what is the denial date and the reason for the denial?",w:1},
+    {label:"Provider Name Match",q:"Does the provider name on file match the provider name in the BV request?",w:1},
+    {label:"Other Active Authorization",q:"Is there any other active authorization on file apart from the one being discussed?",w:1},
+    {label:"Appeal Availability",q:"If PA is not required and the drug is not covered, is an appeal available?",w:1},
+    {label:"Appeal Status",q:"Can you confirm the current appeal status — Approved / Denied / Pending / Not on File?",w:1},
+    {label:"Appeal Reference & Submitted Date",q:"What is the appeal reference number, and when was it submitted?",w:1},
+    {label:"Appeal Count",q:"How many appeals are available under this plan, and how many have been submitted so far?",w:1},
+    {label:"Appeal Notification Method",q:"How will the provider be notified of the appeal decision, and is there a website/portal to track the status?",w:1},
+  ]},
+  {title:"Preferred Specialty Pharmacy",hdr:"hdr-drug",items:[
+    {label:"Preferred SP Details",q:"Can you help me with the name of the preferred specialty pharmacy(s) who can dispense the drug, along with their phone and fax number?",w:1},
+  ]},
+  {title:"Benefit Details",hdr:"hdr-benefit",items:[
+    {label:"Estimated Patient Price (EPP)",q:"May I know the Estimated Patient Price (EPP) of the drug at the preferred specialty pharmacy?",w:1},
+    {label:"Copay/Coinsurance",q:"If EPP is not available, how much is the copay or coinsurance? (Always ask coinsurance first, then copay.)",w:1},
+    {label:"Copay Accumulator",q:"Is there a Copay Accumulator attached to the policy — i.e., does manufacturer copay assistance NOT count toward the member's deductible or OOP max? (Commercial)",w:1},
+    {label:"Copay Maximizer",q:"Is there a Copay Maximizer attached to the policy — i.e., is the drug placed on a specialty tier to inflate the member's cost-share and draw down the full manufacturer assistance amount? (Commercial)",w:1},
+    {label:"Individual Deductible/OOP",q:"What is the individual deductible and OOP max, and how much has been met?",w:1},
+    {label:"Family Deductible/OOP",q:"What is the family deductible and OOP max, and how much has been met? (Commercial)",w:1},
+    {label:"Deductible Included in OOP",q:"Is the deductible included in the OOP max? (Commercial)",w:1},
+    {label:"TrOOP",q:"What is the TrOOP amount, and how much has been met? (Medicare Part D)",w:1},
+    {label:"Drug Tier",q:"What tier does this drug fall under?",w:1},
+    {label:"Annual Benefit Cap",q:"Is there an annual benefit cap on this plan? (Commercial)",w:1},
+    {label:"Step Therapy",q:"Is step therapy required? If so, what are the step therapy drug names?",w:1},
+  ]},
+  {title:"Closing & Internal Documentation",hdr:"hdr-closing",items:[
+    {label:"Closing Statement",q:"Obtained the payer rep's first name, last name initial, and a call reference number for documentation, then thanked the rep before ending the call.",w:1},
+    {label:"Case Record Updates",q:"Pulled through the correct contact and/or updated all new information in the case record.",w:1},
+    {label:"SR / Case Summary Notes",q:"Documented effective, accurate SR/case summary notes (SOB).",w:1},
+    {label:"FUN Quality",q:"FUNs / notes free of significant formatting and spelling errors.",w:1},
+  ]},
+  {title:"Effective Communication",hdr:"hdr-opening",items:[
+    {label:"White Glove Service",q:"Demonstrated professionalism through appropriate tone, disposition, pace, word choice, enunciation, and active listening (focused, did not interrupt, questioned unclear responses).",w:1},
+    {label:"Demonstrated Expertise",q:"Demonstrated expertise of the program, drug, and payer terminology throughout the call.",w:1},
+  ]},
+  {title:"Egregious",hdr:"hdr-compliance",items:[
+    {label:"HIPAA Privacy",q:"Adhered to HIPAA privacy rules — no PHI relayed to a third party without valid consent on file.",w:1,fatal:true},
+    {label:"Misrepresentation",q:"Did not misrepresent identity, program affiliation, or role on the call.",w:1,fatal:true},
+    {label:"Call Recording Disclaimer",q:"Stated the mandatory call-recording disclaimer with every representative on the call.",w:1,fatal:true},
+  ]},
+];
+
+// ══════════════════════════════════════════════════════════════
 //  SIDEBAR
 // ══════════════════════════════════════════════════════════════
 const companies=[...new Set(programs.map(p=>p.company))];
@@ -1288,7 +1574,7 @@ const sidebarEl=document.getElementById("sidebar");
 // ── Drug Reference nav item ──
 const navSection=document.createElement("div");
 navSection.className="sidebar-nav-section";
-navSection.innerHTML=`<div class="sidebar-nav-item" id="navDrugInfo" onclick="showDrugInfo()">💊 <span>Drug Reference</span></div><div class="sidebar-nav-item" id="navTerms" onclick="showTerminology()">📚 <span>Terminologies</span></div><div class="sidebar-nav-item" id="navFieldRef" onclick="showFieldRef()">📋 <span>PBM Field Reference</span></div>`;
+navSection.innerHTML=`<div class="sidebar-nav-item" id="navDrugInfo" onclick="showDrugInfo()">💊 <span>Drug Reference</span></div><div class="sidebar-nav-item" id="navTerms" onclick="showTerminology()">📚 <span>Terminologies</span></div><div class="sidebar-nav-item" id="navFieldRef" onclick="showFieldRef()">📋 <span>PBM Field Reference</span></div><div class="sidebar-nav-item" id="navQC" onclick="showQCDashboard('mm')">🎯 <span>MM QC Scorecard</span></div><div class="sidebar-nav-item" id="navQCPBM" onclick="showQCDashboard('pbm')">💊 <span>PBM QC Scorecard</span></div><div class="sidebar-nav-item" id="navQCAnalytics" onclick="showQCAnalytics()">📊 <span>QC Analytics</span></div>`;
 sidebarEl.appendChild(navSection);
 companies.forEach(co=>{
   const group=programs.filter(p=>p.company===co);
@@ -3590,6 +3876,493 @@ function renderFieldRef(filter){
   </div>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+//  QC SCORECARD — MM  (render + state, localStorage-backed via editStore)
+//  Each row scores on TWO axes: "asked" (on the call) and "documented"
+//  (in the case record) — each worth 50% of the row's weight.
+// ══════════════════════════════════════════════════════════════
+delete editStore['qc__state'];    // drop the old single-axis schema
+delete editStore['qc__state_v2']; // drop v2 — item order/count changed (copay split, egregious edit), so old
+                                   // positional keys ("sectionIdx_itemIdx") would silently misalign onto the
+                                   // wrong item, including fatal items — capping the score below 100% forever.
+const QC_STATE_KEYS={mm:'qc__state_v3',pbm:'qc__pbm_state_v1'};
+const QC_KIND_META={
+  mm:{title:'MM QC Scorecard',shortLabel:'MM',navId:'navQC',
+      subtitle:'Quality audit checklist for Major Medical (MM) benefit-verification calls — one row per literal call-script question, generalized across all MM programs (Spravato, Ipsen, J&amp;J Immunology, J&amp;J PAP, J&amp;J Oncology, Vyepti, Dextenza, Nucala, Sandoz DENO).',
+      progFilter:p=>p.type==='mm'||p.type==='both'},
+  pbm:{title:'PBM QC Scorecard',shortLabel:'PBM',navId:'navQCPBM',
+      subtitle:'Quality audit checklist for Pharmacy Benefit Manager (PBM) benefit-verification calls — one row per literal call-script question, generalized across all PBM programs (Spravato, IpsenCares, J&amp;J Immunology, J&amp;J PAP, J&amp;J Oncology/Erleada, Orgovyx, Nucala, Sandoz DENO).',
+      progFilter:p=>p.type==='pbm'||p.type==='both'},
+};
+let qcStates = {
+  mm: editStore[QC_STATE_KEYS.mm] || {},
+  pbm: editStore[QC_STATE_KEYS.pbm] || {},
+};
+['mm','pbm'].forEach(k=>{ qcStates[k].case=qcStates[k].case||{}; qcStates[k].scores=qcStates[k].scores||{}; });
+let currentQCKind='mm';
+let qcState = qcStates.mm;
+let QC_SECTIONS = QC_SECTIONS_MM;
+function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS[currentQCKind]]=qcState; persistStore(); }
+
+// ══════════════════════════════════════════════════════════════
+//  QC SCORECARD — Save-to-Google-Sheet + Analytics
+//  Deploy google-apps-script/Code.gs as a Web App (see that file's header
+//  comment for exact steps), then paste the resulting /exec URL below.
+// ══════════════════════════════════════════════════════════════
+const QC_WEBHOOK_URL = "https://script.google.com/a/macros/100ms.live/s/AKfycbzjxMxdY2kJF7Ke06Nbiw2uY-gT25iWDYMK3xAdj5ZULXbGWDLksIF3bnA4fKE8RqjM/exec";
+function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
+
+// ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
+const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
+function qcAuthConfigured(){ return !!QC_GOOGLE_CLIENT_ID && QC_GOOGLE_CLIENT_ID.indexOf('PASTE_YOUR')===-1; }
+
+let qcAuthToken=null, qcAuthEmail=null, qcAuthExp=0;
+(function qcLoadStoredAuth(){
+  try{
+    const raw=sessionStorage.getItem('qc_google_auth');
+    if(!raw)return;
+    const saved=JSON.parse(raw);
+    if(saved.exp && saved.exp*1000 > Date.now()){
+      qcAuthToken=saved.token; qcAuthEmail=saved.email; qcAuthExp=saved.exp;
+    }
+  }catch(e){}
+})();
+
+function qcIsSignedIn(){ return !!qcAuthToken && qcAuthExp*1000 > Date.now(); }
+
+function qcInitGoogleAuth(){
+  if(!qcAuthConfigured() || typeof google==='undefined' || !google.accounts) return;
+  google.accounts.id.initialize({client_id:QC_GOOGLE_CLIENT_ID, callback:qcHandleCredential});
+}
+
+function qcHandleCredential(response){
+  try{
+    const b64=response.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const payload=JSON.parse(decodeURIComponent(escape(atob(b64))));
+    qcAuthToken=response.credential; qcAuthEmail=payload.email; qcAuthExp=payload.exp;
+    sessionStorage.setItem('qc_google_auth', JSON.stringify({token:qcAuthToken,email:qcAuthEmail,exp:qcAuthExp}));
+  }catch(e){}
+  qcRefreshAuthUI();
+}
+
+function qcSignOut(){
+  qcAuthToken=null; qcAuthEmail=null; qcAuthExp=0;
+  sessionStorage.removeItem('qc_google_auth');
+  qcRefreshAuthUI();
+}
+
+function qcRefreshAuthUI(){
+  const el=document.getElementById('qcAuthContainer');
+  if(!el || !qcAuthConfigured()) return;
+  if(qcIsSignedIn()){
+    el.innerHTML=`<span class="qc-signedin-chip">&#10003; ${escHtml(qcAuthEmail)}<button class="qc-signout-btn" onclick="qcSignOut()" title="Sign out">&times;</button></span>`;
+    return;
+  }
+  el.innerHTML='';
+  if(typeof google!=='undefined' && google.accounts){
+    google.accounts.id.renderButton(el, {theme:'filled_blue', size:'medium', text:'signin', width:180});
+  }
+}
+
+function qcBuildSavePayload(){
+  const c=qcState.case||{};
+  const p=programs.find(x=>x.id===c.program);
+  const r=qcRecalc();
+  const headers=['Agent Name','SR / Case Number','Auditor Name','Audit Date','Payer Name','Payer Type','Program','Overall Score (%)','# of Errors','Scored','Total'];
+  const values=[c.agentName||'',c.srNumber||'',c.auditorName||'',c.auditDate||'',c.payerName||'',c.payerType||'',p?p.label:'',r.pct===null?'':r.pct,r.errCount,r.scoredCount,r.totalCount];
+  QC_SECTIONS.forEach((sec,si)=>{
+    sec.items.forEach((it,ii)=>{
+      const st=qcState.scores[si+'_'+ii]||{};
+      headers.push(sec.title+' — '+it.label+' — Asked');
+      headers.push(sec.title+' — '+it.label+' — Documented');
+      headers.push(sec.title+' — '+it.label+' — Comment');
+      values.push(st.asked||'',st.documented||'',st.comment||'');
+    });
+  });
+  return {kind:currentQCKind,idToken:qcAuthToken,headers,values};
+}
+
+async function qcSaveToSheet(){
+  const btn=document.getElementById('qcSaveBtn');
+  const statusEl=document.getElementById('qcSaveStatus');
+  const setStatus=(text,cls)=>{ if(statusEl){statusEl.textContent=text;statusEl.className='qc-save-status'+(cls?' '+cls:'');} };
+  if(!qcWebhookConfigured()){
+    setStatus('⚠ Save endpoint not configured — see google-apps-script/Code.gs','err');
+    return;
+  }
+  if(!qcAuthConfigured()){
+    setStatus('⚠ Google Sign-In not configured — see google-apps-script/Code.gs','err');
+    return;
+  }
+  if(!qcIsSignedIn()){
+    setStatus('⚠ Please sign in with your Google account first (top right) before saving.','err');
+    if(typeof google!=='undefined' && google.accounts) google.accounts.id.prompt();
+    return;
+  }
+  const payload=qcBuildSavePayload();
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  setStatus('','');
+  try{
+    const res=await fetch(QC_WEBHOOK_URL,{method:'POST',body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.status==='ok') setStatus('✓ Saved to '+data.sheet+' (row '+data.row+')','ok');
+    else setStatus('✗ Save failed: '+(data.message||'Unknown error'),'err');
+  }catch(err){
+    setStatus('✗ Save failed: '+err.message,'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='&#9729; Save to Sheet';}
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  QC ANALYTICS — aggregate saved audits by agent / by program
+// ══════════════════════════════════════════════════════════════
+let _qcAnalyticsCache={mm:null,pbm:null};
+let _qcAnalyticsKind='mm';
+
+function showQCAnalytics(){
+  currentView='qc_analytics';currentProgId='';
+  document.querySelectorAll(".sidebar-item").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".sidebar-nav-item").forEach(el=>el.classList.remove("active"));
+  const n=document.getElementById('navQCAnalytics');if(n)n.classList.add('active');
+  document.getElementById('main').innerHTML=renderQCAnalyticsShell();
+  qcLoadAnalytics(_qcAnalyticsKind);
+}
+
+function renderQCAnalyticsShell(){
+  return `<div class="qc-header">
+    <div class="qc-header-top">
+      <div>
+        <div class="qc-title">&#128202; QC Analytics</div>
+        <div class="qc-subtitle">Aggregated scores by agent and by program, pulled live from the saved QC audits Google Sheet.</div>
+      </div>
+      <div class="qc-toolbar">
+        <button class="qc-btn" onclick="qcRefreshAnalytics()">&#9851; Refresh</button>
+      </div>
+    </div>
+    <div class="tabs" style="margin-top:14px">
+      <div class="tab ${_qcAnalyticsKind==='mm'?'active-mm':''}" onclick="qcSwitchAnalyticsKind('mm')">MM</div>
+      <div class="tab ${_qcAnalyticsKind==='pbm'?'active-pbm':''}" onclick="qcSwitchAnalyticsKind('pbm')">PBM</div>
+    </div>
+  </div>
+  <div id="qcAnalyticsBody"><div style="padding:40px;text-align:center;color:#94a3b8">Loading…</div></div>`;
+}
+
+function qcSwitchAnalyticsKind(kind){
+  _qcAnalyticsKind=kind;
+  document.getElementById('main').innerHTML=renderQCAnalyticsShell();
+  qcLoadAnalytics(kind);
+}
+
+function qcRefreshAnalytics(){
+  _qcAnalyticsCache[_qcAnalyticsKind]=null;
+  qcLoadAnalytics(_qcAnalyticsKind);
+}
+
+async function qcLoadAnalytics(kind){
+  const bodyEl=document.getElementById('qcAnalyticsBody');
+  if(!bodyEl)return;
+  const cached=_qcAnalyticsCache[kind];
+  const FRESH_MS=5*60*1000;
+  if(cached&&(Date.now()-cached.ts)<FRESH_MS){
+    bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+    return;
+  }
+  if(!qcWebhookConfigured()){
+    bodyEl.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8">&#9888; Save endpoint not configured yet — see google-apps-script/Code.gs</div>`;
+    return;
+  }
+  if(!qcAuthConfigured()){
+    bodyEl.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8">&#9888; Google Sign-In not configured yet — see google-apps-script/Code.gs</div>`;
+    return;
+  }
+  if(!qcIsSignedIn()){
+    bodyEl.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8">&#9888; Please sign in with your Google account (top right) to view analytics.</div>`;
+    if(typeof google!=='undefined' && google.accounts) google.accounts.id.prompt();
+    return;
+  }
+  bodyEl.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8">Loading…</div>`;
+  try{
+    const res=await fetch(QC_WEBHOOK_URL,{method:'POST',body:JSON.stringify({action:'list',kind,idToken:qcAuthToken})});
+    const data=await res.json();
+    if(data.status!=='ok')throw new Error(data.message||'Unknown error');
+    _qcAnalyticsCache[kind]={data:data.audits,ts:Date.now()};
+    bodyEl.innerHTML=renderQCAnalyticsBody(data.audits);
+  }catch(err){
+    bodyEl.innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626">&#10005; Could not load analytics: ${escHtml(err.message)}</div>`;
+  }
+}
+
+function qcAggregateBy(audits,key){
+  const groups={};
+  audits.forEach(a=>{
+    const k=(a[key]||'(unknown)').toString();
+    if(!groups[k])groups[k]={name:k,count:0,scoreSum:0,scoreCount:0,errorSum:0};
+    groups[k].count++;
+    const score=parseFloat(a.overallScore);
+    if(!isNaN(score)){groups[k].scoreSum+=score;groups[k].scoreCount++;}
+    const errs=parseFloat(a.errorCount);
+    if(!isNaN(errs))groups[k].errorSum+=errs;
+  });
+  return Object.values(groups).map(g=>({
+    name:g.name,count:g.count,
+    avgScore:g.scoreCount?Math.round(g.scoreSum/g.scoreCount):null,
+    avgErrors:g.count?+(g.errorSum/g.count).toFixed(1):0
+  })).sort((a,b)=>(b.avgScore===null?-1:b.avgScore)-(a.avgScore===null?-1:a.avgScore));
+}
+
+function qcAnalyticsBarRow(item){
+  const pct=item.avgScore===null?0:item.avgScore;
+  const cls=item.avgScore===null?'na':pct<70?'fail':pct<90?'warn':'pass';
+  return `<div class="qc-analytics-row">
+    <div class="qc-analytics-name" title="${escHtml(item.name)}">${escHtml(item.name)}</div>
+    <div class="qc-analytics-bar-track"><div class="qc-analytics-bar-fill ${cls}" style="width:${pct}%"></div></div>
+    <div class="qc-analytics-score ${cls}">${item.avgScore===null?'—':item.avgScore+'%'}</div>
+    <div class="qc-analytics-meta">${item.count} audit${item.count!==1?'s':''} &middot; ${item.avgErrors} avg errors</div>
+  </div>`;
+}
+
+function renderQCAnalyticsBody(audits){
+  if(!audits||!audits.length){
+    return `<div style="padding:40px;text-align:center;color:#94a3b8">No saved audits yet for this program type.</div>`;
+  }
+  const byAgent=qcAggregateBy(audits,'agent');
+  const byProgram=qcAggregateBy(audits,'program');
+  const totalAudits=audits.length;
+  const scoredAgents=byAgent.filter(a=>a.avgScore!==null);
+  const overallAvg=scoredAgents.length?Math.round(scoredAgents.reduce((s,a)=>s+a.avgScore*a.count,0)/scoredAgents.reduce((s,a)=>s+a.count,0)):0;
+  return `
+  <div class="qc-score-strip">
+    <div class="qc-score-big"><div class="qc-score-num pass">${totalAudits}</div><div class="qc-score-caption">Total Audits</div></div>
+    <div class="qc-score-divider"></div>
+    <div class="qc-score-big"><div class="qc-score-num ${overallAvg<70?'fail':overallAvg<90?'warn':'pass'}">${overallAvg}%</div><div class="qc-score-caption">Overall Avg Score</div></div>
+    <div class="qc-score-divider"></div>
+    <div class="qc-score-big"><div class="qc-score-num na">${byAgent.length}</div><div class="qc-score-caption">Agents</div></div>
+    <div class="qc-score-divider"></div>
+    <div class="qc-score-big"><div class="qc-score-num na">${byProgram.length}</div><div class="qc-score-caption">Programs</div></div>
+  </div>
+  <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>By Agent</span><span class="chevron open">&#9654;</span></div>
+    <div class="section-body">${byAgent.map(qcAnalyticsBarRow).join('')}</div>
+  </div>
+  <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>By Program</span><span class="chevron open">&#9654;</span></div>
+    <div class="section-body">${byProgram.map(qcAnalyticsBarRow).join('')}</div>
+  </div>`;
+}
+
+function showQCDashboard(kind){
+  currentQCKind = kind==='pbm' ? 'pbm' : 'mm';
+  qcState = qcStates[currentQCKind];
+  QC_SECTIONS = currentQCKind==='pbm' ? QC_SECTIONS_PBM : QC_SECTIONS_MM;
+  currentView = currentQCKind==='pbm' ? 'qc_pbm' : 'qc_mm';
+  currentProgId='';
+  document.querySelectorAll(".sidebar-item").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".sidebar-nav-item").forEach(el=>el.classList.remove("active"));
+  const n=document.getElementById(QC_KIND_META[currentQCKind].navId);if(n)n.classList.add("active");
+  document.getElementById("main").innerHTML=renderQCDashboard();
+  document.querySelectorAll("#main .qc-sections-wrap .section-header .chevron").forEach(c=>c.classList.add("open"));
+  qcRecalc();
+}
+
+function qcProgramInfoHtml(progId){
+  const p=programs.find(x=>x.id===progId);
+  if(!p) return '';
+  const jcodes=p.drugs?[...new Set(p.drugs.map(d=>d.jcode).filter(j=>j&&j!=="—"))]:[];
+  if(!jcodes.length) return '';
+  return `<span style="font-size:11px;color:#94a3b8;font-weight:600;margin-right:6px">J-CODE REF:</span>`+jcodes.map(j=>`<span class="prog-jcode-chip">&#128137; ${j}</span>`).join(' ');
+}
+
+function qcUpdateCase(field,val){
+  qcState.case[field]=val;
+  qcSaveState();
+  if(field==='program'){
+    const infoEl=document.getElementById('qcProgramInfo');
+    if(infoEl) infoEl.innerHTML=qcProgramInfoHtml(val);
+  }
+}
+
+function qcUpdateScore(si,ii,axis,val,el){
+  const key=si+'_'+ii;
+  if(!qcState.scores[key]) qcState.scores[key]={asked:'',documented:'',comment:''};
+  qcState.scores[key][axis]=val;
+  if(el) el.className='qc-score-select'+(val?' v-'+val:'');
+  qcSaveState();
+  qcRecalc();
+}
+
+function qcUpdateComment(si,ii,val){
+  const key=si+'_'+ii;
+  if(!qcState.scores[key]) qcState.scores[key]={asked:'',documented:'',comment:''};
+  qcState.scores[key].comment=val;
+  qcSaveState();
+}
+
+function qcRecalc(){
+  let num=0,den=0,errCount=0,scoredCount=0,totalCount=0,fatalFail=false;
+  QC_SECTIONS.forEach((sec,si)=>{
+    sec.items.forEach((it,ii)=>{
+      totalCount+=2; // asked + documented
+      const st=qcState.scores[si+'_'+ii];
+      const half=it.w*0.5;
+      ['asked','documented'].forEach(axis=>{
+        const sc=st&&st[axis];
+        if(sc==='pass'){num+=half;den+=half;scoredCount++;}
+        else if(sc==='fail'){den+=half;errCount++;scoredCount++;if(it.fatal)fatalFail=true;}
+        else if(sc==='na'){scoredCount++;}
+      });
+    });
+  });
+  const pct=fatalFail?0:(den>0?Math.min(100,Math.max(0,Math.round(num/den*100))):null);
+  const numEl=document.getElementById('qcOverallScore');
+  if(numEl){
+    numEl.textContent=pct===null?'—':pct+'%';
+    numEl.className='qc-score-num '+(pct===null?'na':pct<70?'fail':pct<90?'warn':'pass');
+  }
+  const errEl=document.getElementById('qcErrorCount');if(errEl)errEl.textContent=errCount;
+  const progressEl=document.getElementById('qcProgress');if(progressEl)progressEl.textContent=`${scoredCount} / ${totalCount} scored`;
+  const banner=document.getElementById('qcFatalBanner');if(banner)banner.style.display=fatalFail?'':'none';
+  return {pct,errCount,scoredCount,totalCount,fatalFail};
+}
+
+function qcResetAudit(){
+  if(!confirm('Start a new QC audit? This will clear all case info, scores, and comments currently entered.'))return;
+  qcState={case:{},scores:{}};
+  qcSaveState();
+  showQCDashboard(currentQCKind);
+}
+
+function filterQC(val){
+  const q=(val||'').trim().toLowerCase();
+  const sections=document.querySelectorAll('#main .qc-sections-wrap .section');
+  if(!q){
+    sections.forEach(sec=>{
+      sec.classList.remove('search-hidden');
+      sec.querySelectorAll('.qc-row').forEach(r=>r.classList.remove('search-hidden'));
+    });
+    return;
+  }
+  sections.forEach(sec=>{
+    const titleEl=sec.querySelector('.section-header span');
+    const titleMatch=!!(titleEl&&titleEl.textContent.toLowerCase().includes(q));
+    const rows=sec.querySelectorAll('.qc-row');
+    let anyRowMatch=false;
+    rows.forEach(row=>{
+      const label=(row.querySelector('.qc-row-label')||{}).textContent||'';
+      const question=(row.querySelector('.qc-row-question')||{}).textContent||'';
+      const match=titleMatch||(label+' '+question).toLowerCase().includes(q);
+      if(match){row.classList.remove('search-hidden');anyRowMatch=true;}
+      else row.classList.add('search-hidden');
+    });
+    if(titleMatch||anyRowMatch){
+      sec.classList.remove('search-hidden');
+      const chevron=sec.querySelector('.chevron');
+      const body=sec.querySelector('.section-body');
+      if(chevron&&!chevron.classList.contains('open')){chevron.classList.add('open');if(body)body.style.display='';}
+    } else {
+      sec.classList.add('search-hidden');
+    }
+  });
+}
+
+function qcExpandAll(){
+  document.querySelectorAll('#main .qc-sections-wrap .section').forEach(sec=>{
+    const chevron=sec.querySelector('.chevron');
+    const body=sec.querySelector('.section-body');
+    if(chevron&&!chevron.classList.contains('open')){chevron.classList.add('open');if(body)body.style.display='';}
+  });
+}
+
+function qcCollapseAll(){
+  document.querySelectorAll('#main .qc-sections-wrap .section').forEach(sec=>{
+    const chevron=sec.querySelector('.chevron');
+    const body=sec.querySelector('.section-body');
+    if(chevron&&chevron.classList.contains('open')){chevron.classList.remove('open');if(body)body.style.display='none';}
+  });
+}
+
+function qcScoreSelectHtml(si,ii,axis,val){
+  const axisLabel=axis==='asked'?'Asked':'Documented';
+  return `<div class="qc-score-cell"><span class="qc-score-mini-label">${axisLabel}</span><select class="qc-score-select${val?' v-'+val:''}" onchange="qcUpdateScore(${si},${ii},'${axis}',this.value,this)">
+    <option value="" ${!val?'selected':''}>Select…</option>
+    <option value="pass" ${val==='pass'?'selected':''}>Pass</option>
+    <option value="fail" ${val==='fail'?'selected':''}>Fail</option>
+    <option value="na" ${val==='na'?'selected':''}>N/A</option>
+  </select></div>`;
+}
+
+function renderQCDashboard(){
+  const meta=QC_KIND_META[currentQCKind];
+  const c=qcState.case;
+  const kindProgs=programs.filter(meta.progFilter);
+  const progOptions=`<option value="">&#8212; Select Program &#8212;</option>`+kindProgs.map(p=>`<option value="${p.id}" ${c.program===p.id?'selected':''}>${p.label}</option>`).join('');
+  const fields=[
+    {k:'agentName',label:'Agent Name',type:'text'},
+    {k:'srNumber',label:'SR / Case Number',type:'text'},
+    {k:'auditorName',label:'Auditor Name',type:'text'},
+    {k:'auditDate',label:'Audit Date',type:'date'},
+    {k:'payerName',label:'Payer Name',type:'text'},
+    {k:'payerType',label:'Payer Type',type:'text'},
+  ];
+  const fieldsHtml=fields.map(f=>`<div class="qc-field"><label>${f.label}</label><input type="${f.type}" value="${escHtml((c[f.k]||'').toString())}" oninput="qcUpdateCase('${f.k}',this.value)"></div>`).join('');
+  const programField=`<div class="qc-field"><label>${meta.shortLabel} Program</label><select onchange="qcUpdateCase('program',this.value)">${progOptions}</select></div>`;
+
+  const totalItems=QC_SECTIONS.reduce((a,s)=>a+s.items.length,0)*2;
+  const sectionsHtml=QC_SECTIONS.map((sec,si)=>{
+    const rows=sec.items.map((it,ii)=>{
+      const key=si+'_'+ii;
+      const st=qcState.scores[key]||{};
+      const commentVal=escHtml((st.comment||'').toString());
+      return `<div class="qc-row">
+        <div class="qc-row-label">${it.label}</div>
+        <div class="qc-row-question">${it.q}${it.fatal?'<span class="fatal-tag">Fatal</span>':''}</div>
+        ${qcScoreSelectHtml(si,ii,'asked',st.asked||'')}
+        ${qcScoreSelectHtml(si,ii,'documented',st.documented||'')}
+        <div class="qc-weight">${it.w}</div>
+        <input class="qc-comment-input" placeholder="Comments…" value="${commentVal}" oninput="qcUpdateComment(${si},${ii},this.value)">
+      </div>`;
+    }).join('');
+    return `<div class="section">
+      <div class="section-header ${sec.hdr}" onclick="toggleSection(this)">
+        <span>${sec.title}</span>
+        <span class="chevron">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="qc-table-hdr"><span>Criterion</span><span>Question (from call script)</span><span>Asked</span><span>Documented</span><span>Wt.</span><span>Comments</span></div>
+        ${rows}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="qc-header">
+    <div class="qc-header-top">
+      <div>
+        <div class="qc-title">&#127919; ${meta.title}</div>
+        <div class="qc-subtitle">${meta.subtitle} Each row is scored on whether it was <strong>Asked</strong> on the call and whether it was <strong>Documented</strong> in the case record — each worth 50% of that row's weight.</div>
+        <div id="qcProgramInfo" style="margin-top:8px">${qcProgramInfoHtml(c.program)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="qc-toolbar">
+          <button class="qc-btn primary" id="qcSaveBtn" onclick="qcSaveToSheet()">&#9729; Save to Sheet</button>
+          <button class="qc-btn" onclick="downloadExcel('qc')">&#8659; Download Excel</button>
+          <button class="qc-btn" onclick="printToPDF('qc')">&#128196; Print / PDF</button>
+          <button class="qc-btn danger" onclick="qcResetAudit()">&#8635; New Audit</button>
+        </div>
+        <div id="qcSaveStatus" class="qc-save-status"></div>
+      </div>
+    </div>
+    <div class="qc-fields-grid">${programField}${fieldsHtml}</div>
+  </div>
+  <div id="qcFatalBanner" class="qc-egregious-banner" style="display:none">&#9888; Automatic Fail — an Egregious item is marked Fail. Overall score is forced to 0%.</div>
+  <div class="qc-score-strip">
+    <div class="qc-score-big"><div class="qc-score-num na" id="qcOverallScore">&#8212;</div><div class="qc-score-caption">Overall Score</div></div>
+    <div class="qc-score-divider"></div>
+    <div class="qc-score-big"><div class="qc-score-num fail" id="qcErrorCount">0</div><div class="qc-score-caption"># of Errors</div></div>
+    <div class="qc-score-divider"></div>
+    <div class="qc-score-big" style="text-align:left"><div style="font-size:12.5px;color:#4b5563;font-weight:600" id="qcProgress">0 / ${totalItems} scored</div><div class="qc-score-caption">Progress</div></div>
+  </div>
+  <div class="script-search-wrap"><span style="color:#b0bac9;font-size:15px">&#128269;</span><input class="script-search" id="qcSearchInput" type="text" placeholder="Search sections or questions..." oninput="filterQC(this.value)" autocomplete="off"><button class="script-search-clear" onclick="document.getElementById('qcSearchInput').value='';filterQC('')" title="Clear">&#10005;</button><div class="script-search-divider"></div><button class="btn-sec-toggle" onclick="qcExpandAll()" title="Expand all sections">&#8661; Expand All</button><button class="btn-sec-toggle" onclick="qcCollapseAll()" title="Collapse all sections">&#8661; Collapse All</button></div>
+  <div class="qc-sections-wrap">${sectionsHtml}</div>`;
+}
+
 let _termEditIdx=null;
 function openAddTermModal(){
 
@@ -3705,10 +4478,65 @@ function downloadExcel(type){
     XLSX.utils.book_append_sheet(wb,ws,'Terminologies');
     XLSX.writeFile(wb,'Valeris_Terminologies_'+today+'.xlsx');
   }
+  else if(type==='qc'){
+    const meta=QC_KIND_META[currentQCKind];
+    const c=qcState.case||{};
+    const p=programs.find(x=>x.id===c.program);
+    const r=qcRecalc();
+    const aoa=[
+      [meta.title],
+      [],
+      ['Audit Type','QC Internal Audit',meta.shortLabel+' Program',p?p.label:''],
+      ['SR / Case Number',c.srNumber||'','Agent Name',c.agentName||''],
+      ['Auditor Name',c.auditorName||'','Audit Date',c.auditDate||''],
+      ['Payer Name',c.payerName||'','Payer Type',c.payerType||''],
+      ['# of Errors',r.errCount,'Overall Score',r.pct===null?'N/A':r.pct+'%'],
+      ['Scored',`${r.scoredCount} / ${r.totalCount}`,'',''],
+      [],
+    ];
+    const lbl=v=>v==='pass'?'Pass':v==='fail'?'Fail':v==='na'?'N/A':'';
+    QC_SECTIONS.forEach((sec,si)=>{
+      aoa.push([sec.title.toUpperCase(),'','ASKED','DOCUMENTED','WEIGHT','COMMENTS']);
+      sec.items.forEach((it,ii)=>{
+        const st=qcState.scores[si+'_'+ii]||{};
+        aoa.push([it.label,it.q,lbl(st.asked),lbl(st.documented),it.w,st.comment||'']);
+      });
+    });
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols']=[24,60,10,10,8,40].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb,ws,meta.title.slice(0,31));
+    XLSX.writeFile(wb,'Valeris_'+meta.shortLabel+'_QC_'+(c.srNumber||'audit').replace(/[^a-z0-9]/gi,'_')+'_'+today+'.xlsx');
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
 function printToPDF(type){
+  /* ══ QC SCORECARD (MM/PBM) — print an EXACT clone of the on-screen page, no restyling ══ */
+  if(type==='qc'){
+    const mainEl=document.getElementById('main');
+    if(!mainEl){alert('Nothing to print.');return;}
+    const qcTitle=QC_KIND_META[currentQCKind].title;
+    const styleHtml=[...document.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"], style')].map(el=>el.outerHTML).join('\n');
+    const win=window.open('','_blank','width=1100,height=900');
+    if(!win){alert('Please allow pop-ups in your browser to use this feature.');return;}
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${qcTitle}</title>${styleHtml}<style>
+      /* Technical resets only — the app's body/#main use height:100vh + overflow:hidden for the
+         in-app scroll panes, which would clip everything in a static print window. Nothing here
+         changes colors, fonts, spacing, or layout — it only lets the full content render/print. */
+      body{height:auto!important;overflow:visible!important;display:block!important;padding:24px}
+      #main{height:auto!important;overflow:visible!important;padding:0}
+      @page{size:A4 landscape;margin:10mm}
+      /* A print page is narrower than a browser window, which would otherwise trigger this same
+         stylesheet's own max-width:1100px responsive breakpoint and collapse the grid to a mobile
+         layout. Re-assert the desktop grid unconditionally so print always matches the screen. */
+      .qc-table-hdr{display:grid!important;grid-template-columns:180px 1fr 100px 100px 50px 1fr!important}
+      .qc-row{display:grid!important;grid-template-columns:180px 1fr 100px 100px 50px 1fr!important}
+      .qc-row-label,.qc-row-question,.qc-comment-input{grid-column:auto!important}
+    </style></head><body>${mainEl.outerHTML}</body></html>`);
+    win.document.close();
+    setTimeout(()=>{win.focus();win.print();},700);
+    return;
+  }
   /* ── Base CSS (all types) ── */
   const BASE=`
     *{box-sizing:border-box;margin:0;padding:0}
@@ -3862,6 +4690,17 @@ function printToPDF(type){
 }
 
 selectProgram(programs[0].id);
+
+// Poll rather than rely on script onload ordering — the GIS <script> tag is
+// async, so it can finish loading either before or after this inline script.
+(function qcWaitForGoogleAuth(){
+  if(typeof google!=='undefined' && google.accounts && google.accounts.id){
+    qcInitGoogleAuth();
+    qcRefreshAuthUI();
+  } else {
+    setTimeout(qcWaitForGoogleAuth, 150);
+  }
+})();
 </script>
 <div class="term-modal-overlay" id="termModalOverlay" onclick="if(event.target===this)closeTermModal()">
   <div class="term-modal-box">
