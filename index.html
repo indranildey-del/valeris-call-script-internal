@@ -3909,7 +3909,7 @@ function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS
 //  Deploy google-apps-script/Code.gs as a Web App (see that file's header
 //  comment for exact steps), then paste the resulting /exec URL below.
 // ══════════════════════════════════════════════════════════════
-const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwUPzmrHOK1rLv4QaSX2mVsRhuAJcOT0CSj0Frdlh8qNlwnz-OmfuKJFBeZOap7PZuu/exec";
+const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwdvVniMh2GbO0QFDOmbQJ2QsS7SKIvQsaU-_tfd-BaZq7xPNpcl_7R1NK2EZezc1bx/exec";
 function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
@@ -4005,7 +4005,7 @@ async function qcSaveToSheet(){
   try{
     const res=await fetch(QC_WEBHOOK_URL,{method:'POST',body:JSON.stringify(payload)});
     const data=await res.json();
-    if(data.status==='ok') setStatus('✓ Saved to '+data.sheet+' (row '+data.row+')','ok');
+    if(data.status==='ok') setStatus((data.updated?'✓ Updated existing entry in ':'✓ Saved to ')+data.sheet+' (row '+data.row+')','ok');
     else setStatus('✗ Save failed: '+(data.message||'Unknown error'),'err');
   }catch(err){
     setStatus('✗ Save failed: '+err.message,'err');
