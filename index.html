@@ -1371,8 +1371,8 @@ const complianceItems = [
 // ══════════════════════════════════════════════════════════════
 const QC_SECTIONS_MM=[
   {title:"Greeting & Opening Statement",hdr:"hdr-opening",items:[
-    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:1},
-    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:1,fatal:true},
+    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:2,fatal:true},
+    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:2,fatal:true},
     {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:1},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
   ]},
@@ -1474,9 +1474,9 @@ const QC_SECTIONS_MM=[
     {label:"Demonstrated Expertise",q:"Demonstrated expertise of the program, drug, and payer terminology throughout the call.",w:1},
   ]},
   {title:"Egregious",hdr:"hdr-compliance",items:[
-    {label:"HIPAA Privacy",q:"Adhered to HIPAA privacy rules — no PHI relayed to a third party without valid consent on file.",w:1,fatal:true},
-    {label:"Misrepresentation",q:"Did not misrepresent identity, program affiliation, or role on the call.",w:1,fatal:true},
-    {label:"Call Recording Disclaimer",q:"Stated the mandatory call-recording disclaimer with every representative on the call.",w:1,fatal:true},
+    {label:"HIPAA Privacy",q:"Adhered to HIPAA privacy rules — no PHI relayed to a third party without valid consent on file.",w:2,fatal:true},
+    {label:"Misrepresentation",q:"Did not misrepresent identity, program affiliation, or role on the call.",w:2,fatal:true},
+    {label:"Call Recording Disclaimer",q:"Stated the mandatory call-recording disclaimer with every representative on the call.",w:2,fatal:true},
   ]},
 ];
 
@@ -1492,8 +1492,8 @@ const QC_SECTIONS_MM=[
 // ══════════════════════════════════════════════════════════════
 const QC_SECTIONS_PBM=[
   {title:"Greeting & Opening Statement",hdr:"hdr-opening",items:[
-    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:1},
-    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:1,fatal:true},
+    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:2,fatal:true},
+    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:2,fatal:true},
     {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:1},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
   ]},
@@ -1565,9 +1565,9 @@ const QC_SECTIONS_PBM=[
     {label:"Demonstrated Expertise",q:"Demonstrated expertise of the program, drug, and payer terminology throughout the call.",w:1},
   ]},
   {title:"Egregious",hdr:"hdr-compliance",items:[
-    {label:"HIPAA Privacy",q:"Adhered to HIPAA privacy rules — no PHI relayed to a third party without valid consent on file.",w:1,fatal:true},
-    {label:"Misrepresentation",q:"Did not misrepresent identity, program affiliation, or role on the call.",w:1,fatal:true},
-    {label:"Call Recording Disclaimer",q:"Stated the mandatory call-recording disclaimer with every representative on the call.",w:1,fatal:true},
+    {label:"HIPAA Privacy",q:"Adhered to HIPAA privacy rules — no PHI relayed to a third party without valid consent on file.",w:2,fatal:true},
+    {label:"Misrepresentation",q:"Did not misrepresent identity, program affiliation, or role on the call.",w:2,fatal:true},
+    {label:"Call Recording Disclaimer",q:"Stated the mandatory call-recording disclaimer with every representative on the call.",w:2,fatal:true},
   ]},
 ];
 
