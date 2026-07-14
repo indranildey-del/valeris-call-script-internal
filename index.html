@@ -4561,9 +4561,9 @@ function qcScoreSelectHtml(si,ii,axis,val){
   const axisLabel=axis==='asked'?'Asked':'Documented';
   const v=val||'na'; // N/A is the default starting state for every row of a new audit
   return `<div class="qc-score-cell"><span class="qc-score-mini-label">${axisLabel}</span><select class="qc-score-select v-${v}" onchange="qcUpdateScore(${si},${ii},'${axis}',this.value,this)">
+    <option value="na" ${v==='na'?'selected':''}>N/A</option>
     <option value="pass" ${v==='pass'?'selected':''}>Pass</option>
     <option value="fail" ${v==='fail'?'selected':''}>Fail</option>
-    <option value="na" ${v==='na'?'selected':''}>N/A</option>
   </select></div>`;
 }
 
