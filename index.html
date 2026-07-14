@@ -1417,6 +1417,7 @@ const QC_SECTIONS_MM=[
     {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:4,fatal:true},
     {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:4,fatal:true},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
+    {label:"Case Disposition",q:"Selected and documented the correct case disposition reflecting the outcome/status of this call.",w:4},
   ]},
   {title:"Call Attempts & Pushback",hdr:"hdr-compliance",weightPct:3,items:[
     {label:"Call Attempt Limits",q:"Total combined AI + Human call attempts did not exceed 4 per case (3 AI + 1 Human); any additional follow-up call was limited strictly to the disconnected-call / partial-information exception.",w:1},
@@ -1533,6 +1534,7 @@ const QC_SECTIONS_PBM=[
     {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:4,fatal:true},
     {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:4,fatal:true},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
+    {label:"Case Disposition",q:"Selected and documented the correct case disposition reflecting the outcome/status of this call.",w:4},
   ]},
   {title:"Call Attempts & Pushback",hdr:"hdr-compliance",weightPct:3,items:[
     {label:"Call Attempt Limits",q:"Total combined AI + Human call attempts did not exceed 4 per case (3 AI + 1 Human); any additional follow-up call was limited strictly to the disconnected-call / partial-information exception.",w:1},
@@ -3959,7 +3961,7 @@ function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS
 //  Deploy google-apps-script/Code.gs as a Web App (see that file's header
 //  comment for exact steps), then paste the resulting /exec URL below.
 // ══════════════════════════════════════════════════════════════
-const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyqX-kNjz8CQ2ONLnO7lfiHjo45m71sXbVS3JGHtYZz9IrJ0qvVg-qG5iZYgKCszMux/exec";
+const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbywki4PUpZA82WFldF8ZHNk1D2j3aSAogh59pCKn3ujFEH6JlWzmnQez13-_4rM-mZs/exec";
 function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
 
 // Bump this string on every push (any change is enough — date+counter is a
@@ -3967,7 +3969,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.13";
+const APP_VERSION = "2026-07-15.15";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
