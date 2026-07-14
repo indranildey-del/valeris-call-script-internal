@@ -486,8 +486,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-fields-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 @media(max-width:980px){.qc-fields-grid{grid-template-columns:repeat(2,1fr)}}
 .qc-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:4px}
+.qc-required-star{color:#dc2626;margin-left:2px}
 .qc-field input,.qc-field select{width:100%;padding:7px 10px;border:1px solid #e2e6f0;border-radius:6px;font-size:12.5px;font-family:'Inter',sans-serif;color:#1f2937;background:#fbfbfe}
 .qc-field input:focus,.qc-field select:focus{outline:none;border-color:#4263eb}
+.qc-field input.qc-field-error,.qc-field select.qc-field-error{border-color:#dc2626;background:#fef2f2}
 .qc-section-count{font-size:11px;color:#94a3b8;font-weight:600;margin-left:auto;padding-right:8px}
 .qc-table-hdr{display:grid;grid-template-columns:180px 1fr 100px 100px 50px 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
 @media(max-width:1100px){.qc-table-hdr{display:none}}
@@ -3987,6 +3989,31 @@ function qcBuildSavePayload(){
   return {kind:currentQCKind,idToken:qcAuthToken,headers,values};
 }
 
+function qcRequiredCaseFields(){
+  return [
+    {k:'program',label:QC_KIND_META[currentQCKind].shortLabel+' Program'},
+    {k:'type',label:'Type'},
+    {k:'teamLeader',label:'Team Leader'},
+    {k:'agentName',label:'Agent Name'},
+    {k:'srNumber',label:'SR / Case Number'},
+    {k:'auditorName',label:'Auditor Name'},
+    {k:'auditDate',label:'Audit Date'},
+    {k:'payerName',label:'Payer Name'},
+    {k:'payerType',label:'Payer Type'},
+  ];
+}
+
+function qcValidateCaseInfo(){
+  const c=qcState.case||{};
+  document.querySelectorAll('[data-field].qc-field-error').forEach(el=>el.classList.remove('qc-field-error'));
+  const missing=qcRequiredCaseFields().filter(f=>!String(c[f.k]||'').trim());
+  missing.forEach(f=>{
+    const el=document.querySelector('[data-field="'+f.k+'"]');
+    if(el) el.classList.add('qc-field-error');
+  });
+  return missing;
+}
+
 async function qcSaveToSheet(){
   const btns=[...document.querySelectorAll('[data-role="qc-save-btn"]')];
   const statusEls=[...document.querySelectorAll('[data-role="qc-save-status"]')];
@@ -4002,6 +4029,11 @@ async function qcSaveToSheet(){
   if(!qcIsSignedIn()){
     setStatus('⚠ Please sign in with your Google account first (top right) before saving.','err');
     if(typeof google!=='undefined' && google.accounts) google.accounts.id.prompt();
+    return;
+  }
+  const missingFields=qcValidateCaseInfo();
+  if(missingFields.length){
+    setStatus('⚠ Please fill in: '+missingFields.map(f=>f.label).join(', '),'err');
     return;
   }
   const payload=qcBuildSavePayload();
@@ -4201,6 +4233,10 @@ function qcUpdateCase(field,val){
     const infoEl=document.getElementById('qcProgramInfo');
     if(infoEl) infoEl.innerHTML=qcProgramInfoHtml(val);
   }
+  if(String(val||'').trim()){
+    const el=document.querySelector('[data-field="'+field+'"]');
+    if(el) el.classList.remove('qc-field-error');
+  }
 }
 
 function qcUpdateScore(si,ii,axis,val,el){
@@ -4325,14 +4361,14 @@ function renderQCDashboard(){
     {k:'payerName',label:'Payer Name',type:'text'},
     {k:'payerType',label:'Payer Type',type:'text'},
   ];
-  const fieldsHtml=fields.map(f=>`<div class="qc-field"><label>${f.label}</label><input type="${f.type}" value="${escHtml((c[f.k]||'').toString())}" oninput="qcUpdateCase('${f.k}',this.value)"></div>`).join('');
-  const programField=`<div class="qc-field"><label>${meta.shortLabel} Program</label><select onchange="qcUpdateCase('program',this.value)">${progOptions}</select></div>`;
+  const fieldsHtml=fields.map(f=>`<div class="qc-field"><label>${f.label}<span class="qc-required-star">*</span></label><input data-field="${f.k}" type="${f.type}" value="${escHtml((c[f.k]||'').toString())}" oninput="qcUpdateCase('${f.k}',this.value)"></div>`).join('');
+  const programField=`<div class="qc-field"><label>${meta.shortLabel} Program<span class="qc-required-star">*</span></label><select data-field="program" onchange="qcUpdateCase('program',this.value)">${progOptions}</select></div>`;
   const QC_TYPE_OPTIONS=['MM','PBM','Transportation'];
   const QC_TEAM_LEADER_OPTIONS=['Hosni','Karthik','Jeswanth','Sudeesh','Basudeb','Rohan','Ezekeil'];
   const typeOptionsHtml=`<option value="">&#8212; Select &#8212;</option>`+QC_TYPE_OPTIONS.map(v=>`<option value="${v}" ${c.type===v?'selected':''}>${v}</option>`).join('');
   const teamLeaderOptionsHtml=`<option value="">&#8212; Select &#8212;</option>`+QC_TEAM_LEADER_OPTIONS.map(v=>`<option value="${v}" ${c.teamLeader===v?'selected':''}>${v}</option>`).join('');
-  const typeField=`<div class="qc-field"><label>Type</label><select onchange="qcUpdateCase('type',this.value)">${typeOptionsHtml}</select></div>`;
-  const teamLeaderField=`<div class="qc-field"><label>Team Leader</label><select onchange="qcUpdateCase('teamLeader',this.value)">${teamLeaderOptionsHtml}</select></div>`;
+  const typeField=`<div class="qc-field"><label>Type<span class="qc-required-star">*</span></label><select data-field="type" onchange="qcUpdateCase('type',this.value)">${typeOptionsHtml}</select></div>`;
+  const teamLeaderField=`<div class="qc-field"><label>Team Leader<span class="qc-required-star">*</span></label><select data-field="teamLeader" onchange="qcUpdateCase('teamLeader',this.value)">${teamLeaderOptionsHtml}</select></div>`;
 
   const totalItems=QC_SECTIONS.reduce((a,s)=>a+s.items.length,0)*2;
   const sectionsHtml=QC_SECTIONS.map((sec,si)=>{
