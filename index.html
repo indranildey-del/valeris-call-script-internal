@@ -487,6 +487,13 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 @media(max-width:980px){.qc-fields-grid{grid-template-columns:repeat(2,1fr)}}
 .qc-field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:4px}
 .qc-required-star{color:#dc2626;margin-left:2px}
+.qc-section-weight{font-size:11px;font-weight:600;color:#94a3b8;text-transform:none;letter-spacing:0}
+.qc-section-score{font-size:11px;font-weight:700;color:#4b5563;margin-left:10px;background:#f1f4fb;padding:2px 9px;border-radius:10px;white-space:nowrap}
+.qc-section-label{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:2px 9px;border-radius:10px;margin-left:6px;white-space:nowrap}
+.qc-section-label.high{background:#dcfce7;color:#15803d}
+.qc-section-label.medium{background:#fef3c7;color:#b45309}
+.qc-section-label.low{background:#ffedd5;color:#c2410c}
+.qc-section-label.fail{background:#fee2e2;color:#b91c1c}
 .qc-field input,.qc-field select{width:100%;padding:7px 10px;border:1px solid #e2e6f0;border-radius:6px;font-size:12.5px;font-family:'Inter',sans-serif;color:#1f2937;background:#fbfbfe}
 .qc-field input:focus,.qc-field select:focus{outline:none;border-color:#4263eb}
 .qc-field input.qc-field-error,.qc-field select.qc-field-error{border-color:#dc2626;background:#fef2f2}
@@ -1372,20 +1379,20 @@ const complianceItems = [
 //  (in the case record) — each worth 50% of that row's weight.
 // ══════════════════════════════════════════════════════════════
 const QC_SECTIONS_MM=[
-  {title:"Greeting & Opening Statement",hdr:"hdr-opening",items:[
-    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:2,fatal:true},
-    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:2,fatal:true},
-    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:2,fatal:true},
+  {title:"Greeting & Opening Statement",hdr:"hdr-opening",weightPct:8,items:[
+    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:4,fatal:true},
+    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:4,fatal:true},
+    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:4,fatal:true},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
   ]},
-  {title:"Call Attempts & Pushback",hdr:"hdr-compliance",items:[
+  {title:"Call Attempts & Pushback",hdr:"hdr-compliance",weightPct:3,items:[
     {label:"Call Attempt Limits",q:"Total combined AI + Human call attempts did not exceed 4 per case (3 AI + 1 Human); any additional follow-up call was limited strictly to the disconnected-call / partial-information exception.",w:1},
     {label:"Pushback Policy",q:"No more than one (1) professional pushback attempt made when the payer rep refused to provide requested information; agent remained professional and non-confrontational.",w:1},
     {label:"Question Response",q:"Every payer rep question received a direct, clearly acknowledged response; agent did not talk over, interrupt, or bypass payer inquiries.",w:1},
     {label:"Information Handling",q:"Provided the exact information requested (did not substitute an alternate identifier — e.g., Member ID for name — unless explicitly requested); clearly stated when information was unavailable.",w:1},
     {label:"Missing Information",q:"Followed the appropriate Missing Information (MI) protocol when required information was missing from the case file.",w:1},
   ]},
-  {title:"Eligibility",hdr:"hdr-plan",items:[
+  {title:"Eligibility",hdr:"hdr-plan",weightPct:10,items:[
     {label:"Plan Active",q:"Is this plan active?",w:1},
     {label:"Plan Effective Date",q:"Could you help me out with the effective date of the plan?",w:1},
     {label:"Plan Term/End Date",q:"Could you help me out with the termination date of the plan?",w:1},
@@ -1402,7 +1409,7 @@ const QC_SECTIONS_MM=[
     {label:"Referral Dates",q:"If PCP referral on file = Yes: What is the start and end date of the referral?",w:1},
     {label:"Approved Visit Count",q:"If PCP referral on file = Yes: How many visits have already been approved?",w:1},
   ]},
-  {title:"Benefits Details",hdr:"hdr-benefit",items:[
+  {title:"Benefits Details",hdr:"hdr-benefit",weightPct:25,items:[
     {label:"Drug Coverage (J-code/DX)",q:"Is the drug (J-code) covered under the patient's plan for the diagnosis billed, rendered outpatient in the specialist office with no office visit billed?",w:1},
     {label:"Drug Copay/Coinsurance",q:"How much would be the copay or coinsurance for the drug?",w:1},
     {label:"100% After OOP",q:"Is the drug and CPT code covered at 100% after the OOP is met?",w:1},
@@ -1415,14 +1422,14 @@ const QC_SECTIONS_MM=[
     {label:"Admin (CPT) Copay",q:"What is the Admin (CPT code) copay / coinsurance?",w:1},
     {label:"Codes Billed Separately",q:"If the J-code and CPT code were provided together, informed the payer rep that benefits are needed for the codes billed separately.",w:1},
   ]},
-  {title:"Office Visit Benefits",hdr:"hdr-coverage",items:[
+  {title:"Office Visit Benefits",hdr:"hdr-coverage",weightPct:10,items:[
     {label:"Office Visit Copay",q:"Could you help me with the specialist office visit copay for the J-code?",w:1},
     {label:"Deductible on Office Visit",q:"Is the deductible applicable to the office visit copay?",w:1},
     {label:"OOP Max on Office Visit",q:"Is the OOP max applicable to the office visit copay?",w:1},
     {label:"Copay After OOP Met",q:"Does copay / coinsurance always apply after the OOP max is met?",w:1},
     {label:"Office Visit 100% After OOP",q:"Is the office visit copay covered at 100% once the OOP max is met?",w:1},
   ]},
-  {title:"Prior Authorization / Pre-Determination",hdr:"hdr-auth",items:[
+  {title:"Prior Authorization / Pre-Determination",hdr:"hdr-auth",weightPct:10,items:[
     {label:"Authorization Required",q:"Is there an authorization required for the J-code and CPT code?",w:1},
     {label:"Pre-D Fallback",q:"If authorization is not required, is pre-determination recommended?",w:1},
     {label:"PA/Pre-D Dept & Phone",q:"What is the PA/Pre-D department name and phone number?",w:1},
@@ -1437,11 +1444,11 @@ const QC_SECTIONS_MM=[
     {label:"Pending Reference & Date",q:"If pending: what is the reference number, and when was it submitted?",w:1},
     {label:"Other Active Authorization",q:"Is there any other active authorization/pre-determination on file apart from the one being discussed?",w:1},
   ]},
-  {title:"Step Therapy",hdr:"hdr-benefit",items:[
+  {title:"Step Therapy",hdr:"hdr-benefit",weightPct:2,items:[
     {label:"Step Therapy Required",q:"Is step therapy required?",w:1},
     {label:"Step Therapy Process",q:"What is the step therapy process — which drug(s) must be tried and failed first?",w:1},
   ]},
-  {title:"Copay Maximizer & AFP",hdr:"hdr-benefit",items:[
+  {title:"Copay Maximizer & AFP",hdr:"hdr-benefit",weightPct:2,items:[
     {label:"Copay Accumulator",q:"Is there a Copay Accumulator attached to the policy — i.e., does manufacturer copay assistance NOT count toward the member's deductible or OOP max (e.g. SaveOnSP, PrudentRx, SHARx, Payer Matrix)?",w:1},
     {label:"Copay Maximizer",q:"Is there a Copay Maximizer attached to the policy — i.e., is the drug placed on a specialty tier to inflate the member's cost-share and draw down the full manufacturer assistance amount?",w:1},
     {label:"AFP Required",q:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment is provided for this medication?",w:1},
@@ -1451,7 +1458,7 @@ const QC_SECTIONS_MM=[
     {label:"AFP Enrollment Required",q:"If yes: is member enrollment or participation required before coverage can be approved or paid?",w:1},
     {label:"AFP Requirements/Next Steps",q:"If yes: are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",w:1},
   ]},
-  {title:"Drug Acquisition & PBM Information",hdr:"hdr-drug",items:[
+  {title:"Drug Acquisition & PBM Information",hdr:"hdr-drug",weightPct:20,items:[
     {label:"Buy & Bill Permitted",q:"Can the provider do buy and bill?",w:1},
     {label:"Limitations/Exclusions",q:"Are there any limitations or exclusions to buy and bill?",w:1},
     {label:"SP + Major Medical Coverage",q:"If the drug is obtained through SP, will it still be covered under Major Medical benefits?",w:1},
@@ -1460,25 +1467,20 @@ const QC_SECTIONS_MM=[
     {label:"SP Preferred/Open/Mandated",q:"Is this SP preferred / open / mandated?",w:1},
     {label:"PBM Information",q:"What is the name of the PBM and their phone number and fax number?",w:1},
   ]},
-  {title:"Site of Care Policy",hdr:"hdr-plan",items:[
+  {title:"Site of Care Policy",hdr:"hdr-plan",weightPct:5,items:[
     {label:"HCP Office Coverage",q:"Is administration covered at the HCP office? (Network Status)",w:1},
     {label:"Hospital/Outpatient Coverage",q:"Is administration covered at the Hospital / Outpatient Infusion Center? (Network Status)",w:1},
     {label:"Site of Care Cost Share",q:"How much would be the copay or coinsurance for the drug at each applicable site of care?",w:1},
   ]},
-  {title:"Closing & Internal Documentation",hdr:"hdr-closing",items:[
+  {title:"Closing & Internal Documentation",hdr:"hdr-closing",weightPct:3,items:[
     {label:"Closing Statement",q:"Thanked the payer rep by name and obtained a call reference number before ending the call.",w:1},
     {label:"Case Record Updates",q:"Pulled through the correct contact and/or updated all new information in the case record.",w:1},
     {label:"SR / Case Summary Notes",q:"Documented effective, accurate SR/case summary notes (SOB).",w:1},
     {label:"FUN Quality",q:"FUNs / notes free of significant formatting and spelling errors.",w:1},
   ]},
-  {title:"Effective Communication",hdr:"hdr-opening",items:[
+  {title:"Effective Communication",hdr:"hdr-opening",weightPct:2,items:[
     {label:"White Glove Service",q:"Demonstrated professionalism through appropriate tone, disposition, pace, word choice, enunciation, and active listening (focused, did not interrupt, questioned unclear responses).",w:1},
     {label:"Demonstrated Expertise",q:"Demonstrated expertise of the program, drug, and payer terminology throughout the call.",w:1},
-  ]},
-  {title:"Egregious",hdr:"hdr-compliance",items:[
-    {label:"HIPAA Privacy",q:"Adhered to HIPAA privacy rules — no PHI relayed to a third party without valid consent on file.",w:2,fatal:true},
-    {label:"Misrepresentation",q:"Did not misrepresent identity, program affiliation, or role on the call.",w:2,fatal:true},
-    {label:"Call Recording Disclaimer",q:"Stated the mandatory call-recording disclaimer with every representative on the call.",w:2,fatal:true},
   ]},
 ];
 
@@ -1493,20 +1495,20 @@ const QC_SECTIONS_MM=[
 //  (in the case record) — each worth 50% of that row's weight.
 // ══════════════════════════════════════════════════════════════
 const QC_SECTIONS_PBM=[
-  {title:"Greeting & Opening Statement",hdr:"hdr-opening",items:[
-    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:2,fatal:true},
-    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:2,fatal:true},
-    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:2,fatal:true},
+  {title:"Greeting & Opening Statement",hdr:"hdr-opening",weightPct:8,items:[
+    {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:4,fatal:true},
+    {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:4,fatal:true},
+    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:4,fatal:true},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
   ]},
-  {title:"Call Attempts & Pushback",hdr:"hdr-compliance",items:[
+  {title:"Call Attempts & Pushback",hdr:"hdr-compliance",weightPct:3,items:[
     {label:"Call Attempt Limits",q:"Total combined AI + Human call attempts did not exceed 4 per case (3 AI + 1 Human); any additional follow-up call was limited strictly to the disconnected-call / partial-information exception.",w:1},
     {label:"Pushback Policy",q:"No more than one (1) professional pushback attempt made when the payer rep refused to provide requested information; agent remained professional and non-confrontational.",w:1},
     {label:"Question Response",q:"Every payer rep question received a direct, clearly acknowledged response; agent did not talk over, interrupt, or bypass payer inquiries.",w:1},
     {label:"Information Handling",q:"Provided the exact information requested (did not substitute an alternate identifier — e.g., Member ID for name — unless explicitly requested); clearly stated when information was unavailable.",w:1},
     {label:"Missing Information",q:"Followed the appropriate Missing Information (MI) protocol when required information was missing from the case file.",w:1},
   ]},
-  {title:"Plan Details",hdr:"hdr-plan",items:[
+  {title:"Plan Details",hdr:"hdr-plan",weightPct:10,items:[
     {label:"Insurance Type",q:"Is this a commercial or Medicare Part D plan?",w:1},
     {label:"Plan Name",q:"May I know the plan name?",w:1},
     {label:"Plan Type",q:"May I know the plan type — Medicare Part D / Commercial / Medicare Advantage / Tricare?",w:1},
@@ -1517,13 +1519,13 @@ const QC_SECTIONS_PBM=[
     {label:"LIS Status",q:"Does this patient have Low Income Subsidy (LIS)? (Medicare Part D only)",w:1},
     {label:"LIS Level",q:"What is the level of LIS — Level 1 / 2 / 3 / 4? (Medicare Part D only)",w:1},
   ]},
-  {title:"Pharmacy Processing Information",hdr:"hdr-pharmacy",items:[
+  {title:"Pharmacy Processing Information",hdr:"hdr-pharmacy",weightPct:2,items:[
     {label:"BIN / PCN / Rx Group",q:"May I know the BIN, PCN, and Rx Group number?",w:1},
   ]},
-  {title:"Coverage Details",hdr:"hdr-coverage",items:[
+  {title:"Coverage Details",hdr:"hdr-coverage",weightPct:5,items:[
     {label:"Drug Coverage (NDC)",q:"Is the patient covered for the specific drug (verified by NDC), strength, and quantity/day supply — can you run a test claim?",w:1},
   ]},
-  {title:"Prior Authorization / Formulary Exception & Appeal",hdr:"hdr-auth",items:[
+  {title:"Prior Authorization / Formulary Exception & Appeal",hdr:"hdr-auth",weightPct:15,items:[
     {label:"PA/FE Required",q:"Is there a PA required for the drug? If not, is there a Formulary Exception?",w:1},
     {label:"PA/FE On File",q:"Is there a PA/Formulary Exception currently on file?",w:1},
     {label:"PA/FE Reference/Approval #",q:"May I have the PA/Formulary Exception reference or approval number?",w:1},
@@ -1540,10 +1542,10 @@ const QC_SECTIONS_PBM=[
     {label:"Appeal Count",q:"How many appeals are available under this plan, and how many have been submitted so far?",w:1},
     {label:"Appeal Notification Method",q:"How will the provider be notified of the appeal decision, and is there a website/portal to track the status?",w:1},
   ]},
-  {title:"Preferred Specialty Pharmacy",hdr:"hdr-drug",items:[
+  {title:"Preferred Specialty Pharmacy",hdr:"hdr-drug",weightPct:10,items:[
     {label:"Preferred SP Details",q:"Can you help me with the name of the preferred specialty pharmacy(s) who can dispense the drug, along with their phone and fax number?",w:1},
   ]},
-  {title:"Benefit Details",hdr:"hdr-benefit",items:[
+  {title:"Benefit Details",hdr:"hdr-benefit",weightPct:40,items:[
     {label:"Estimated Patient Price (EPP)",q:"May I know the Estimated Patient Price (EPP) of the drug at the preferred specialty pharmacy?",w:1},
     {label:"Copay/Coinsurance",q:"If EPP is not available, how much is the copay or coinsurance? (Always ask coinsurance first, then copay.)",w:1},
     {label:"Copay Accumulator",q:"Is there a Copay Accumulator attached to the policy — i.e., does manufacturer copay assistance NOT count toward the member's deductible or OOP max? (Commercial)",w:1},
@@ -1556,20 +1558,15 @@ const QC_SECTIONS_PBM=[
     {label:"Annual Benefit Cap",q:"Is there an annual benefit cap on this plan? (Commercial)",w:1},
     {label:"Step Therapy",q:"Is step therapy required? If so, what are the step therapy drug names?",w:1},
   ]},
-  {title:"Closing & Internal Documentation",hdr:"hdr-closing",items:[
+  {title:"Closing & Internal Documentation",hdr:"hdr-closing",weightPct:5,items:[
     {label:"Closing Statement",q:"Obtained the payer rep's first name, last name initial, and a call reference number for documentation, then thanked the rep before ending the call.",w:1},
     {label:"Case Record Updates",q:"Pulled through the correct contact and/or updated all new information in the case record.",w:1},
     {label:"SR / Case Summary Notes",q:"Documented effective, accurate SR/case summary notes (SOB).",w:1},
     {label:"FUN Quality",q:"FUNs / notes free of significant formatting and spelling errors.",w:1},
   ]},
-  {title:"Effective Communication",hdr:"hdr-opening",items:[
+  {title:"Effective Communication",hdr:"hdr-opening",weightPct:2,items:[
     {label:"White Glove Service",q:"Demonstrated professionalism through appropriate tone, disposition, pace, word choice, enunciation, and active listening (focused, did not interrupt, questioned unclear responses).",w:1},
     {label:"Demonstrated Expertise",q:"Demonstrated expertise of the program, drug, and payer terminology throughout the call.",w:1},
-  ]},
-  {title:"Egregious",hdr:"hdr-compliance",items:[
-    {label:"HIPAA Privacy",q:"Adhered to HIPAA privacy rules — no PHI relayed to a third party without valid consent on file.",w:2,fatal:true},
-    {label:"Misrepresentation",q:"Did not misrepresent identity, program affiliation, or role on the call.",w:2,fatal:true},
-    {label:"Call Recording Disclaimer",q:"Stated the mandatory call-recording disclaimer with every representative on the call.",w:2,fatal:true},
   ]},
 ];
 
@@ -3901,11 +3898,24 @@ const QC_KIND_META={
       subtitle:'Quality audit checklist for Pharmacy Benefit Manager (PBM) benefit-verification calls — one row per literal call-script question, generalized across all PBM programs (Spravato, IpsenCares, J&amp;J Immunology, J&amp;J PAP, J&amp;J Oncology/Erleada, Orgovyx, Nucala, Sandoz DENO).',
       progFilter:p=>p.type==='pbm'||p.type==='both'},
 };
+function qcDefaultScores(sections){
+  const scores={};
+  sections.forEach((sec,si)=>{
+    sec.items.forEach((it,ii)=>{
+      scores[si+'_'+ii]={asked:'na',documented:'na',comment:''};
+    });
+  });
+  return scores;
+}
+
 let qcStates = {
   mm: editStore[QC_STATE_KEYS.mm] || {},
   pbm: editStore[QC_STATE_KEYS.pbm] || {},
 };
-['mm','pbm'].forEach(k=>{ qcStates[k].case=qcStates[k].case||{}; qcStates[k].scores=qcStates[k].scores||{}; });
+qcStates.mm.case=qcStates.mm.case||{};
+qcStates.mm.scores=(qcStates.mm.scores&&Object.keys(qcStates.mm.scores).length)?qcStates.mm.scores:qcDefaultScores(QC_SECTIONS_MM);
+qcStates.pbm.case=qcStates.pbm.case||{};
+qcStates.pbm.scores=(qcStates.pbm.scores&&Object.keys(qcStates.pbm.scores).length)?qcStates.pbm.scores:qcDefaultScores(QC_SECTIONS_PBM);
 let currentQCKind='mm';
 let qcState = qcStates.mm;
 let QC_SECTIONS = QC_SECTIONS_MM;
@@ -4255,22 +4265,60 @@ function qcUpdateComment(si,ii,val){
   qcSaveState();
 }
 
+function qcFormatPoints(n){
+  const r=Math.round(n*10)/10;
+  return Number.isInteger(r)?String(r):r.toFixed(1);
+}
+
+function qcSectionBand(pct){
+  if(pct>=90) return {label:'High',cls:'high'};
+  if(pct>=70) return {label:'Medium',cls:'medium'};
+  if(pct>=50) return {label:'Low',cls:'low'};
+  return {label:'Fail',cls:'fail'};
+}
+
 function qcRecalc(){
-  let num=0,den=0,errCount=0,scoredCount=0,totalCount=0,fatalFail=false;
+  // Two-level scoring: each section computes its own 0-100% sub-score first
+  // (item weights 1/2/4 rank importance *within* that section, N/A excluded,
+  // same math as before) — then the Overall Score is the weighted average of
+  // every section's sub-score, weighted by that section's fixed weightPct.
+  // A section with no scored (non-N/A) items yet is skipped and the other
+  // sections' percentages are proportionally rescaled, so the score stays
+  // meaningful mid-audit instead of only once everything is filled in.
+  let errCount=0,scoredCount=0,totalCount=0,fatalFail=false;
+  let weightedNum=0,weightedDenPct=0;
   QC_SECTIONS.forEach((sec,si)=>{
+    let secNum=0,secDen=0;
     sec.items.forEach((it,ii)=>{
       totalCount+=2; // asked + documented
       const st=qcState.scores[si+'_'+ii];
       const half=it.w*0.5;
       ['asked','documented'].forEach(axis=>{
         const sc=st&&st[axis];
-        if(sc==='pass'){num+=half;den+=half;scoredCount++;}
-        else if(sc==='fail'){den+=half;errCount++;scoredCount++;if(it.fatal)fatalFail=true;}
+        if(sc==='pass'){secNum+=half;secDen+=half;scoredCount++;}
+        else if(sc==='fail'){secDen+=half;errCount++;scoredCount++;if(it.fatal)fatalFail=true;}
         else if(sc==='na'){scoredCount++;}
       });
     });
+    const scoreEl=document.getElementById('qcSecScore_'+si);
+    const labelEl=document.getElementById('qcSecLabel_'+si);
+    if(secDen>0){
+      const secPct=secNum/secDen*100;
+      const w=sec.weightPct||0;
+      weightedNum+=secPct*w;
+      weightedDenPct+=w;
+      if(scoreEl) scoreEl.textContent=qcFormatPoints(secNum)+'/'+qcFormatPoints(secDen);
+      if(labelEl){
+        const band=qcSectionBand(secPct);
+        labelEl.textContent=band.label;
+        labelEl.className='qc-section-label '+band.cls;
+      }
+    } else {
+      if(scoreEl) scoreEl.textContent='—/—';
+      if(labelEl){ labelEl.textContent=''; labelEl.className='qc-section-label'; }
+    }
   });
-  const pct=den>0?Math.min(100,Math.max(0,Math.round(num/den*100))):null;
+  const pct=weightedDenPct>0?Math.min(100,Math.max(0,Math.round(weightedNum/weightedDenPct))):null;
   const numEl=document.getElementById('qcOverallScore');
   if(numEl){
     numEl.textContent=pct===null?'—':pct+'%';
@@ -4284,7 +4332,7 @@ function qcRecalc(){
 
 function qcResetAudit(){
   if(!confirm('Start a new QC audit? This will clear all case info, scores, and comments currently entered.'))return;
-  qcState={case:{},scores:{}};
+  qcState={case:{},scores:qcDefaultScores(QC_SECTIONS)};
   qcSaveState();
   showQCDashboard(currentQCKind);
 }
@@ -4340,11 +4388,11 @@ function qcCollapseAll(){
 
 function qcScoreSelectHtml(si,ii,axis,val){
   const axisLabel=axis==='asked'?'Asked':'Documented';
-  return `<div class="qc-score-cell"><span class="qc-score-mini-label">${axisLabel}</span><select class="qc-score-select${val?' v-'+val:''}" onchange="qcUpdateScore(${si},${ii},'${axis}',this.value,this)">
-    <option value="" ${!val?'selected':''}>Select…</option>
-    <option value="pass" ${val==='pass'?'selected':''}>Pass</option>
-    <option value="fail" ${val==='fail'?'selected':''}>Fail</option>
-    <option value="na" ${val==='na'?'selected':''}>N/A</option>
+  const v=val||'na'; // N/A is the default starting state for every row of a new audit
+  return `<div class="qc-score-cell"><span class="qc-score-mini-label">${axisLabel}</span><select class="qc-score-select v-${v}" onchange="qcUpdateScore(${si},${ii},'${axis}',this.value,this)">
+    <option value="pass" ${v==='pass'?'selected':''}>Pass</option>
+    <option value="fail" ${v==='fail'?'selected':''}>Fail</option>
+    <option value="na" ${v==='na'?'selected':''}>N/A</option>
   </select></div>`;
 }
 
@@ -4387,7 +4435,9 @@ function renderQCDashboard(){
     }).join('');
     return `<div class="section">
       <div class="section-header ${sec.hdr}" onclick="toggleSection(this)">
-        <span>${sec.title}</span>
+        <span>${sec.title}${sec.weightPct?` <span class="qc-section-weight">— ${sec.weightPct}% of overall score</span>`:''}</span>
+        <span class="qc-section-score" id="qcSecScore_${si}">&#8212;/&#8212;</span>
+        <span class="qc-section-label" id="qcSecLabel_${si}"></span>
         <span class="chevron">&#9654;</span>
       </div>
       <div class="section-body">
@@ -4416,7 +4466,7 @@ function renderQCDashboard(){
     </div>
     <div class="qc-fields-grid">${programField}${typeField}${teamLeaderField}${fieldsHtml}</div>
   </div>
-  <div id="qcFatalBanner" class="qc-egregious-banner" style="display:none">&#9888; A fatal/Egregious item is marked Fail. This is counted in the score and error count like any other item, but flagged here for visibility.</div>
+  <div id="qcFatalBanner" class="qc-egregious-banner" style="display:none">&#9888; A fatal item is marked Fail. This is counted in the score and error count like any other item, but flagged here for visibility.</div>
   <div class="qc-score-strip">
     <div class="qc-score-big"><div class="qc-score-num na" id="qcOverallScore">&#8212;</div><div class="qc-score-caption">Overall Score</div></div>
     <div class="qc-score-divider"></div>
@@ -4580,11 +4630,37 @@ function downloadExcel(type){
 }
 
 // ══════════════════════════════════════════════════════════════
+function qcSyncFormValuesIntoClone(liveRoot,cloneRoot){
+  // outerHTML/cloneNode serialize the *attributes* an element was rendered with, not the
+  // live DOM property a user's typing/selecting updates — so a naive clone always shows
+  // stale text values and the original "Select…" option, no matter what's on screen.
+  // Copy the live .value (and, for <select>, which <option> is actually selected) onto the
+  // clone's matching elements — same tag order in both trees since it's a deep clone.
+  const liveEls=liveRoot.querySelectorAll('input, select, textarea');
+  const cloneEls=cloneRoot.querySelectorAll('input, select, textarea');
+  liveEls.forEach((liveEl,i)=>{
+    const cloneEl=cloneEls[i];
+    if(!cloneEl)return;
+    if(liveEl.tagName==='SELECT'){
+      [...cloneEl.options].forEach((opt,oi)=>{
+        if(oi===liveEl.selectedIndex) opt.setAttribute('selected','selected');
+        else opt.removeAttribute('selected');
+      });
+    } else if(liveEl.tagName==='TEXTAREA'){
+      cloneEl.textContent=liveEl.value;
+    } else {
+      cloneEl.setAttribute('value',liveEl.value);
+    }
+  });
+}
+
 function printToPDF(type){
   /* ══ QC SCORECARD (MM/PBM) — print an EXACT clone of the on-screen page, no restyling ══ */
   if(type==='qc'){
     const mainEl=document.getElementById('main');
     if(!mainEl){alert('Nothing to print.');return;}
+    const mainClone=mainEl.cloneNode(true);
+    qcSyncFormValuesIntoClone(mainEl,mainClone);
     const qcTitle=QC_KIND_META[currentQCKind].title;
     const styleHtml=[...document.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"], style')].map(el=>el.outerHTML).join('\n');
     const win=window.open('','_blank','width=1100,height=900');
@@ -4602,7 +4678,7 @@ function printToPDF(type){
       .qc-table-hdr{display:grid!important;grid-template-columns:180px 1fr 100px 100px 50px 1fr!important}
       .qc-row{display:grid!important;grid-template-columns:180px 1fr 100px 100px 50px 1fr!important}
       .qc-row-label,.qc-row-question,.qc-comment-input{grid-column:auto!important}
-    </style></head><body>${mainEl.outerHTML}</body></html>`);
+    </style></head><body>${mainClone.outerHTML}</body></html>`);
     win.document.close();
     setTimeout(()=>{win.focus();win.print();},700);
     return;
