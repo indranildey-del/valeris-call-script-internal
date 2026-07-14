@@ -3967,7 +3967,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.12";
+const APP_VERSION = "2026-07-15.13";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4252,7 +4252,7 @@ function qcAnalyticsSparklineSvg(points,cls){
   }
   const dotLabel=v=>v+' error'+(v!==1?'s':'');
   if(points.length===1){
-    return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}" stroke="${strokeColor}" stroke-width="0.5"/><circle cx="${w/2}" cy="${h/2}" r="6" fill="transparent"><title>${dotLabel(points[0])}</title></circle><circle cx="${w/2}" cy="${h/2}" r="2.5" fill="${strokeColor}" style="pointer-events:none"/></svg>`;
+    return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}" stroke="${strokeColor}" stroke-width="0.5"/><circle cx="${w/2}" cy="${h/2}" r="6" fill="transparent"><title>${dotLabel(points[0])}</title></circle><circle cx="${w/2}" cy="${h/2}" r="0.5" fill="${strokeColor}" style="pointer-events:none"/></svg>`;
   }
   const max=Math.max.apply(null,points)||1;
   const stepX=(w-2*pad)/(points.length-1);
@@ -4262,7 +4262,7 @@ function qcAnalyticsSparklineSvg(points,cls){
   // easy (2.5px dots are hard to hit precisely) carrying the tooltip, and
   // the small visible dot on top of it, excluded from hit-testing so it
   // doesn't fight the hover target underneath.
-  const dots=coords.map((c,i)=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="6" fill="transparent"><title>${dotLabel(points[i])}</title></circle><circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="2.5" fill="${strokeColor}" style="pointer-events:none"/>`).join('');
+  const dots=coords.map((c,i)=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="6" fill="transparent"><title>${dotLabel(points[i])}</title></circle><circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="0.5" fill="${strokeColor}" style="pointer-events:none"/>`).join('');
   return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
     <path d="${path}" fill="none" stroke="${strokeColor}" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
     ${dots}
