@@ -524,8 +524,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-save-status.ok{color:#15803d}
 .qc-save-status.err{color:#dc2626}
 /* ── QC ANALYTICS ── */
-.qc-analytics-row{display:grid;grid-template-columns:160px 1fr 60px 180px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid #f1f4fb}
+.qc-analytics-row{display:grid;grid-template-columns:160px 1fr 60px 180px 16px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid #f1f4fb}
 .qc-analytics-row:last-child{border-bottom:none}
+.qc-analytics-row-clickable{cursor:pointer}
+.qc-analytics-row-clickable:hover{background:#f8faff}
 @media(max-width:900px){.qc-analytics-row{grid-template-columns:1fr;gap:4px}}
 .qc-analytics-name{font-size:12.5px;font-weight:700;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qc-analytics-bar-track{height:10px;border-radius:6px;background:#f1f4fb;overflow:hidden}
@@ -540,6 +542,18 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-analytics-score.fail{color:#dc2626}
 .qc-analytics-score.na{color:#94a3b8}
 .qc-analytics-meta{font-size:11px;color:#94a3b8;white-space:nowrap}
+.qc-analytics-arrow{color:#94a3b8;font-size:16px;text-align:center}
+.qc-breadcrumb{display:flex;align-items:center;gap:7px;margin-bottom:14px;font-size:12.5px;flex-wrap:wrap}
+.qc-breadcrumb-item{color:#4263eb;cursor:pointer;font-weight:600}
+.qc-breadcrumb-item:hover{text-decoration:underline}
+.qc-breadcrumb-item.active{color:#111827;cursor:default;text-decoration:none;font-weight:700}
+.qc-breadcrumb-sep{color:#cbd5e1}
+.qc-analytics-date-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.qc-analytics-date-controls input[type="date"]{padding:5px 8px;border:1px solid #e2e6f0;border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;color:#334155}
+.qc-analytics-detail-hdr{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
+.qc-analytics-detail-row{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1fr;gap:10px;padding:8px 0;font-size:12.5px;color:#334155;border-bottom:1px solid #f1f4fb;align-items:center}
+.qc-analytics-detail-row:last-child{border-bottom:none}
+@media(max-width:900px){.qc-analytics-detail-hdr{display:none}.qc-analytics-detail-row{grid-template-columns:1fr 1fr;gap:4px}}
 </style>
 </head>
 <body>
@@ -3926,7 +3940,7 @@ function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS
 //  Deploy google-apps-script/Code.gs as a Web App (see that file's header
 //  comment for exact steps), then paste the resulting /exec URL below.
 // ══════════════════════════════════════════════════════════════
-const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwR9KxmD04eBlgBPsPGsj6UgRZ4Y6hiamZyjLGjB0XH1PKAlVpWvxgoBhFftiW-0K68/exec";
+const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwPgeX6BviAjQ5edHaS7yr5NBwIrmRTbR2H4K5nKFP-4lm6B2OWU3zuhKXeg2uCk8dw/exec";
 function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
@@ -4066,6 +4080,13 @@ async function qcSaveToSheet(){
 // ══════════════════════════════════════════════════════════════
 let _qcAnalyticsCache={mm:null,pbm:null};
 let _qcAnalyticsKind='mm';
+// Drill hierarchy: program -> teamLeader -> agent -> detail (one agent's audit history).
+let _qcAnalyticsDrill={level:'program',program:null,teamLeader:null,agent:null};
+let _qcAnalyticsDateFilter={mode:'all',from:'',to:''};
+// Row/breadcrumb click targets are registered here at render time and referenced by index —
+// avoids embedding free-text agent/program names (which may contain quotes/apostrophes)
+// directly into onclick="..." attribute strings.
+let _qcAnalyticsRowTargets=[];
 
 function showQCAnalytics(){
   currentView='qc_analytics';currentProgId='';
@@ -4073,6 +4094,7 @@ function showQCAnalytics(){
   document.querySelectorAll(".sidebar-nav-item").forEach(el=>el.classList.remove("active"));
   qcExpandNavGroup();
   const n=document.getElementById('navQCAnalytics');if(n)n.classList.add('active');
+  _qcAnalyticsDrill={level:'program',program:null,teamLeader:null,agent:null};
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(_qcAnalyticsKind);
 }
@@ -4082,7 +4104,7 @@ function renderQCAnalyticsShell(){
     <div class="qc-header-top">
       <div>
         <div class="qc-title">&#128202; QC Analytics</div>
-        <div class="qc-subtitle">Aggregated scores by agent and by program, pulled live from the saved QC audits Google Sheet.</div>
+        <div class="qc-subtitle">Drill down from program &rarr; team leader &rarr; agent &rarr; individual audits, pulled live from the saved QC audits Google Sheet.</div>
       </div>
       <div class="qc-toolbar">
         <button class="qc-btn" onclick="qcRefreshAnalytics()">&#9851; Refresh</button>
@@ -4098,6 +4120,7 @@ function renderQCAnalyticsShell(){
 
 function qcSwitchAnalyticsKind(kind){
   _qcAnalyticsKind=kind;
+  _qcAnalyticsDrill={level:'program',program:null,teamLeader:null,agent:null};
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(kind);
 }
@@ -4159,41 +4182,179 @@ function qcAggregateBy(audits,key){
   })).sort((a,b)=>(b.avgScore===null?-1:b.avgScore)-(a.avgScore===null?-1:a.avgScore));
 }
 
-function qcAnalyticsBarRow(item){
+function qcAnalyticsRegisterTarget(target){
+  _qcAnalyticsRowTargets.push(target);
+  return _qcAnalyticsRowTargets.length-1;
+}
+
+function qcAnalyticsRowClick(idx){
+  const t=_qcAnalyticsRowTargets[idx];
+  if(!t)return;
+  _qcAnalyticsDrill={level:t.level,program:t.program||null,teamLeader:t.teamLeader||null,agent:t.agent||null};
+  const bodyEl=document.getElementById('qcAnalyticsBody');
+  const cached=_qcAnalyticsCache[_qcAnalyticsKind];
+  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+}
+
+function qcAnalyticsSetDateMode(mode){
+  _qcAnalyticsDateFilter.mode=mode;
+  const bodyEl=document.getElementById('qcAnalyticsBody');
+  const cached=_qcAnalyticsCache[_qcAnalyticsKind];
+  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+}
+
+function qcAnalyticsSetCustomDate(which,val){
+  _qcAnalyticsDateFilter[which]=val;
+  const bodyEl=document.getElementById('qcAnalyticsBody');
+  const cached=_qcAnalyticsCache[_qcAnalyticsKind];
+  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+}
+
+function qcAnalyticsFilterByDate(audits){
+  const f=_qcAnalyticsDateFilter;
+  if(f.mode==='all') return audits;
+  const today=new Date(); today.setHours(0,0,0,0);
+  let from=null,to=null;
+  if(f.mode==='today'){ from=new Date(today); to=new Date(today); }
+  else if(f.mode==='7d'){ from=new Date(today); from.setDate(from.getDate()-6); to=new Date(today); }
+  else if(f.mode==='30d'){ from=new Date(today); from.setDate(from.getDate()-29); to=new Date(today); }
+  else if(f.mode==='custom'){
+    if(f.from) from=new Date(f.from+'T00:00:00');
+    if(f.to) to=new Date(f.to+'T00:00:00');
+  }
+  return audits.filter(a=>{
+    if(!a.auditDate) return false;
+    const d=new Date((''+a.auditDate).slice(0,10)+'T00:00:00');
+    if(isNaN(d.getTime())) return false;
+    if(from&&d<from) return false;
+    if(to&&d>to) return false;
+    return true;
+  });
+}
+
+function qcAnalyticsDateControlsHtml(){
+  const f=_qcAnalyticsDateFilter;
+  const modes=[['all','All Time'],['today','Today'],['7d','Last 7 Days'],['30d','Last 30 Days'],['custom','Custom']];
+  const buttons=modes.map(([m,label])=>`<button class="qc-btn${f.mode===m?' primary':''}" style="padding:5px 10px;font-size:11.5px" onclick="qcAnalyticsSetDateMode('${m}')">${label}</button>`).join('');
+  const customInputs=f.mode==='custom'?`
+    <input type="date" value="${escHtml(f.from)}" onchange="qcAnalyticsSetCustomDate('from',this.value)">
+    <span style="color:#94a3b8;font-size:12px">to</span>
+    <input type="date" value="${escHtml(f.to)}" onchange="qcAnalyticsSetCustomDate('to',this.value)">
+  `:'';
+  return `<div class="qc-analytics-date-controls">${buttons}${customInputs}</div>`;
+}
+
+function qcAnalyticsBreadcrumbHtml(){
+  const d=_qcAnalyticsDrill;
+  const items=[];
+  const rootIdx=qcAnalyticsRegisterTarget({level:'program'});
+  items.push(`<span class="qc-breadcrumb-item${d.level==='program'?' active':''}" onclick="qcAnalyticsRowClick(${rootIdx})">All Programs</span>`);
+  if(d.program){
+    const idx=qcAnalyticsRegisterTarget({level:'teamLeader',program:d.program});
+    items.push(`<span class="qc-breadcrumb-item${d.level==='teamLeader'?' active':''}" onclick="qcAnalyticsRowClick(${idx})">${escHtml(d.program)}</span>`);
+  }
+  if(d.teamLeader){
+    const idx=qcAnalyticsRegisterTarget({level:'agent',program:d.program,teamLeader:d.teamLeader});
+    items.push(`<span class="qc-breadcrumb-item${d.level==='agent'?' active':''}" onclick="qcAnalyticsRowClick(${idx})">${escHtml(d.teamLeader)}</span>`);
+  }
+  if(d.agent){
+    items.push(`<span class="qc-breadcrumb-item active">${escHtml(d.agent)}</span>`);
+  }
+  return `<div class="qc-breadcrumb">${items.join('<span class="qc-breadcrumb-sep">&#8250;</span>')}</div>`;
+}
+
+function qcAnalyticsSummaryStrip(audits,groupCount,groupLabel){
+  const scored=audits.map(a=>parseFloat(a.overallScore)).filter(n=>!isNaN(n));
+  const avg=scored.length?Math.round(scored.reduce((s,n)=>s+n,0)/scored.length):null;
+  const cls=avg===null?'na':avg<70?'fail':avg<90?'warn':'pass';
+  return `<div class="qc-score-strip">
+    <div class="qc-score-big"><div class="qc-score-num pass">${audits.length}</div><div class="qc-score-caption">Audits (filtered)</div></div>
+    <div class="qc-score-divider"></div>
+    <div class="qc-score-big"><div class="qc-score-num ${cls}">${avg===null?'—':avg+'%'}</div><div class="qc-score-caption">Avg Score</div></div>
+    <div class="qc-score-divider"></div>
+    <div class="qc-score-big"><div class="qc-score-num na">${groupCount}</div><div class="qc-score-caption">${escHtml(groupLabel)}</div></div>
+  </div>`;
+}
+
+function qcAnalyticsEmptyRow(){
+  return `<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12.5px">No audits match this date range.</div>`;
+}
+
+function qcAnalyticsBarRow(item,target){
   const pct=item.avgScore===null?0:item.avgScore;
   const cls=item.avgScore===null?'na':pct<70?'fail':pct<90?'warn':'pass';
-  return `<div class="qc-analytics-row">
+  let clickAttr='',arrow='';
+  if(target){
+    const idx=qcAnalyticsRegisterTarget(target);
+    clickAttr=` onclick="qcAnalyticsRowClick(${idx})"`;
+    arrow='<span class="qc-analytics-arrow">&#8250;</span>';
+  }
+  return `<div class="qc-analytics-row${target?' qc-analytics-row-clickable':''}"${clickAttr}>
     <div class="qc-analytics-name" title="${escHtml(item.name)}">${escHtml(item.name)}</div>
     <div class="qc-analytics-bar-track"><div class="qc-analytics-bar-fill ${cls}" style="width:${pct}%"></div></div>
     <div class="qc-analytics-score ${cls}">${item.avgScore===null?'—':item.avgScore+'%'}</div>
     <div class="qc-analytics-meta">${item.count} audit${item.count!==1?'s':''} &middot; ${item.avgErrors} avg errors</div>
+    ${arrow}
   </div>`;
 }
 
-function renderQCAnalyticsBody(audits){
-  if(!audits||!audits.length){
-    return `<div style="padding:40px;text-align:center;color:#94a3b8">No saved audits yet for this program type.</div>`;
+function renderQCAnalyticsBody(rawAudits){
+  _qcAnalyticsRowTargets=[];
+  if(!rawAudits||!rawAudits.length){
+    return `${qcAnalyticsDateControlsHtml()}<div style="padding:40px;text-align:center;color:#94a3b8">No saved audits yet for this program type.</div>`;
   }
-  const byAgent=qcAggregateBy(audits,'agent');
+  const audits=qcAnalyticsFilterByDate(rawAudits);
+  const drill=_qcAnalyticsDrill;
+  const dateControls=qcAnalyticsDateControlsHtml();
+  const breadcrumb=qcAnalyticsBreadcrumbHtml();
+
+  if(drill.level==='teamLeader'){
+    const scoped=audits.filter(a=>(a.program||'')===drill.program);
+    const byTL=qcAggregateBy(scoped,'teamLeader');
+    return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byTL.length,'Team Leaders')}
+    <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>By Team Leader</span><span class="chevron open">&#9654;</span></div>
+      <div class="section-body">${byTL.length?byTL.map(item=>qcAnalyticsBarRow(item,{level:'agent',program:drill.program,teamLeader:item.name})).join(''):qcAnalyticsEmptyRow()}</div>
+    </div>`;
+  }
+
+  if(drill.level==='agent'){
+    const scoped=audits.filter(a=>(a.program||'')===drill.program&&(a.teamLeader||'')===drill.teamLeader);
+    const byAgent=qcAggregateBy(scoped,'agent');
+    return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byAgent.length,'Agents')}
+    <div class="section"><div class="section-header hdr-benefit" onclick="toggleSection(this)"><span>By Agent</span><span class="chevron open">&#9654;</span></div>
+      <div class="section-body">${byAgent.length?byAgent.map(item=>qcAnalyticsBarRow(item,{level:'detail',program:drill.program,teamLeader:drill.teamLeader,agent:item.name})).join(''):qcAnalyticsEmptyRow()}</div>
+    </div>`;
+  }
+
+  if(drill.level==='detail'){
+    const scoped=audits.filter(a=>(a.program||'')===drill.program&&(a.teamLeader||'')===drill.teamLeader&&(a.agent||'')===drill.agent)
+      .slice().sort((a,b)=>(b.auditDate||'').localeCompare(a.auditDate||''));
+    const auditRows=scoped.map(a=>{
+      const score=a.overallScore===''||a.overallScore==null?null:Math.round(parseFloat(a.overallScore));
+      const cls=score===null?'na':score<70?'fail':score<90?'warn':'pass';
+      return `<div class="qc-analytics-detail-row">
+        <div>${escHtml(a.auditDate||'—')}</div>
+        <div>${escHtml(a.srNumber||'—')}</div>
+        <div>${escHtml(a.payer||'—')}</div>
+        <div class="qc-analytics-score ${cls}">${score===null?'—':score+'%'}</div>
+        <div>${a.errorCount===''||a.errorCount==null?'—':a.errorCount}</div>
+        <div title="${escHtml(a.savedBy||'')}">${escHtml(a.auditor||'—')}</div>
+      </div>`;
+    }).join('');
+    return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,scoped.length,'Audits')}
+    <div class="section"><div class="section-header hdr-closing" onclick="toggleSection(this)"><span>Audit History — ${escHtml(drill.agent)}</span><span class="chevron open">&#9654;</span></div>
+      <div class="section-body">
+        <div class="qc-analytics-detail-hdr"><span>Audit Date</span><span>SR / Case #</span><span>Payer</span><span>Score</span><span># Errors</span><span>Auditor</span></div>
+        ${auditRows||qcAnalyticsEmptyRow()}
+      </div>
+    </div>`;
+  }
+
+  // level === 'program' (top of the hierarchy)
   const byProgram=qcAggregateBy(audits,'program');
-  const totalAudits=audits.length;
-  const scoredAgents=byAgent.filter(a=>a.avgScore!==null);
-  const overallAvg=scoredAgents.length?Math.round(scoredAgents.reduce((s,a)=>s+a.avgScore*a.count,0)/scoredAgents.reduce((s,a)=>s+a.count,0)):0;
-  return `
-  <div class="qc-score-strip">
-    <div class="qc-score-big"><div class="qc-score-num pass">${totalAudits}</div><div class="qc-score-caption">Total Audits</div></div>
-    <div class="qc-score-divider"></div>
-    <div class="qc-score-big"><div class="qc-score-num ${overallAvg<70?'fail':overallAvg<90?'warn':'pass'}">${overallAvg}%</div><div class="qc-score-caption">Overall Avg Score</div></div>
-    <div class="qc-score-divider"></div>
-    <div class="qc-score-big"><div class="qc-score-num na">${byAgent.length}</div><div class="qc-score-caption">Agents</div></div>
-    <div class="qc-score-divider"></div>
-    <div class="qc-score-big"><div class="qc-score-num na">${byProgram.length}</div><div class="qc-score-caption">Programs</div></div>
-  </div>
-  <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>By Agent</span><span class="chevron open">&#9654;</span></div>
-    <div class="section-body">${byAgent.map(qcAnalyticsBarRow).join('')}</div>
-  </div>
+  return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,byProgram.length,'Programs')}
   <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>By Program</span><span class="chevron open">&#9654;</span></div>
-    <div class="section-body">${byProgram.map(qcAnalyticsBarRow).join('')}</div>
+    <div class="section-body">${byProgram.length?byProgram.map(item=>qcAnalyticsBarRow(item,{level:'teamLeader',program:item.name})).join(''):qcAnalyticsEmptyRow()}</div>
   </div>`;
 }
 
