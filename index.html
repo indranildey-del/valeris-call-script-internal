@@ -1373,7 +1373,7 @@ const QC_SECTIONS_MM=[
   {title:"Greeting & Opening Statement",hdr:"hdr-opening",items:[
     {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:2,fatal:true},
     {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:2,fatal:true},
-    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:1},
+    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:2,fatal:true},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
   ]},
   {title:"Call Attempts & Pushback",hdr:"hdr-compliance",items:[
@@ -1494,7 +1494,7 @@ const QC_SECTIONS_PBM=[
   {title:"Greeting & Opening Statement",hdr:"hdr-opening",items:[
     {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:2,fatal:true},
     {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:2,fatal:true},
-    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:1},
+    {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:2,fatal:true},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
   ]},
   {title:"Call Attempts & Pushback",hdr:"hdr-compliance",items:[
@@ -3973,8 +3973,8 @@ function qcBuildSavePayload(){
   const c=qcState.case||{};
   const p=programs.find(x=>x.id===c.program);
   const r=qcRecalc();
-  const headers=['Agent Name','SR / Case Number','Auditor Name','Audit Date','Payer Name','Payer Type','Program','Overall Score (%)','# of Errors','Scored','Total'];
-  const values=[c.agentName||'',c.srNumber||'',c.auditorName||'',c.auditDate||'',c.payerName||'',c.payerType||'',p?p.label:'',r.pct===null?'':r.pct,r.errCount,r.scoredCount,r.totalCount];
+  const headers=['Agent Name','SR / Case Number','Auditor Name','Audit Date','Payer Name','Payer Type','Program','Type','Team Leader','Overall Score (%)','# of Errors','Scored','Total'];
+  const values=[c.agentName||'',c.srNumber||'',c.auditorName||'',c.auditDate||'',c.payerName||'',c.payerType||'',p?p.label:'',c.type||'',c.teamLeader||'',r.pct===null?'':r.pct,r.errCount,r.scoredCount,r.totalCount];
   QC_SECTIONS.forEach((sec,si)=>{
     sec.items.forEach((it,ii)=>{
       const st=qcState.scores[si+'_'+ii]||{};
@@ -4327,6 +4327,12 @@ function renderQCDashboard(){
   ];
   const fieldsHtml=fields.map(f=>`<div class="qc-field"><label>${f.label}</label><input type="${f.type}" value="${escHtml((c[f.k]||'').toString())}" oninput="qcUpdateCase('${f.k}',this.value)"></div>`).join('');
   const programField=`<div class="qc-field"><label>${meta.shortLabel} Program</label><select onchange="qcUpdateCase('program',this.value)">${progOptions}</select></div>`;
+  const QC_TYPE_OPTIONS=['MM','PBM','Transportation'];
+  const QC_TEAM_LEADER_OPTIONS=['Hosni','Karthik','Jeswanth','Sudeesh','Basudeb','Rohan','Ezekeil'];
+  const typeOptionsHtml=`<option value="">&#8212; Select &#8212;</option>`+QC_TYPE_OPTIONS.map(v=>`<option value="${v}" ${c.type===v?'selected':''}>${v}</option>`).join('');
+  const teamLeaderOptionsHtml=`<option value="">&#8212; Select &#8212;</option>`+QC_TEAM_LEADER_OPTIONS.map(v=>`<option value="${v}" ${c.teamLeader===v?'selected':''}>${v}</option>`).join('');
+  const typeField=`<div class="qc-field"><label>Type</label><select onchange="qcUpdateCase('type',this.value)">${typeOptionsHtml}</select></div>`;
+  const teamLeaderField=`<div class="qc-field"><label>Team Leader</label><select onchange="qcUpdateCase('teamLeader',this.value)">${teamLeaderOptionsHtml}</select></div>`;
 
   const totalItems=QC_SECTIONS.reduce((a,s)=>a+s.items.length,0)*2;
   const sectionsHtml=QC_SECTIONS.map((sec,si)=>{
@@ -4372,7 +4378,7 @@ function renderQCDashboard(){
         <div id="qcSaveStatus" class="qc-save-status" data-role="qc-save-status"></div>
       </div>
     </div>
-    <div class="qc-fields-grid">${programField}${fieldsHtml}</div>
+    <div class="qc-fields-grid">${programField}${typeField}${teamLeaderField}${fieldsHtml}</div>
   </div>
   <div id="qcFatalBanner" class="qc-egregious-banner" style="display:none">&#9888; A fatal/Egregious item is marked Fail. This is counted in the score and error count like any other item, but flagged here for visibility.</div>
   <div class="qc-score-strip">
@@ -4517,6 +4523,7 @@ function downloadExcel(type){
       ['SR / Case Number',c.srNumber||'','Agent Name',c.agentName||''],
       ['Auditor Name',c.auditorName||'','Audit Date',c.auditDate||''],
       ['Payer Name',c.payerName||'','Payer Type',c.payerType||''],
+      ['Type',c.type||'','Team Leader',c.teamLeader||''],
       ['# of Errors',r.errCount,'Overall Score',r.pct===null?'N/A':r.pct+'%'],
       ['Scored',`${r.scoredCount} / ${r.totalCount}`,'',''],
       [],
