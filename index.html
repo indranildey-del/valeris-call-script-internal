@@ -524,19 +524,30 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-save-status.ok{color:#15803d}
 .qc-save-status.err{color:#dc2626}
 /* ── QC ANALYTICS ── */
-.qc-analytics-row{display:grid;grid-template-columns:160px 1fr 60px 180px 16px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid #f1f4fb}
-.qc-analytics-row:last-child{border-bottom:none}
-.qc-analytics-row-clickable{cursor:pointer}
-.qc-analytics-row-clickable:hover{background:#f8faff}
-@media(max-width:900px){.qc-analytics-row{grid-template-columns:1fr;gap:4px}}
-.qc-analytics-name{font-size:12.5px;font-weight:700;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.qc-analytics-bar-track{height:10px;border-radius:6px;background:#f1f4fb;overflow:hidden}
-.qc-analytics-bar-fill{height:100%;border-radius:6px}
-.qc-analytics-bar-fill.pass{background:#22c55e}
-.qc-analytics-bar-fill.warn{background:#f59e0b}
-.qc-analytics-bar-fill.fail{background:#ef4444}
-.qc-analytics-bar-fill.na{background:#cbd5e1}
-.qc-analytics-score{font-size:13px;font-weight:800;text-align:right}
+.qc-analytics-card{border:1px solid #eef1f8;border-radius:10px;padding:14px 16px;margin-bottom:12px;background:#fff}
+.qc-analytics-card:last-child{margin-bottom:0}
+.qc-analytics-card-clickable{cursor:pointer}
+.qc-analytics-card-clickable:hover{border-color:#c7d2fe;box-shadow:0 2px 10px rgba(79,70,229,.1)}
+.qc-analytics-card-hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.qc-analytics-card-title{font-size:14px;font-weight:800;color:#1f2937;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qc-analytics-card-boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+@media(max-width:700px){.qc-analytics-card-boxes{grid-template-columns:1fr}}
+.qc-analytics-card-box{background:#f8faff;border-radius:8px;padding:10px 12px}
+.qc-analytics-card-box-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:8px}
+.qc-analytics-chart-empty{font-size:11.5px;color:#b6bfd1;text-align:center;padding:30px 0}
+.qc-analytics-spark-wrap{height:90px;display:flex;align-items:center}
+.qc-analytics-spark{width:100%;height:100%;display:block;overflow:visible}
+.qc-analytics-minibar-chart{display:flex;align-items:flex-end;gap:8px;height:90px}
+.qc-analytics-minibar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;height:100%}
+.qc-analytics-minibar-track{width:100%;max-width:26px;height:70px;background:#e9edf7;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;overflow:hidden}
+.qc-analytics-minibar-fill{width:100%;background:#6366f1;border-radius:4px 4px 0 0;min-height:2px}
+.qc-analytics-minibar-label{font-size:9.5px;color:#94a3b8;margin-top:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;width:100%}
+.qc-analytics-topfields-list{display:flex;flex-direction:column;gap:7px;min-height:90px;justify-content:center}
+.qc-analytics-topfields-row{display:flex;align-items:center;gap:8px}
+.qc-analytics-topfields-rank{flex:0 0 16px;height:16px;border-radius:50%;background:#e0e7ff;color:#4338ca;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.qc-analytics-topfields-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:#374151}
+.qc-analytics-topfields-pct{flex:0 0 auto;font-weight:800;color:#6366f1;font-size:11.5px}
+.qc-analytics-score{font-size:13px;font-weight:800}
 .qc-analytics-score.pass{color:#15803d}
 .qc-analytics-score.warn{color:#b45309}
 .qc-analytics-score.fail{color:#dc2626}
@@ -561,6 +572,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 #qcUpdateBanner{position:fixed;top:0;left:0;right:0;z-index:99999;background:#1d4ed8;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:13.5px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.25);font-family:'Inter',sans-serif}
 #qcUpdateBanner button{background:#fff;color:#1d4ed8;border:none;border-radius:6px;padding:6px 14px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif}
 #qcUpdateBanner button:hover{background:#e0e7ff}
+#qcUpdateBlockOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.55);z-index:99998;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -3947,7 +3959,7 @@ function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS
 //  Deploy google-apps-script/Code.gs as a Web App (see that file's header
 //  comment for exact steps), then paste the resulting /exec URL below.
 // ══════════════════════════════════════════════════════════════
-const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbx7mn7t9lYdKAbeiGLlr-zYWCzmvZRfvufo6y6otMe8N8tvH0hLDyOxTONjk0gfgVzC/exec";
+const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyqX-kNjz8CQ2ONLnO7lfiHjo45m71sXbVS3JGHtYZz9IrJ0qvVg-qG5iZYgKCszMux/exec";
 function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
 
 // Bump this string on every push (any change is enough — date+counter is a
@@ -3955,7 +3967,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.5";
+const APP_VERSION = "2026-07-15.11";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4182,18 +4194,79 @@ function qcAggregateBy(audits,key){
   const groups={};
   audits.forEach(a=>{
     const k=(a[key]||'(unknown)').toString();
-    if(!groups[k])groups[k]={name:k,count:0,scoreSum:0,scoreCount:0,errorSum:0};
+    if(!groups[k])groups[k]={name:k,count:0,scoreSum:0,scoreCount:0,errorSum:0,errorTrend:[],failedFields:[]};
     groups[k].count++;
     const score=parseFloat(a.overallScore);
     if(!isNaN(score)){groups[k].scoreSum+=score;groups[k].scoreCount++;}
     const errs=parseFloat(a.errorCount);
-    if(!isNaN(errs))groups[k].errorSum+=errs;
+    if(!isNaN(errs)){
+      groups[k].errorSum+=errs;
+      groups[k].errorTrend.push({date:a.auditDate||'',errors:errs});
+    }
+    if(Array.isArray(a.failedFields)) groups[k].failedFields.push.apply(groups[k].failedFields,a.failedFields);
   });
+  // No fixed sort here — callers sort differently depending on purpose (best/worst
+  // performer first for the main list, highest-errors-first for a bar breakdown,
+  // chronological for a date-keyed breakdown), so sorting here would fight them.
   return Object.values(groups).map(g=>({
     name:g.name,count:g.count,
     avgScore:g.scoreCount?Math.round(g.scoreSum/g.scoreCount):null,
-    avgErrors:g.count?+(g.errorSum/g.count).toFixed(1):0
-  })).sort((a,b)=>(b.avgScore===null?-1:b.avgScore)-(a.avgScore===null?-1:a.avgScore));
+    avgErrors:g.count?+(g.errorSum/g.count).toFixed(1):0,
+    totalErrors:Math.round(g.errorSum),
+    errorTrend:g.errorTrend.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>p.errors),
+    failedFields:g.failedFields
+  }));
+}
+
+// Tallies how often each specific question was marked "fail" (across Asked +
+// Documented) within a scope, and returns the 5 most common as a % of that
+// scope's total fail occurrences — answers "what are we failing on most?"
+// which the trend/breakdown boxes above don't show on their own.
+function qcAnalyticsTopErrorFields(failedFields,limit){
+  limit=limit||5;
+  const counts={};
+  failedFields.forEach(f=>{ counts[f]=(counts[f]||0)+1; });
+  const total=failedFields.length;
+  return Object.keys(counts).map(label=>({
+    label,count:counts[label],pct:total?Math.round(counts[label]/total*100):0
+  })).sort((a,b)=>b.count-a.count).slice(0,limit);
+}
+function qcSortByScoreDesc(items){
+  return items.slice().sort((a,b)=>(b.avgScore===null?-1:b.avgScore)-(a.avgScore===null?-1:a.avgScore));
+}
+function qcSortByErrorsDesc(items){
+  return items.slice().sort((a,b)=>b.totalErrors-a.totalErrors);
+}
+function qcSortByNameAsc(items){
+  return items.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+}
+
+// Small inline SVG line graph of a group's error count trend (chronological,
+// oldest→newest) — replaces the old single score-bar so at-a-glance you can
+// see whether errors are trending up or down, not just the current average.
+function qcAnalyticsSparklineSvg(points,cls){
+  const w=100,h=28,pad=4;
+  const strokeColor={pass:'#22c55e',warn:'#f59e0b',fail:'#ef4444',na:'#cbd5e1'}[cls]||'#94a3b8';
+  if(!points||points.length===0){
+    return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}" stroke="#e2e6f0" stroke-width="2" stroke-dasharray="3,3"/></svg>`;
+  }
+  const dotLabel=v=>v+' error'+(v!==1?'s':'');
+  if(points.length===1){
+    return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}" stroke="${strokeColor}" stroke-width="1.25"/><circle cx="${w/2}" cy="${h/2}" r="6" fill="transparent"><title>${dotLabel(points[0])}</title></circle><circle cx="${w/2}" cy="${h/2}" r="2.5" fill="${strokeColor}" style="pointer-events:none"/></svg>`;
+  }
+  const max=Math.max.apply(null,points)||1;
+  const stepX=(w-2*pad)/(points.length-1);
+  const coords=points.map((v,i)=>[pad+i*stepX, h-pad-(v/max)*(h-2*pad)]);
+  const path=coords.map((c,i)=>(i===0?'M':'L')+c[0].toFixed(1)+','+c[1].toFixed(1)).join(' ');
+  // Two circles per point: a larger transparent one purely to make hovering
+  // easy (2.5px dots are hard to hit precisely) carrying the tooltip, and
+  // the small visible dot on top of it, excluded from hit-testing so it
+  // doesn't fight the hover target underneath.
+  const dots=coords.map((c,i)=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="6" fill="transparent"><title>${dotLabel(points[i])}</title></circle><circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="2.5" fill="${strokeColor}" style="pointer-events:none"/>`).join('');
+  return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <path d="${path}" fill="none" stroke="${strokeColor}" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+  </svg>`;
 }
 
 function qcAnalyticsRegisterTarget(target){
@@ -4294,7 +4367,12 @@ function qcAnalyticsEmptyRow(){
   return `<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12.5px">No audits match this date range.</div>`;
 }
 
-function qcAnalyticsBarRow(item,target){
+// One card per entity (Program / Team Leader / Agent): a header with name +
+// score + audit count, and three boxes underneath — an error-trend line
+// graph for this entity's own audits, a bar breakdown of total errors by
+// whichever grouping is one level further down the drill hierarchy, and the
+// 5 specific questions most often marked "fail" across this entity's audits.
+function qcAnalyticsCardHtml(item,childItems,childLabel,target){
   const pct=item.avgScore===null?0:item.avgScore;
   const cls=item.avgScore===null?'na':pct<70?'fail':pct<90?'warn':'pass';
   let clickAttr='',arrow='';
@@ -4303,13 +4381,52 @@ function qcAnalyticsBarRow(item,target){
     clickAttr=` onclick="qcAnalyticsRowClick(${idx})"`;
     arrow='<span class="qc-analytics-arrow">&#8250;</span>';
   }
-  return `<div class="qc-analytics-row${target?' qc-analytics-row-clickable':''}"${clickAttr}>
-    <div class="qc-analytics-name" title="${escHtml(item.name)}">${escHtml(item.name)}</div>
-    <div class="qc-analytics-bar-track"><div class="qc-analytics-bar-fill ${cls}" style="width:${pct}%"></div></div>
-    <div class="qc-analytics-score ${cls}">${item.avgScore===null?'—':item.avgScore+'%'}</div>
-    <div class="qc-analytics-meta">${item.count} audit${item.count!==1?'s':''} &middot; ${item.avgErrors} avg errors</div>
-    ${arrow}
+  return `<div class="qc-analytics-card${target?' qc-analytics-card-clickable':''}"${clickAttr}>
+    <div class="qc-analytics-card-hdr">
+      <span class="qc-analytics-card-title" title="${escHtml(item.name)}">${escHtml(item.name)}</span>
+      <span class="qc-analytics-score ${cls}">${item.avgScore===null?'—':item.avgScore+'%'}</span>
+      <span class="qc-analytics-meta">${item.count} audit${item.count!==1?'s':''} &middot; ${item.avgErrors} avg errors</span>
+      ${arrow}
+    </div>
+    <div class="qc-analytics-card-boxes">
+      <div class="qc-analytics-card-box">
+        <div class="qc-analytics-card-box-label">Error Trend</div>
+        <div class="qc-analytics-spark-wrap" title="Error count trend, oldest to newest">${qcAnalyticsSparklineSvg(item.errorTrend,cls)}</div>
+      </div>
+      <div class="qc-analytics-card-box">
+        <div class="qc-analytics-card-box-label">Errors by ${escHtml(childLabel)}</div>
+        ${qcAnalyticsMiniBarChartHtml(childItems,childLabel)}
+      </div>
+      <div class="qc-analytics-card-box">
+        <div class="qc-analytics-card-box-label">Top 5 Error Fields</div>
+        ${qcAnalyticsTopFieldsBoxHtml(item.failedFields)}
+      </div>
+    </div>
   </div>`;
+}
+
+function qcAnalyticsTopFieldsBoxHtml(failedFields){
+  const top=qcAnalyticsTopErrorFields(failedFields||[],5);
+  if(!top.length) return `<div class="qc-analytics-chart-empty">No errors recorded</div>`;
+  return `<div class="qc-analytics-topfields-list">${top.map((f,i)=>`
+    <div class="qc-analytics-topfields-row" title="${escHtml(f.label)}">
+      <span class="qc-analytics-topfields-rank">${i+1}</span>
+      <span class="qc-analytics-topfields-label">${escHtml(f.label)}</span>
+      <span class="qc-analytics-topfields-pct">${f.pct}%</span>
+    </div>`).join('')}</div>`;
+}
+
+function qcAnalyticsMiniBarChartHtml(children,childLabel){
+  if(!children||!children.length) return `<div class="qc-analytics-chart-empty">No ${escHtml(childLabel.toLowerCase())} data</div>`;
+  const max=Math.max.apply(null,children.map(c=>c.totalErrors))||1;
+  const cols=children.map(c=>{
+    const h=Math.max(Math.round((c.totalErrors/max)*100),4);
+    return `<div class="qc-analytics-minibar-col" title="${escHtml(c.name)}: ${c.totalErrors} error${c.totalErrors!==1?'s':''}">
+      <div class="qc-analytics-minibar-track"><div class="qc-analytics-minibar-fill" style="height:${h}%"></div></div>
+      <div class="qc-analytics-minibar-label">${escHtml(c.name)}</div>
+    </div>`;
+  }).join('');
+  return `<div class="qc-analytics-minibar-chart">${cols}</div>`;
 }
 
 function renderQCAnalyticsBody(rawAudits){
@@ -4324,19 +4441,27 @@ function renderQCAnalyticsBody(rawAudits){
 
   if(drill.level==='teamLeader'){
     const scoped=audits.filter(a=>(a.program||'')===drill.program);
-    const byTL=qcAggregateBy(scoped,'teamLeader');
+    const byTL=qcSortByScoreDesc(qcAggregateBy(scoped,'teamLeader'));
+    const cards=byTL.map(item=>{
+      const children=qcSortByErrorsDesc(qcAggregateBy(scoped.filter(a=>(a.teamLeader||'')===item.name),'agent'));
+      return qcAnalyticsCardHtml(item,children,'Agent',{level:'agent',program:drill.program,teamLeader:item.name});
+    }).join('');
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byTL.length,'Team Leaders')}
     <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>By Team Leader</span><span class="chevron open">&#9654;</span></div>
-      <div class="section-body">${byTL.length?byTL.map(item=>qcAnalyticsBarRow(item,{level:'agent',program:drill.program,teamLeader:item.name})).join(''):qcAnalyticsEmptyRow()}</div>
+      <div class="section-body">${byTL.length?cards:qcAnalyticsEmptyRow()}</div>
     </div>`;
   }
 
   if(drill.level==='agent'){
     const scoped=audits.filter(a=>(a.program||'')===drill.program&&(a.teamLeader||'')===drill.teamLeader);
-    const byAgent=qcAggregateBy(scoped,'agent');
+    const byAgent=qcSortByScoreDesc(qcAggregateBy(scoped,'agent'));
+    const cards=byAgent.map(item=>{
+      const children=qcSortByNameAsc(qcAggregateBy(scoped.filter(a=>(a.agent||'')===item.name),'auditDate'));
+      return qcAnalyticsCardHtml(item,children,'Audit Date',{level:'detail',program:drill.program,teamLeader:drill.teamLeader,agent:item.name});
+    }).join('');
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byAgent.length,'Agents')}
     <div class="section"><div class="section-header hdr-benefit" onclick="toggleSection(this)"><span>By Agent</span><span class="chevron open">&#9654;</span></div>
-      <div class="section-body">${byAgent.length?byAgent.map(item=>qcAnalyticsBarRow(item,{level:'detail',program:drill.program,teamLeader:drill.teamLeader,agent:item.name})).join(''):qcAnalyticsEmptyRow()}</div>
+      <div class="section-body">${byAgent.length?cards:qcAnalyticsEmptyRow()}</div>
     </div>`;
   }
 
@@ -4365,10 +4490,14 @@ function renderQCAnalyticsBody(rawAudits){
   }
 
   // level === 'program' (top of the hierarchy)
-  const byProgram=qcAggregateBy(audits,'program');
+  const byProgram=qcSortByScoreDesc(qcAggregateBy(audits,'program'));
+  const cards=byProgram.map(item=>{
+    const children=qcSortByErrorsDesc(qcAggregateBy(audits.filter(a=>(a.program||'')===item.name),'teamLeader'));
+    return qcAnalyticsCardHtml(item,children,'Team Leader',{level:'teamLeader',program:item.name});
+  }).join('');
   return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,byProgram.length,'Programs')}
   <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>By Program</span><span class="chevron open">&#9654;</span></div>
-    <div class="section-body">${byProgram.length?byProgram.map(item=>qcAnalyticsBarRow(item,{level:'teamLeader',program:item.name})).join(''):qcAnalyticsEmptyRow()}</div>
+    <div class="section-body">${byProgram.length?cards:qcAnalyticsEmptyRow()}</div>
   </div>`;
 }
 
@@ -5032,12 +5161,21 @@ function qcCheckForUpdate(){
     .then(v=>{ if(v && v.trim() && v.trim()!==APP_VERSION) qcShowUpdateBanner(); })
     .catch(()=>{});
 }
+// Deliberately a hard gate, not a dismissible nudge — this tool feeds a
+// shared Google Sheet through a specific Apps Script deployment, and a tab
+// left running old code can silently write misaligned rows (see the
+// Team Leader/timezone bugs this was built to catch). Blocking all use
+// until reload guarantees nobody acts on stale code without noticing.
 function qcShowUpdateBanner(){
   if(document.getElementById('qcUpdateBanner')) return;
   const bar=document.createElement('div');
   bar.id='qcUpdateBanner';
-  bar.innerHTML='<span>A new version of Valeris is available.</span><button onclick="location.reload()">Reload now</button>';
+  bar.innerHTML='<span>A new version of Valeris is available — reload to continue.</span><button onclick="location.reload()">Reload now</button>';
   document.body.appendChild(bar);
+  const overlay=document.createElement('div');
+  overlay.id='qcUpdateBlockOverlay';
+  document.body.appendChild(overlay);
+  document.body.style.overflow='hidden';
 }
 setTimeout(qcCheckForUpdate, 4000);
 setInterval(qcCheckForUpdate, 3*60*1000);
