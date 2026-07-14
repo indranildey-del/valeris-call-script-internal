@@ -554,6 +554,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-analytics-detail-row{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1fr;gap:10px;padding:8px 0;font-size:12.5px;color:#334155;border-bottom:1px solid #f1f4fb;align-items:center}
 .qc-analytics-detail-row:last-child{border-bottom:none}
 @media(max-width:900px){.qc-analytics-detail-hdr{display:none}.qc-analytics-detail-row{grid-template-columns:1fr 1fr;gap:4px}}
+#qcUpdateBanner{position:fixed;top:0;left:0;right:0;z-index:99999;background:#1d4ed8;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:13.5px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.25);font-family:'Inter',sans-serif}
+#qcUpdateBanner button{background:#fff;color:#1d4ed8;border:none;border-radius:6px;padding:6px 14px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif}
+#qcUpdateBanner button:hover{background:#e0e7ff}
 </style>
 </head>
 <body>
@@ -3943,6 +3946,13 @@ function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS
 const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbx4lEf4rE-_eSpvHE0JBdczrhyvreUNTeF36z_9QVL5ODMoJLU3sY8nYiWFp9l0V-f6/exec";
 function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
 
+// Bump this string on every push (any change is enough — date+counter is a
+// convenient scheme). qcCheckForUpdate() below polls version.txt and prompts
+// a reload when it no longer matches what this page loaded with — otherwise
+// a tab left open across a deploy keeps running stale code (e.g. hitting an
+// old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
+const APP_VERSION = "2026-07-15.1";
+
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
 function qcAuthConfigured(){ return !!QC_GOOGLE_CLIENT_ID && QC_GOOGLE_CLIENT_ID.indexOf('PASTE_YOUR')===-1; }
@@ -5008,6 +5018,26 @@ selectProgram(programs[0].id);
     setTimeout(qcWaitForGoogleAuth, 150);
   }
 })();
+
+// Detects when a newer build has been deployed while this tab is still open
+// (e.g. running a stale QC_WEBHOOK_URL against an outdated Apps Script
+// deployment) and prompts a reload rather than silently misbehaving.
+function qcCheckForUpdate(){
+  fetch('version.txt?_='+Date.now(),{cache:'no-store'})
+    .then(r=>r.ok?r.text():null)
+    .then(v=>{ if(v && v.trim() && v.trim()!==APP_VERSION) qcShowUpdateBanner(); })
+    .catch(()=>{});
+}
+function qcShowUpdateBanner(){
+  if(document.getElementById('qcUpdateBanner')) return;
+  const bar=document.createElement('div');
+  bar.id='qcUpdateBanner';
+  bar.innerHTML='<span>A new version of Valeris is available.</span><button onclick="location.reload()">Reload now</button>';
+  document.body.appendChild(bar);
+}
+setTimeout(qcCheckForUpdate, 4000);
+setInterval(qcCheckForUpdate, 3*60*1000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) qcCheckForUpdate(); });
 </script>
 <div class="term-modal-overlay" id="termModalOverlay" onclick="if(event.target===this)closeTermModal()">
   <div class="term-modal-box">
