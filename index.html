@@ -561,10 +561,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-breadcrumb-sep{color:#cbd5e1}
 .qc-analytics-date-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .qc-analytics-date-controls input[type="date"]{padding:5px 8px;border:1px solid #e2e6f0;border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;color:#334155}
-.qc-analytics-detail-hdr{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
-.qc-analytics-detail-row{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1fr;gap:10px;padding:8px 0;font-size:12.5px;color:#334155;border-bottom:1px solid #f1f4fb;align-items:center}
+.qc-analytics-detail-hdr{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1.6fr 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
+.qc-analytics-detail-row{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1.6fr 1fr;gap:10px;padding:8px 0;font-size:12.5px;color:#334155;border-bottom:1px solid #f1f4fb;align-items:center}
 .qc-analytics-detail-row>div{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.qc-analytics-detail-row>div:nth-child(2){white-space:normal;overflow-wrap:anywhere;text-overflow:clip}
+.qc-analytics-detail-row>div:nth-child(2),.qc-analytics-detail-row>div:nth-child(6){white-space:normal;overflow-wrap:anywhere;text-overflow:clip}
 .qc-analytics-detail-hdr>span:nth-child(4),.qc-analytics-detail-hdr>span:nth-child(5){text-align:right}
 .qc-analytics-detail-row>div:nth-child(4),.qc-analytics-detail-row>div:nth-child(5){text-align:right}
 .qc-analytics-detail-row:last-child{border-bottom:none}
@@ -3961,7 +3961,7 @@ function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS
 //  Deploy google-apps-script/Code.gs as a Web App (see that file's header
 //  comment for exact steps), then paste the resulting /exec URL below.
 // ══════════════════════════════════════════════════════════════
-const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbywki4PUpZA82WFldF8ZHNk1D2j3aSAogh59pCKn3ujFEH6JlWzmnQez13-_4rM-mZs/exec";
+const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxqt-RwuHcx_6QSR1EvKCgkGMcfkn39TKygRI_pQzL1OHCGEXpNNwuavvw-HL3LuV0P/exec";
 function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
 
 // Bump this string on every push (any change is enough — date+counter is a
@@ -3969,7 +3969,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.15";
+const APP_VERSION = "2026-07-15.17";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4196,7 +4196,7 @@ function qcAggregateBy(audits,key){
   const groups={};
   audits.forEach(a=>{
     const k=(a[key]||'(unknown)').toString();
-    if(!groups[k])groups[k]={name:k,count:0,scoreSum:0,scoreCount:0,errorSum:0,errorTrend:[],failedFields:[]};
+    if(!groups[k])groups[k]={name:k,count:0,scoreSum:0,scoreCount:0,errorSum:0,errorTrend:[],failedFields:[],askedFails:0,documentedFails:0};
     groups[k].count++;
     const score=parseFloat(a.overallScore);
     if(!isNaN(score)){groups[k].scoreSum+=score;groups[k].scoreCount++;}
@@ -4206,6 +4206,8 @@ function qcAggregateBy(audits,key){
       groups[k].errorTrend.push({date:a.auditDate||'',errors:errs});
     }
     if(Array.isArray(a.failedFields)) groups[k].failedFields.push.apply(groups[k].failedFields,a.failedFields);
+    if(typeof a.askedFails==='number') groups[k].askedFails+=a.askedFails;
+    if(typeof a.documentedFails==='number') groups[k].documentedFails+=a.documentedFails;
   });
   // No fixed sort here — callers sort differently depending on purpose (best/worst
   // performer first for the main list, highest-errors-first for a bar breakdown,
@@ -4216,7 +4218,9 @@ function qcAggregateBy(audits,key){
     avgErrors:g.count?+(g.errorSum/g.count).toFixed(1):0,
     totalErrors:Math.round(g.errorSum),
     errorTrend:g.errorTrend.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>p.errors),
-    failedFields:g.failedFields
+    failedFields:g.failedFields,
+    askedFails:g.askedFails,
+    documentedFails:g.documentedFails
   }));
 }
 
@@ -4403,8 +4407,30 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,target){
         <div class="qc-analytics-card-box-label">Top 5 Error Fields</div>
         ${qcAnalyticsTopFieldsBoxHtml(item.failedFields)}
       </div>
+      <div class="qc-analytics-card-box">
+        <div class="qc-analytics-card-box-label">Asked vs Documented Fails</div>
+        ${qcAnalyticsAxisBarChartHtml(item.askedFails,item.documentedFails)}
+      </div>
     </div>
   </div>`;
+}
+
+// Whether errors mostly came from not asking the question at all (Asked
+// fail) or from asking it but not writing it down (Documented fail) changes
+// the coaching — the two need very different fixes — so this is its own box
+// rather than folded into the field-level breakdown above.
+function qcAnalyticsAxisBarChartHtml(askedFails,documentedFails){
+  askedFails=askedFails||0; documentedFails=documentedFails||0;
+  if(!askedFails&&!documentedFails) return `<div class="qc-analytics-chart-empty">No errors recorded</div>`;
+  const max=Math.max(askedFails,documentedFails)||1;
+  const bar=(label,val)=>{
+    const h=Math.max(Math.round((val/max)*100),4);
+    return `<div class="qc-analytics-minibar-col" title="${label}: ${val} error${val!==1?'s':''}">
+      <div class="qc-analytics-minibar-track"><div class="qc-analytics-minibar-fill" style="height:${h}%"></div></div>
+      <div class="qc-analytics-minibar-label">${label}</div>
+    </div>`;
+  };
+  return `<div class="qc-analytics-minibar-chart">${bar('Asked',askedFails)}${bar('Documented',documentedFails)}</div>`;
 }
 
 function qcAnalyticsTopFieldsBoxHtml(failedFields){
@@ -4473,19 +4499,22 @@ function renderQCAnalyticsBody(rawAudits){
     const auditRows=scoped.map(a=>{
       const score=a.overallScore===''||a.overallScore==null?null:Math.round(parseFloat(a.overallScore));
       const cls=score===null?'na':score<70?'fail':score<90?'warn':'pass';
+      const erroredFields=Array.isArray(a.failedFields)?Array.from(new Set(a.failedFields)):[];
+      const erroredFieldsText=erroredFields.length?erroredFields.join(', '):'—';
       return `<div class="qc-analytics-detail-row">
         <div>${escHtml(a.auditDate||'—')}</div>
         <div title="${escHtml(a.srNumber||'')}">${escHtml(a.srNumber||'—')}</div>
         <div title="${escHtml(a.payer||'')}">${escHtml(a.payer||'—')}</div>
         <div class="qc-analytics-score ${cls}">${score===null?'—':score+'%'}</div>
         <div>${a.errorCount===''||a.errorCount==null?'—':a.errorCount}</div>
+        <div title="${escHtml(erroredFieldsText)}">${escHtml(erroredFieldsText)}</div>
         <div title="${escHtml(a.savedBy||'')}">${escHtml(a.auditor||'—')}</div>
       </div>`;
     }).join('');
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,scoped.length,'Audits')}
     <div class="section"><div class="section-header hdr-closing" onclick="toggleSection(this)"><span>Audit History — ${escHtml(drill.agent)}</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">
-        <div class="qc-analytics-detail-hdr"><span>Audit Date</span><span>SR / Case #</span><span>Payer</span><span>Score</span><span># Errors</span><span>Auditor</span></div>
+        <div class="qc-analytics-detail-hdr"><span>Audit Date</span><span>SR / Case #</span><span>Payer</span><span>Score</span><span># Errors</span><span>Errored Fields</span><span>Auditor</span></div>
         ${auditRows||qcAnalyticsEmptyRow()}
       </div>
     </div>`;
