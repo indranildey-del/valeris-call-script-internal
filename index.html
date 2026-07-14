@@ -533,15 +533,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-analytics-card-boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 @media(max-width:700px){.qc-analytics-card-boxes{grid-template-columns:1fr}}
 .qc-analytics-card-box{background:#f8faff;border-radius:8px;padding:10px 12px}
-.qc-analytics-card-box-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:8px}
+.qc-analytics-card-box-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.qc-analytics-expand-btn{font-size:9.5px;font-weight:700;color:#6366f1;cursor:pointer;text-transform:none;letter-spacing:0}
+.qc-analytics-expand-btn:hover{text-decoration:underline}
 .qc-analytics-chart-empty{font-size:11.5px;color:#b6bfd1;text-align:center;padding:30px 0}
-.qc-analytics-spark-wrap{height:90px;display:flex;align-items:center}
-.qc-analytics-spark{width:100%;height:100%;display:block;overflow:visible}
-.qc-analytics-minibar-chart{display:flex;align-items:flex-end;gap:8px;height:90px}
-.qc-analytics-minibar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;height:100%}
-.qc-analytics-minibar-track{width:100%;max-width:26px;height:70px;background:#e9edf7;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;overflow:hidden}
-.qc-analytics-minibar-fill{width:100%;background:#6366f1;border-radius:4px 4px 0 0;min-height:2px}
-.qc-analytics-minibar-label{font-size:9.5px;color:#94a3b8;margin-top:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;width:100%}
+.qc-analytics-spark-wrap{display:block}
+.qc-analytics-linechart,.qc-analytics-barchart{width:100%;height:auto;display:block;overflow:visible}
 .qc-analytics-topfields-list{display:flex;flex-direction:column;gap:7px;min-height:90px;justify-content:center}
 .qc-analytics-topfields-row{display:flex;align-items:center;gap:8px}
 .qc-analytics-topfields-rank{flex:0 0 16px;height:16px;border-radius:50%;background:#e0e7ff;color:#4338ca;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
@@ -573,6 +570,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 #qcUpdateBanner button{background:#fff;color:#1d4ed8;border:none;border-radius:6px;padding:6px 14px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif}
 #qcUpdateBanner button:hover{background:#e0e7ff}
 #qcUpdateBlockOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.55);z-index:99998;cursor:not-allowed}
+#qcChartModalOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+.qc-chart-modal-box{background:#fff;border-radius:12px;max-width:840px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.qc-chart-modal-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid #eef1f8;font-weight:800;font-size:14px;color:#1f2937;position:sticky;top:0;background:#fff}
+.qc-chart-modal-hdr button{background:none;border:none;font-size:16px;cursor:pointer;color:#94a3b8;line-height:1;padding:2px}
+.qc-chart-modal-hdr button:hover{color:#1f2937}
+.qc-chart-modal-body{padding:18px}
 </style>
 </head>
 <body>
@@ -3969,7 +3972,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.17";
+const APP_VERSION = "2026-07-15.18";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4196,14 +4199,18 @@ function qcAggregateBy(audits,key){
   const groups={};
   audits.forEach(a=>{
     const k=(a[key]||'(unknown)').toString();
-    if(!groups[k])groups[k]={name:k,count:0,scoreSum:0,scoreCount:0,errorSum:0,errorTrend:[],failedFields:[],askedFails:0,documentedFails:0};
+    if(!groups[k])groups[k]={name:k,count:0,scoreSum:0,scoreCount:0,errorSum:0,errorByDate:{},failedFields:[],askedFails:0,documentedFails:0};
     groups[k].count++;
     const score=parseFloat(a.overallScore);
     if(!isNaN(score)){groups[k].scoreSum+=score;groups[k].scoreCount++;}
     const errs=parseFloat(a.errorCount);
     if(!isNaN(errs)){
       groups[k].errorSum+=errs;
-      groups[k].errorTrend.push({date:a.auditDate||'',errors:errs});
+      // Bucket by calendar date, not by audit — if a date range covers several
+      // audits on the same day (or several days), each point on the trend line
+      // should be that day's TOTAL errors, not one point per audit.
+      const d=a.auditDate||'(no date)';
+      groups[k].errorByDate[d]=(groups[k].errorByDate[d]||0)+errs;
     }
     if(Array.isArray(a.failedFields)) groups[k].failedFields.push.apply(groups[k].failedFields,a.failedFields);
     if(typeof a.askedFails==='number') groups[k].askedFails+=a.askedFails;
@@ -4217,7 +4224,7 @@ function qcAggregateBy(audits,key){
     avgScore:g.scoreCount?Math.round(g.scoreSum/g.scoreCount):null,
     avgErrors:g.count?+(g.errorSum/g.count).toFixed(1):0,
     totalErrors:Math.round(g.errorSum),
-    errorTrend:g.errorTrend.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>p.errors),
+    errorTrend:Object.keys(g.errorByDate).sort().map(d=>({date:d,errors:g.errorByDate[d]})),
     failedFields:g.failedFields,
     askedFails:g.askedFails,
     documentedFails:g.documentedFails
@@ -4247,32 +4254,139 @@ function qcSortByNameAsc(items){
   return items.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
 }
 
-// Small inline SVG line graph of a group's error count trend (chronological,
-// oldest→newest) — replaces the old single score-bar so at-a-glance you can
-// see whether errors are trending up or down, not just the current average.
-function qcAnalyticsSparklineSvg(points,cls){
-  const w=100,h=28,pad=4;
+const QC_MONTH_ABBR=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// Parses a plain "yyyy-MM-dd" string by hand rather than `new Date(d)` —
+// the latter parses as UTC midnight then reformats in the *viewer's* local
+// timezone, which can silently roll the date back a day west of UTC. This
+// is purely string slicing, so it can never drift.
+function qcShortDate(d){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||'');
+  if(!m) return d||'—';
+  return QC_MONTH_ABBR[parseInt(m[2],10)-1]+' '+parseInt(m[3],10);
+}
+function qcTruncateLabel(s,maxChars){
+  s=s||'';
+  return s.length>maxChars ? s.slice(0,maxChars-1)+'…' : s;
+}
+// Rounds an axis max up to a "nice" number (1/2/5×10^n) and picks a matching
+// step, so ticks read like 0,5,10,15 instead of 0,4.33,8.66,13 — mirrors
+// what D3/most charting libraries call "nice" tick generation.
+function qcNiceAxisMax(rawMax){
+  if(rawMax<=0) return {max:4,step:1};
+  const rough=rawMax/4;
+  const mag=Math.pow(10,Math.floor(Math.log10(rough)));
+  const norm=rough/mag;
+  const niceNorm=norm<=1?1:norm<=2?2:norm<=5?5:10;
+  const step=niceNorm*mag;
+  return {max:Math.ceil(rawMax/step)*step,step};
+}
+
+// SVG line graph of a group's error count trend, one point per calendar
+// date (see qcAggregateBy) with a real axis — Y-axis ticks/gridlines on the
+// left, date labels along the bottom — rather than a bare unlabeled squiggle.
+// Used both inline (small opts) and in the expand modal (large opts).
+function qcAnalyticsLineChartSvg(points,cls,opts){
+  opts=opts||{};
+  const w=opts.width||220,h=opts.height||120;
+  const marginL=opts.marginL||26,marginB=opts.marginB||18,marginT=8,marginR=10;
+  const plotW=w-marginL-marginR,plotH=h-marginT-marginB;
+  const fontSize=opts.fontSize||8.5;
+  const dotR=opts.dotR||1.5,hitR=opts.hitR||7,strokeWidth=opts.strokeWidth||1;
   const strokeColor={pass:'#22c55e',warn:'#f59e0b',fail:'#ef4444',na:'#cbd5e1'}[cls]||'#94a3b8';
+
   if(!points||points.length===0){
-    return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}" stroke="#e2e6f0" stroke-width="2" stroke-dasharray="3,3"/></svg>`;
+    return `<svg class="qc-analytics-linechart" viewBox="0 0 ${w} ${h}"><text x="${w/2}" y="${h/2}" text-anchor="middle" font-size="${fontSize+1}" fill="#b6bfd1">No data</text></svg>`;
   }
-  const dotLabel=v=>v+' error'+(v!==1?'s':'');
-  if(points.length===1){
-    return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line x1="${pad}" y1="${h/2}" x2="${w-pad}" y2="${h/2}" stroke="${strokeColor}" stroke-width="0.5"/><circle cx="${w/2}" cy="${h/2}" r="6" fill="transparent"><title>${dotLabel(points[0])}</title></circle><circle cx="${w/2}" cy="${h/2}" r="0.5" fill="${strokeColor}" style="pointer-events:none"/></svg>`;
+  const errVals=points.map(p=>p.errors);
+  const rawMax=Math.max.apply(null,errVals);
+  const {max:axisMax,step}=qcNiceAxisMax(rawMax);
+  const tickCount=Math.round(axisMax/step);
+  const yAt=v=>marginT+plotH-(axisMax>0?(v/axisMax)*plotH:0);
+
+  let axisSvg='';
+  for(let t=0;t<=tickCount;t++){
+    const val=t*step,y=yAt(val);
+    axisSvg+=`<line x1="${marginL}" y1="${y.toFixed(1)}" x2="${w-marginR}" y2="${y.toFixed(1)}" stroke="#eef1f8" stroke-width="1"/>`;
+    axisSvg+=`<text x="${marginL-5}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="${fontSize}" fill="#94a3b8">${val}</text>`;
   }
-  const max=Math.max.apply(null,points)||1;
-  const stepX=(w-2*pad)/(points.length-1);
-  const coords=points.map((v,i)=>[pad+i*stepX, h-pad-(v/max)*(h-2*pad)]);
+  axisSvg+=`<line x1="${marginL}" y1="${marginT}" x2="${marginL}" y2="${h-marginB}" stroke="#e2e6f0" stroke-width="1"/>`;
+  axisSvg+=`<line x1="${marginL}" y1="${h-marginB}" x2="${w-marginR}" y2="${h-marginB}" stroke="#e2e6f0" stroke-width="1"/>`;
+
+  const n=points.length;
+  const xAt=i=>marginL+(n>1?i*(plotW/(n-1)):plotW/2);
+  // Thin out date labels so they don't overlap when there are many points —
+  // always keep the first and last so the range's boundaries stay visible.
+  const minSpacing=opts.minLabelSpacing||30;
+  const maxLabels=Math.max(2,Math.floor(plotW/minSpacing));
+  const labelEvery=Math.max(1,Math.ceil(n/maxLabels));
+  let xLabelsSvg='';
+  points.forEach((p,i)=>{
+    if(i%labelEvery===0||i===n-1){
+      xLabelsSvg+=`<text x="${xAt(i).toFixed(1)}" y="${h-3}" text-anchor="middle" font-size="${fontSize}" fill="#94a3b8">${qcShortDate(p.date)}</text>`;
+    }
+  });
+
+  const dotLabel=p=>qcShortDate(p.date)+': '+p.errors+' error'+(p.errors!==1?'s':'');
+  if(n===1){
+    const y=yAt(points[0].errors);
+    return `<svg class="qc-analytics-linechart" viewBox="0 0 ${w} ${h}">${axisSvg}
+      <line x1="${marginL}" y1="${y.toFixed(1)}" x2="${w-marginR}" y2="${y.toFixed(1)}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>
+      <circle cx="${xAt(0).toFixed(1)}" cy="${y.toFixed(1)}" r="${hitR}" fill="transparent"><title>${dotLabel(points[0])}</title></circle>
+      <circle cx="${xAt(0).toFixed(1)}" cy="${y.toFixed(1)}" r="${dotR}" fill="${strokeColor}" style="pointer-events:none"/>
+      ${xLabelsSvg}
+    </svg>`;
+  }
+  const coords=points.map((p,i)=>[xAt(i),yAt(p.errors)]);
   const path=coords.map((c,i)=>(i===0?'M':'L')+c[0].toFixed(1)+','+c[1].toFixed(1)).join(' ');
-  // Two circles per point: a larger transparent one purely to make hovering
-  // easy (2.5px dots are hard to hit precisely) carrying the tooltip, and
-  // the small visible dot on top of it, excluded from hit-testing so it
-  // doesn't fight the hover target underneath.
-  const dots=coords.map((c,i)=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="6" fill="transparent"><title>${dotLabel(points[i])}</title></circle><circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="0.5" fill="${strokeColor}" style="pointer-events:none"/>`).join('');
-  return `<svg class="qc-analytics-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-    <path d="${path}" fill="none" stroke="${strokeColor}" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+  const dots=coords.map((c,i)=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${hitR}" fill="transparent"><title>${dotLabel(points[i])}</title></circle><circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${dotR}" fill="${strokeColor}" style="pointer-events:none"/>`).join('');
+  return `<svg class="qc-analytics-linechart" viewBox="0 0 ${w} ${h}">${axisSvg}
+    <path d="${path}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>
     ${dots}
+    ${xLabelsSvg}
   </svg>`;
+}
+
+// SVG bar chart with the same left-side Y-axis treatment as the line chart
+// above, generalized over {label,value} pairs so it serves the "Errors by
+// X" breakdown, the Agent-level "by Audit Date" breakdown, AND the 2-bar
+// Asked-vs-Documented box — one renderer instead of three near-duplicates.
+function qcAnalyticsBarChartSvg(bars,opts){
+  opts=opts||{};
+  const w=opts.width||220,h=opts.height||120;
+  const marginL=opts.marginL||26,marginB=opts.marginB||26,marginT=8,marginR=10;
+  const plotW=w-marginL-marginR,plotH=h-marginT-marginB;
+  const fontSize=opts.fontSize||8.5;
+  const barColor=opts.barColor||'#6366f1';
+  const labelMaxChars=opts.labelMaxChars||9;
+
+  if(!bars||!bars.length){
+    return `<svg class="qc-analytics-barchart" viewBox="0 0 ${w} ${h}"><text x="${w/2}" y="${h/2}" text-anchor="middle" font-size="${fontSize+1}" fill="#b6bfd1">No data</text></svg>`;
+  }
+  const rawMax=Math.max.apply(null,bars.map(b=>b.value))||0;
+  const {max:axisMax,step}=qcNiceAxisMax(rawMax);
+  const tickCount=Math.round(axisMax/step);
+
+  let axisSvg='';
+  for(let t=0;t<=tickCount;t++){
+    const val=t*step,y=marginT+plotH-(axisMax>0?(val/axisMax)*plotH:0);
+    axisSvg+=`<line x1="${marginL}" y1="${y.toFixed(1)}" x2="${w-marginR}" y2="${y.toFixed(1)}" stroke="#eef1f8" stroke-width="1"/>`;
+    axisSvg+=`<text x="${marginL-5}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="${fontSize}" fill="#94a3b8">${val}</text>`;
+  }
+  axisSvg+=`<line x1="${marginL}" y1="${marginT}" x2="${marginL}" y2="${h-marginB}" stroke="#e2e6f0" stroke-width="1"/>`;
+  axisSvg+=`<line x1="${marginL}" y1="${h-marginB}" x2="${w-marginR}" y2="${h-marginB}" stroke="#e2e6f0" stroke-width="1"/>`;
+
+  const n=bars.length;
+  const slot=plotW/n;
+  const barW=Math.min(slot*0.55,opts.maxBarWidth||30);
+  let barsSvg='',labelsSvg='';
+  bars.forEach((b,i)=>{
+    const cx=marginL+slot*(i+0.5);
+    const barH=axisMax>0?(b.value/axisMax)*plotH:0;
+    const y=marginT+plotH-barH;
+    barsSvg+=`<rect x="${(cx-barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(barH,1).toFixed(1)}" rx="2" fill="${barColor}"><title>${escHtml(b.label)}: ${b.value} error${b.value!==1?'s':''}</title></rect>`;
+    labelsSvg+=`<text x="${cx.toFixed(1)}" y="${h-marginB+13}" text-anchor="middle" font-size="${fontSize}" fill="#94a3b8">${escHtml(qcTruncateLabel(b.label,labelMaxChars))}</text>`;
+  });
+  return `<svg class="qc-analytics-barchart" viewBox="0 0 ${w} ${h}">${axisSvg}${barsSvg}${labelsSvg}</svg>`;
 }
 
 function qcAnalyticsRegisterTarget(target){
@@ -4387,6 +4501,10 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,target){
     clickAttr=` onclick="qcAnalyticsRowClick(${idx})"`;
     arrow='<span class="qc-analytics-arrow">&#8250;</span>';
   }
+  const trendIdx=qcAnalyticsRegisterChart({type:'trend',points:item.errorTrend,cls,title:item.name+' — Error Trend'});
+  const barsIdx=qcAnalyticsRegisterChart({type:'bars',bars:childItems.map(c=>({label:c.name,value:c.totalErrors})),title:item.name+' — Errors by '+childLabel});
+  const axisIdx=qcAnalyticsRegisterChart({type:'bars',bars:[{label:'Asked',value:item.askedFails||0},{label:'Documented',value:item.documentedFails||0}],title:item.name+' — Asked vs Documented Fails'});
+  const expandBtn=idx=>`<span class="qc-analytics-expand-btn" onclick="event.stopPropagation();qcAnalyticsExpandChart(${idx})">&#10530; Expand</span>`;
   return `<div class="qc-analytics-card${target?' qc-analytics-card-clickable':''}"${clickAttr}>
     <div class="qc-analytics-card-hdr">
       <span class="qc-analytics-card-title" title="${escHtml(item.name)}">${escHtml(item.name)}</span>
@@ -4396,11 +4514,11 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,target){
     </div>
     <div class="qc-analytics-card-boxes">
       <div class="qc-analytics-card-box">
-        <div class="qc-analytics-card-box-label">Error Trend</div>
-        <div class="qc-analytics-spark-wrap" title="Error count trend, oldest to newest">${qcAnalyticsSparklineSvg(item.errorTrend,cls)}</div>
+        <div class="qc-analytics-card-box-label">Error Trend${expandBtn(trendIdx)}</div>
+        <div class="qc-analytics-spark-wrap">${qcAnalyticsLineChartSvg(item.errorTrend,cls)}</div>
       </div>
       <div class="qc-analytics-card-box">
-        <div class="qc-analytics-card-box-label">Errors by ${escHtml(childLabel)}</div>
+        <div class="qc-analytics-card-box-label">Errors by ${escHtml(childLabel)}${expandBtn(barsIdx)}</div>
         ${qcAnalyticsMiniBarChartHtml(childItems,childLabel)}
       </div>
       <div class="qc-analytics-card-box">
@@ -4408,7 +4526,7 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,target){
         ${qcAnalyticsTopFieldsBoxHtml(item.failedFields)}
       </div>
       <div class="qc-analytics-card-box">
-        <div class="qc-analytics-card-box-label">Asked vs Documented Fails</div>
+        <div class="qc-analytics-card-box-label">Asked vs Documented Fails${expandBtn(axisIdx)}</div>
         ${qcAnalyticsAxisBarChartHtml(item.askedFails,item.documentedFails)}
       </div>
     </div>
@@ -4422,15 +4540,7 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,target){
 function qcAnalyticsAxisBarChartHtml(askedFails,documentedFails){
   askedFails=askedFails||0; documentedFails=documentedFails||0;
   if(!askedFails&&!documentedFails) return `<div class="qc-analytics-chart-empty">No errors recorded</div>`;
-  const max=Math.max(askedFails,documentedFails)||1;
-  const bar=(label,val)=>{
-    const h=Math.max(Math.round((val/max)*100),4);
-    return `<div class="qc-analytics-minibar-col" title="${label}: ${val} error${val!==1?'s':''}">
-      <div class="qc-analytics-minibar-track"><div class="qc-analytics-minibar-fill" style="height:${h}%"></div></div>
-      <div class="qc-analytics-minibar-label">${label}</div>
-    </div>`;
-  };
-  return `<div class="qc-analytics-minibar-chart">${bar('Asked',askedFails)}${bar('Documented',documentedFails)}</div>`;
+  return qcAnalyticsBarChartSvg([{label:'Asked',value:askedFails},{label:'Documented',value:documentedFails}]);
 }
 
 function qcAnalyticsTopFieldsBoxHtml(failedFields){
@@ -4446,19 +4556,41 @@ function qcAnalyticsTopFieldsBoxHtml(failedFields){
 
 function qcAnalyticsMiniBarChartHtml(children,childLabel){
   if(!children||!children.length) return `<div class="qc-analytics-chart-empty">No ${escHtml(childLabel.toLowerCase())} data</div>`;
-  const max=Math.max.apply(null,children.map(c=>c.totalErrors))||1;
-  const cols=children.map(c=>{
-    const h=Math.max(Math.round((c.totalErrors/max)*100),4);
-    return `<div class="qc-analytics-minibar-col" title="${escHtml(c.name)}: ${c.totalErrors} error${c.totalErrors!==1?'s':''}">
-      <div class="qc-analytics-minibar-track"><div class="qc-analytics-minibar-fill" style="height:${h}%"></div></div>
-      <div class="qc-analytics-minibar-label">${escHtml(c.name)}</div>
-    </div>`;
-  }).join('');
-  return `<div class="qc-analytics-minibar-chart">${cols}</div>`;
+  return qcAnalyticsBarChartSvg(children.map(c=>({label:c.name,value:c.totalErrors})));
+}
+
+let _qcAnalyticsChartTargets=[];
+function qcAnalyticsRegisterChart(target){
+  _qcAnalyticsChartTargets.push(target);
+  return _qcAnalyticsChartTargets.length-1;
+}
+// Compact inline charts trade detail for space; the expand modal re-renders
+// the exact same data at a much larger size with roomier fonts/margins so
+// every date/label/tick is actually legible instead of a squint-and-guess.
+function qcAnalyticsExpandChart(idx){
+  const t=_qcAnalyticsChartTargets[idx];
+  if(!t) return;
+  const bigOpts={width:760,height:360,marginL:44,marginB:36,fontSize:12,strokeWidth:1.5,dotR:3,hitR:11,minLabelSpacing:60,labelMaxChars:20,maxBarWidth:60};
+  const chartHtml=t.type==='trend'
+    ? qcAnalyticsLineChartSvg(t.points,t.cls,bigOpts)
+    : qcAnalyticsBarChartSvg(t.bars,bigOpts);
+  const overlay=document.createElement('div');
+  overlay.id='qcChartModalOverlay';
+  overlay.onclick=function(e){ if(e.target===overlay) qcAnalyticsCloseChartModal(); };
+  overlay.innerHTML=`<div class="qc-chart-modal-box">
+    <div class="qc-chart-modal-hdr"><span>${escHtml(t.title)}</span><button onclick="qcAnalyticsCloseChartModal()">&#10005;</button></div>
+    <div class="qc-chart-modal-body">${chartHtml}</div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+function qcAnalyticsCloseChartModal(){
+  const el=document.getElementById('qcChartModalOverlay');
+  if(el) el.remove();
 }
 
 function renderQCAnalyticsBody(rawAudits){
   _qcAnalyticsRowTargets=[];
+  _qcAnalyticsChartTargets=[];
   if(!rawAudits||!rawAudits.length){
     return `${qcAnalyticsDateControlsHtml()}<div style="padding:40px;text-align:center;color:#94a3b8">No saved audits yet for this program type.</div>`;
   }
@@ -4484,7 +4616,11 @@ function renderQCAnalyticsBody(rawAudits){
     const scoped=audits.filter(a=>(a.program||'')===drill.program&&(a.teamLeader||'')===drill.teamLeader);
     const byAgent=qcSortByScoreDesc(qcAggregateBy(scoped,'agent'));
     const cards=byAgent.map(item=>{
-      const children=qcSortByNameAsc(qcAggregateBy(scoped.filter(a=>(a.agent||'')===item.name),'auditDate'));
+      // Sort by the raw "yyyy-MM-dd" name first (sorts correctly chronologically),
+      // then reformat to "Jul 15" for display — reformatting before sorting would
+      // sort alphabetically and put "Jul 15" before "Jul 5".
+      const children=qcSortByNameAsc(qcAggregateBy(scoped.filter(a=>(a.agent||'')===item.name),'auditDate'))
+        .map(c=>({...c,name:qcShortDate(c.name)}));
       return qcAnalyticsCardHtml(item,children,'Audit Date',{level:'detail',program:drill.program,teamLeader:drill.teamLeader,agent:item.name});
     }).join('');
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byAgent.length,'Agents')}
