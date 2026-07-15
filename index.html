@@ -544,6 +544,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-analytics-topfields-rank{flex:0 0 16px;height:16px;border-radius:50%;background:#e0e7ff;color:#4338ca;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .qc-analytics-topfields-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:#374151}
 .qc-analytics-topfields-count{flex:0 0 auto;font-weight:800;color:#6366f1;font-size:11.5px}
+.qc-analytics-topfields-critical .qc-analytics-topfields-rank{background:#fee2e2;color:#dc2626}
+.qc-analytics-topfields-critical .qc-analytics-topfields-label{color:#dc2626;font-weight:700}
+.qc-analytics-topfields-critical .qc-analytics-topfields-count{color:#dc2626}
 .qc-analytics-score{font-size:13px;font-weight:800}
 .qc-analytics-score.pass{color:#15803d}
 .qc-analytics-score.warn{color:#b45309}
@@ -558,6 +561,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-breadcrumb-sep{color:#cbd5e1}
 .qc-analytics-date-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .qc-analytics-date-controls input[type="date"]{padding:5px 8px;border:1px solid #e2e6f0;border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;color:#334155}
+.qc-analytics-search-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.qc-analytics-search-input{flex:1;min-width:200px;max-width:340px;padding:7px 10px;border:1px solid #e2e6f0;border-radius:6px;font-size:12.5px;font-family:'Inter',sans-serif;color:#334155}
+.qc-analytics-card-checkbox{width:16px;height:16px;flex:0 0 auto;cursor:pointer;accent-color:#4263eb}
 .qc-analytics-detail-hdr{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1.6fr 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
 .qc-analytics-detail-row{display:grid;grid-template-columns:110px 140px 1fr 70px 80px 1.6fr 1fr;gap:10px;padding:8px 0;font-size:12.5px;color:#334155;border-bottom:1px solid #f1f4fb;align-items:center}
 .qc-analytics-detail-row>div{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -3972,7 +3978,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.24";
+const APP_VERSION = "2026-07-15.27";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4118,6 +4124,10 @@ let _qcAnalyticsDateFilter={mode:'all',from:'',to:''};
 // avoids embedding free-text agent/program names (which may contain quotes/apostrophes)
 // directly into onclick="..." attribute strings.
 let _qcAnalyticsRowTargets=[];
+// Programs checked via the multi-select checkboxes on the "By Program" list —
+// persists across re-renders (date filter changes, etc.) within a kind, reset
+// on kind switch since program names differ between MM and PBM.
+let _qcAnalyticsSelectedPrograms=new Set();
 
 function showQCAnalytics(){
   currentView='qc_analytics';currentProgId='';
@@ -4126,6 +4136,7 @@ function showQCAnalytics(){
   qcExpandNavGroup();
   const n=document.getElementById('navQCAnalytics');if(n)n.classList.add('active');
   _qcAnalyticsDrill={level:'kind',program:null,teamLeader:null,agent:null};
+  _qcAnalyticsSelectedPrograms=new Set();
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(_qcAnalyticsKind);
 }
@@ -4152,6 +4163,7 @@ function renderQCAnalyticsShell(){
 function qcSwitchAnalyticsKind(kind){
   _qcAnalyticsKind=kind;
   _qcAnalyticsDrill={level:'kind',program:null,teamLeader:null,agent:null};
+  _qcAnalyticsSelectedPrograms=new Set();
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(kind);
 }
@@ -4243,17 +4255,31 @@ function qcAggregateAll(audits,label){
 }
 
 // Tallies how often each specific question was marked "fail" (across Asked +
-// Documented) within a scope, and returns the 5 most common as a % of that
+// Documented) within a scope, and returns the most common as a % of that
 // scope's total fail occurrences — answers "what are we failing on most?"
 // which the trend/breakdown boxes above don't show on their own.
+//
+// Case Disposition is a forced exception: it always occupies #1 — even
+// showing a 0 when it has no failures — rather than being omitted like a
+// normal field would be with zero occurrences, since getting the case
+// disposition wrong matters regardless of how often other fields fail and
+// this box should always make it visible whether that's currently a problem
+// or not. Only flagged critical (red styling) when its count is actually >0.
+const QC_CRITICAL_ERROR_FIELD='Case Disposition';
 function qcAnalyticsTopErrorFields(failedFields,limit){
   limit=limit||5;
   const counts={};
   failedFields.forEach(f=>{ counts[f]=(counts[f]||0)+1; });
   const total=failedFields.length;
-  return Object.keys(counts).map(label=>({
-    label,count:counts[label],pct:total?Math.round(counts[label]/total*100):0
-  })).sort((a,b)=>b.count-a.count).slice(0,limit);
+  const toEntry=label=>({label,count:counts[label]||0,pct:total?Math.round((counts[label]||0)/total*100):0});
+  const criticalCount=counts[QC_CRITICAL_ERROR_FIELD]||0;
+  const rest=Object.keys(counts)
+    .filter(label=>label!==QC_CRITICAL_ERROR_FIELD)
+    .map(toEntry)
+    .sort((a,b)=>b.count-a.count);
+  const result=[Object.assign(toEntry(QC_CRITICAL_ERROR_FIELD),{critical:criticalCount>0})];
+  result.push(...rest.slice(0,Math.max(limit-result.length,0)));
+  return result;
 }
 function qcSortByScoreDesc(items){
   return items.slice().sort((a,b)=>(b.avgScore===null?-1:b.avgScore)-(a.avgScore===null?-1:a.avgScore));
@@ -4425,6 +4451,45 @@ function qcAnalyticsRegisterTarget(target){
   return _qcAnalyticsRowTargets.length-1;
 }
 
+// Same index-registry trick as row/chart targets — the checkbox's onchange
+// references a program by index rather than embedding its free-text name in
+// the attribute string, so a name containing a quote/apostrophe can't break it.
+let _qcAnalyticsCheckboxTargets=[];
+function qcAnalyticsRegisterCheckbox(name){
+  _qcAnalyticsCheckboxTargets.push(name);
+  return _qcAnalyticsCheckboxTargets.length-1;
+}
+function qcAnalyticsToggleProgramSelect(idx,checked){
+  const name=_qcAnalyticsCheckboxTargets[idx];
+  if(name==null) return;
+  if(checked) _qcAnalyticsSelectedPrograms.add(name);
+  else _qcAnalyticsSelectedPrograms.delete(name);
+  qcAnalyticsUpdateSelectedButton();
+}
+function qcAnalyticsUpdateSelectedButton(){
+  const btn=document.getElementById('qcAnalyticsViewSelectedBtn');
+  if(!btn) return;
+  const n=_qcAnalyticsSelectedPrograms.size;
+  btn.style.display=n>0?'':'none';
+  btn.textContent='View Analytics for Selected ('+n+') ›';
+}
+function qcAnalyticsViewSelectedPrograms(){
+  if(_qcAnalyticsSelectedPrograms.size===0) return;
+  _qcAnalyticsDrill={level:'multi',programs:Array.from(_qcAnalyticsSelectedPrograms),program:null,teamLeader:null,agent:null};
+  const bodyEl=document.getElementById('qcAnalyticsBody');
+  const cached=_qcAnalyticsCache[_qcAnalyticsKind];
+  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+}
+// Pure DOM filter, not a re-render — re-rendering the whole body on every
+// keystroke would blow away the input's focus/cursor position.
+function qcAnalyticsFilterProgramSearch(val){
+  const q=val.trim().toLowerCase();
+  document.querySelectorAll('.qc-analytics-card[data-entity-name]').forEach(card=>{
+    const name=(card.getAttribute('data-entity-name')||'').toLowerCase();
+    card.style.display=(!q||name.includes(q))?'':'none';
+  });
+}
+
 function qcAnalyticsRowClick(idx){
   const t=_qcAnalyticsRowTargets[idx];
   if(!t)return;
@@ -4503,6 +4568,9 @@ function qcAnalyticsBreadcrumbHtml(){
     const rootIdx=qcAnalyticsRegisterTarget({level:'program'});
     items.push(`<span class="qc-breadcrumb-item${d.level==='program'?' active':''}" onclick="qcAnalyticsRowClick(${rootIdx})">All Programs</span>`);
   }
+  if(d.level==='multi'){
+    items.push(`<span class="qc-breadcrumb-item active">Selected Programs (${(d.programs||[]).length})</span>`);
+  }
   if(d.program){
     const idx=qcAnalyticsRegisterTarget({level:'teamLeader',program:d.program});
     items.push(`<span class="qc-breadcrumb-item${d.level==='teamLeader'?' active':''}" onclick="qcAnalyticsRowClick(${idx})">${escHtml(d.program)}</span>`);
@@ -4555,7 +4623,7 @@ function qcAnalyticsTrendFromAudits(auditsForEntity){
 // above), a bar breakdown of total errors by whichever grouping is one level
 // further down, the 5 questions most often marked "fail", and an Asked vs
 // Documented fail-type comparison.
-function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,target){
+function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,target,showCheckbox){
   const pct=item.avgScore===null?0:item.avgScore;
   const cls=item.avgScore===null?'na':pct<70?'fail':pct<90?'warn':'pass';
   let clickAttr='',arrow='';
@@ -4564,13 +4632,19 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,t
     clickAttr=` onclick="qcAnalyticsRowClick(${idx})"`;
     arrow='<span class="qc-analytics-arrow">&#8250;</span>';
   }
+  let checkboxHtml='';
+  if(showCheckbox){
+    const cbIdx=qcAnalyticsRegisterCheckbox(item.name);
+    checkboxHtml=`<input type="checkbox" class="qc-analytics-card-checkbox" onclick="event.stopPropagation()" onchange="qcAnalyticsToggleProgramSelect(${cbIdx},this.checked)"${_qcAnalyticsSelectedPrograms.has(item.name)?' checked':''}>`;
+  }
   const trendIdx=qcAnalyticsRegisterChart({type:'trend',points:trendPoints,cls,title:item.name+' — '+trendLabel});
   const barsIdx=qcAnalyticsRegisterChart({type:'bars',bars:childItems.map(c=>({label:c.name,value:c.totalErrors})),title:item.name+' — Errors by '+childLabel});
   const axisIdx=qcAnalyticsRegisterChart({type:'bars',bars:[{label:'Asked',value:item.askedFails||0},{label:'Documented',value:item.documentedFails||0}],title:item.name+' — Asked vs Documented Fails'});
   const topFieldsIdx=qcAnalyticsRegisterChart({type:'topfields',failedFields:item.failedFields,title:item.name+' — Top 10 Error Fields'});
   const expandBtn=idx=>`<span class="qc-analytics-expand-btn" onclick="event.stopPropagation();qcAnalyticsExpandChart(${idx})">&#10530; Expand</span>`;
-  return `<div class="qc-analytics-card${target?' qc-analytics-card-clickable':''}"${clickAttr}>
+  return `<div class="qc-analytics-card${target?' qc-analytics-card-clickable':''}" data-entity-name="${escHtml(item.name)}"${clickAttr}>
     <div class="qc-analytics-card-hdr">
+      ${checkboxHtml}
       <span class="qc-analytics-card-title" title="${escHtml(item.name)}">${escHtml(item.name)}</span>
       <span class="qc-analytics-score ${cls}">${item.avgScore===null?'—':item.avgScore+'%'}</span>
       <span class="qc-analytics-meta">${item.count} audit${item.count!==1?'s':''} &middot; ${item.avgErrors} avg errors</span>
@@ -4615,7 +4689,7 @@ function qcAnalyticsAxisBarChartHtml(askedFails,documentedFails){
 function qcAnalyticsTopFieldsListHtml(top){
   if(!top.length) return `<div class="qc-analytics-chart-empty">No errors recorded</div>`;
   return `<div class="qc-analytics-topfields-list">${top.map((f,i)=>`
-    <div class="qc-analytics-topfields-row" title="${escHtml(f.label)}">
+    <div class="qc-analytics-topfields-row${f.critical?' qc-analytics-topfields-critical':''}" title="${escHtml(f.label)}${f.critical?' — always shown when present':''}">
       <span class="qc-analytics-topfields-rank">${i+1}</span>
       <span class="qc-analytics-topfields-label">${escHtml(f.label)}</span>
       <span class="qc-analytics-topfields-count">${f.count}</span>
@@ -4664,6 +4738,7 @@ function qcAnalyticsCloseChartModal(){
 function renderQCAnalyticsBody(rawAudits){
   _qcAnalyticsRowTargets=[];
   _qcAnalyticsChartTargets=[];
+  _qcAnalyticsCheckboxTargets=[];
   if(!rawAudits||!rawAudits.length){
     return `${qcAnalyticsDateControlsHtml()}<div style="padding:40px;text-align:center;color:#94a3b8">No saved audits yet for this program type.</div>`;
   }
@@ -4757,15 +4832,37 @@ function renderQCAnalyticsBody(rawAudits){
     </div>`;
   }
 
+  if(drill.level==='multi'){
+    const selected=new Set(drill.programs||[]);
+    const scoped=audits.filter(a=>selected.has(a.program||''));
+    const label='Selected Programs ('+selected.size+')';
+    const item=qcAggregateAll(scoped,label);
+    const children=qcSortByErrorsDesc(qcAggregateBy(scoped,'program'));
+    const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
+    const trendLabel=isSingleDay?'Avg Errors by Program':'Avg Errors by Day';
+    // No target/checkbox — an arbitrary multi-program selection isn't a real
+    // hierarchy node, so there's nowhere further to drill from here.
+    const card=qcAnalyticsCardHtml(item,children,'Program',trendPoints,trendLabel,null,false);
+    return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,children.length,'Programs')}
+    <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>Selected Programs</span><span class="chevron open">&#9654;</span></div>
+      <div class="section-body">${card}</div>
+    </div>`;
+  }
+
   // level === 'program' (top of the hierarchy)
   const byProgram=qcSortByScoreDesc(qcAggregateBy(audits,'program'));
   const cards=byProgram.map(item=>{
     const children=qcSortByErrorsDesc(qcAggregateBy(audits.filter(a=>(a.program||'')===item.name),'teamLeader'));
     const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
     const trendLabel=isSingleDay?'Avg Errors by Team Leader':'Avg Errors by Day';
-    return qcAnalyticsCardHtml(item,children,'Team Leader',trendPoints,trendLabel,{level:'teamLeader',program:item.name});
+    return qcAnalyticsCardHtml(item,children,'Team Leader',trendPoints,trendLabel,{level:'teamLeader',program:item.name},true);
   }).join('');
+  const selectedCount=_qcAnalyticsSelectedPrograms.size;
   return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,byProgram.length,'Programs')}
+  <div class="qc-analytics-search-row">
+    <input type="text" class="qc-analytics-search-input" placeholder="Search programs by name…" oninput="qcAnalyticsFilterProgramSearch(this.value)">
+    <button id="qcAnalyticsViewSelectedBtn" class="qc-btn primary" style="display:${selectedCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedPrograms()">View Analytics for Selected (${selectedCount}) &rsaquo;</button>
+  </div>
   <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>By Program</span><span class="chevron open">&#9654;</span></div>
     <div class="section-body">${byProgram.length?cards:qcAnalyticsEmptyRow()}</div>
   </div>`;
