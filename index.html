@@ -3990,7 +3990,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.4";
+const APP_VERSION = "2026-07-16.5";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5132,19 +5132,23 @@ function qcRecalc(){
   // not one — deliberately more punishing than treating the group as a
   // single yes/no flag. Order across groups (worst-first) doesn't change the
   // final number (multiplication commutes) but keeps the banner readable.
+  // Detect triggered deductions regardless of whether rawPct exists yet — an
+  // auditor might score a critical item before scoring anything else, in
+  // which case every section still has zero non-critical items scored and
+  // rawPct is null. The banner should still name the failed field right
+  // away rather than falling back to a vague generic message just because
+  // there's no score yet to apply the deduction to.
   let pct=rawPct;
   const triggeredDeductions=[];
-  if(pct!==null){
-    QC_DEDUCTION_GROUPS.forEach(g=>{
-      g.labels.forEach(label=>{
-        if(qcItemFailedByLabel(label)){
-          pct=pct*(1-g.pct/100);
-          triggeredDeductions.push({pct:g.pct,label});
-        }
-      });
+  QC_DEDUCTION_GROUPS.forEach(g=>{
+    g.labels.forEach(label=>{
+      if(qcItemFailedByLabel(label)){
+        if(pct!==null) pct=pct*(1-g.pct/100);
+        triggeredDeductions.push({pct:g.pct,label});
+      }
     });
-    pct=Math.max(0,Math.round(pct));
-  }
+  });
+  if(pct!==null) pct=Math.max(0,Math.round(pct));
 
   const numEl=document.getElementById('qcOverallScore');
   if(numEl){
@@ -5158,7 +5162,9 @@ function qcRecalc(){
     if(triggeredDeductions.length){
       banner.style.display='';
       const parts=triggeredDeductions.map(d=>escHtml(d.label)+' ('+d.pct+'% deduction)').join(', ');
-      banner.innerHTML='&#9888; '+parts+' — overall score reduced from '+rawPct+'% to '+pct+'%.';
+      banner.innerHTML=rawPct===null
+        ? '&#9888; '+parts+' — this will be deducted from the overall score once the rest of the audit is scored.'
+        : '&#9888; '+parts+' — overall score reduced from '+rawPct+'% to '+pct+'%.';
     } else if(fatalFail){
       banner.style.display='';
       banner.innerHTML='&#9888; A fatal item is marked Fail. This is counted in the score and error count like any other item, but flagged here for visibility.';
