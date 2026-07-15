@@ -3990,7 +3990,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.1";
+const APP_VERSION = "2026-07-16.2";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5112,12 +5112,24 @@ function qcRecalc(){
   });
   const rawPct=weightedDenPct>0?Math.min(100,Math.max(0,Math.round(weightedNum/weightedDenPct))):null;
 
-  let deductionPct=0,deductionLabels=[];
-  QC_DEDUCTION_GROUPS.forEach(g=>{
-    const hit=g.labels.filter(l=>qcItemFailedByLabel(l));
-    if(hit.length&&g.pct>deductionPct){ deductionPct=g.pct; deductionLabels=hit; }
-  });
-  const pct=rawPct===null?null:Math.max(0,rawPct-deductionPct);
+  // Each triggered group multiplies the *running* score by (1 - pct/100) —
+  // not a flat point subtraction — and every triggered group stacks in turn
+  // (a 50% hit followed by a 30% hit leaves 35%, not 20%), rather than only
+  // the single worst group counting. Order doesn't change the result
+  // (multiplication commutes) but we always apply worst-first for a
+  // consistent, readable trail in the banner.
+  let pct=rawPct;
+  const triggeredDeductions=[];
+  if(pct!==null){
+    QC_DEDUCTION_GROUPS.forEach(g=>{
+      const hit=g.labels.filter(l=>qcItemFailedByLabel(l));
+      if(hit.length){
+        pct=pct*(1-g.pct/100);
+        triggeredDeductions.push({pct:g.pct,labels:hit});
+      }
+    });
+    pct=Math.max(0,Math.round(pct));
+  }
 
   const numEl=document.getElementById('qcOverallScore');
   if(numEl){
@@ -5128,9 +5140,10 @@ function qcRecalc(){
   const progressEl=document.getElementById('qcProgress');if(progressEl)progressEl.textContent=`${scoredCount} / ${totalCount} scored`;
   const banner=document.getElementById('qcFatalBanner');
   if(banner){
-    if(deductionPct>0){
+    if(triggeredDeductions.length){
       banner.style.display='';
-      banner.innerHTML='&#9888; '+escHtml(deductionLabels.join(', '))+' marked Fail — '+deductionPct+'% deducted from the overall score.';
+      const parts=triggeredDeductions.map(d=>escHtml(d.labels.join(', '))+' ('+d.pct+'% deduction)').join(', ');
+      banner.innerHTML='&#9888; '+parts+' — overall score reduced from '+rawPct+'% to '+pct+'%.';
     } else if(fatalFail){
       banner.style.display='';
       banner.innerHTML='&#9888; A fatal item is marked Fail. This is counted in the score and error count like any other item, but flagged here for visibility.';
@@ -5138,7 +5151,7 @@ function qcRecalc(){
       banner.style.display='none';
     }
   }
-  return {pct,errCount,scoredCount,totalCount,fatalFail,deductionPct};
+  return {pct,rawPct,errCount,scoredCount,totalCount,fatalFail,triggeredDeductions};
 }
 
 function qcResetAudit(){
