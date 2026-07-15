@@ -3972,7 +3972,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.20";
+const APP_VERSION = "2026-07-15.22";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4273,14 +4273,20 @@ function qcTruncateLabel(s,maxChars){
 // Rounds an axis max up to a "nice" number (1/2/5×10^n) and picks a matching
 // step, so ticks read like 0,5,10,15 instead of 0,4.33,8.66,13 — mirrors
 // what D3/most charting libraries call "nice" tick generation.
+// Multiplying/dividing floats like 3*0.2 produces binary-floating-point
+// noise (0.6000000000000001) — round it away before it ever reaches a tick
+// label. 6 decimal places is far past any scale this chart ever plots at.
+function qcRoundClean(n){
+  return Math.round(n*1e6)/1e6;
+}
 function qcNiceAxisMax(rawMax){
   if(rawMax<=0) return {max:4,step:1};
   const rough=rawMax/4;
   const mag=Math.pow(10,Math.floor(Math.log10(rough)));
   const norm=rough/mag;
   const niceNorm=norm<=1?1:norm<=2?2:norm<=5?5:10;
-  const step=niceNorm*mag;
-  return {max:Math.ceil(rawMax/step)*step,step};
+  const step=qcRoundClean(niceNorm*mag);
+  return {max:qcRoundClean(Math.ceil(rawMax/step)*step),step};
 }
 
 // SVG line graph of a group's error count trend, one point per calendar
@@ -4297,7 +4303,7 @@ function qcAnalyticsLineChartSvg(points,cls,opts){
   const marginL=opts.marginL||26,marginB=opts.marginB||18,marginT=8,marginR=10;
   const plotW=w-marginL-marginR,plotH=h-marginT-marginB;
   const fontSize=opts.fontSize||8.5;
-  const dotR=opts.dotR||8,hitR=Math.max(opts.hitR||7,dotR+2),strokeWidth=opts.strokeWidth||1;
+  const dotR=opts.dotR||6,hitR=Math.max(opts.hitR||7,dotR+2),strokeWidth=opts.strokeWidth||1;
   const strokeColor={pass:'#22c55e',warn:'#f59e0b',fail:'#ef4444',na:'#cbd5e1'}[cls]||'#94a3b8';
 
   if(!points||points.length===0){
@@ -4311,7 +4317,7 @@ function qcAnalyticsLineChartSvg(points,cls,opts){
 
   let axisSvg='';
   for(let t=0;t<=tickCount;t++){
-    const val=t*step,y=yAt(val);
+    const val=qcRoundClean(t*step),y=yAt(val);
     axisSvg+=`<line x1="${marginL}" y1="${y.toFixed(1)}" x2="${w-marginR}" y2="${y.toFixed(1)}" stroke="#eef1f8" stroke-width="1"/>`;
     axisSvg+=`<text x="${marginL-5}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="${fontSize}" fill="#94a3b8">${val}</text>`;
   }
@@ -4374,7 +4380,7 @@ function qcAnalyticsBarChartSvg(bars,opts){
 
   let axisSvg='';
   for(let t=0;t<=tickCount;t++){
-    const val=t*step,y=marginT+plotH-(axisMax>0?(val/axisMax)*plotH:0);
+    const val=qcRoundClean(t*step),y=marginT+plotH-(axisMax>0?(val/axisMax)*plotH:0);
     axisSvg+=`<line x1="${marginL}" y1="${y.toFixed(1)}" x2="${w-marginR}" y2="${y.toFixed(1)}" stroke="#eef1f8" stroke-width="1"/>`;
     axisSvg+=`<text x="${marginL-5}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="${fontSize}" fill="#94a3b8">${val}</text>`;
   }
