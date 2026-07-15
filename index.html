@@ -3984,7 +3984,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.28";
+const APP_VERSION = "2026-07-15.29";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4536,15 +4536,17 @@ function qcAnalyticsToggleAgentSelect(idx,checked){
 }
 function qcAnalyticsViewSelectedAgents(){
   if(_qcAnalyticsSelectedAgents.size===0) return;
-  _qcAnalyticsDrill={level:'multiAgent',program:_qcAnalyticsDrill.program,agents:Array.from(_qcAnalyticsSelectedAgents),teamLeader:null,agent:null};
+  _qcAnalyticsDrill={level:'multiAgent',program:_qcAnalyticsDrill.program,teamLeader:_qcAnalyticsDrill.teamLeader,agents:Array.from(_qcAnalyticsSelectedAgents),agent:null};
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
   if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
 }
 
 // Pure DOM filter, not a re-render — re-rendering the whole body on every
-// keystroke would blow away the input's focus/cursor position.
-function qcAnalyticsFilterProgramSearch(val){
+// keystroke would blow away the input's focus/cursor position. Generic over
+// whatever cards are currently in the DOM (program cards, agent cards, ...)
+// since every qcAnalyticsCardHtml() card already carries data-entity-name.
+function qcAnalyticsFilterCardSearch(val){
   const q=val.trim().toLowerCase();
   document.querySelectorAll('.qc-analytics-card[data-entity-name]').forEach(card=>{
     const name=(card.getAttribute('data-entity-name')||'').toLowerCase();
@@ -4555,10 +4557,10 @@ function qcAnalyticsFilterProgramSearch(val){
 function qcAnalyticsRowClick(idx){
   const t=_qcAnalyticsRowTargets[idx];
   if(!t)return;
-  // Entering a program's Team Leader list fresh — clear any agent selection
-  // left over from a previously-viewed program, since agent names there
-  // could otherwise be misread as applying to this different program.
-  if(t.level==='teamLeader') _qcAnalyticsSelectedAgents=new Set();
+  // Entering a team leader's Agent list fresh — clear any agent selection
+  // left over from a previously-viewed team leader/program, since agent
+  // names there could otherwise be misread as applying to this different scope.
+  if(t.level==='agent') _qcAnalyticsSelectedAgents=new Set();
   _qcAnalyticsDrill={level:t.level,program:t.program||null,teamLeader:t.teamLeader||null,agent:t.agent||null};
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
@@ -4641,12 +4643,12 @@ function qcAnalyticsBreadcrumbHtml(){
     const idx=qcAnalyticsRegisterTarget({level:'teamLeader',program:d.program});
     items.push(`<span class="qc-breadcrumb-item${d.level==='teamLeader'?' active':''}" onclick="qcAnalyticsRowClick(${idx})">${escHtml(d.program)}</span>`);
   }
-  if(d.level==='multiAgent'){
-    items.push(`<span class="qc-breadcrumb-item active">Selected Agents (${(d.agents||[]).length})</span>`);
-  }
   if(d.teamLeader){
     const idx=qcAnalyticsRegisterTarget({level:'agent',program:d.program,teamLeader:d.teamLeader});
     items.push(`<span class="qc-breadcrumb-item${d.level==='agent'?' active':''}" onclick="qcAnalyticsRowClick(${idx})">${escHtml(d.teamLeader)}</span>`);
+  }
+  if(d.level==='multiAgent'){
+    items.push(`<span class="qc-breadcrumb-item active">Selected Agents (${(d.agents||[]).length})</span>`);
   }
   if(d.agent){
     items.push(`<span class="qc-breadcrumb-item active">${escHtml(d.agent)}</span>`);
@@ -4839,17 +4841,7 @@ function renderQCAnalyticsBody(rawAudits){
       const trendLabel='Avg Errors by Agent';
       return qcAnalyticsCardHtml(item,children,'Agent',trendPoints,trendLabel,{level:'agent',program:drill.program,teamLeader:item.name});
     }).join('');
-    // Flattened across every team leader in this program — lets you pick
-    // specific agents directly without needing to know which team leader
-    // each one reports to.
-    const allAgentNames=qcSortByNameAsc(qcAggregateBy(scoped,'agent')).map(a=>a.name);
-    const agentDropdown=qcAnalyticsMultiSelectDropdownHtml('qcAgentDropdown','qcAgentDropdownTrigger','Select Agents',allAgentNames,_qcAnalyticsSelectedAgents,qcAnalyticsRegisterAgentCheckbox,'qcAnalyticsToggleAgentSelect');
-    const selectedAgentCount=_qcAnalyticsSelectedAgents.size;
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byTL.length,'Team Leaders')}
-    <div class="qc-analytics-search-row">
-      ${agentDropdown}
-      <button id="qcAnalyticsViewSelectedAgentsBtn" class="qc-btn primary" style="display:${selectedAgentCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedAgents()">View Analytics for Selected (${selectedAgentCount}) &rsaquo;</button>
-    </div>
     <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>By Team Leader</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">${byTL.length?cards:qcAnalyticsEmptyRow()}</div>
     </div>`;
@@ -4873,7 +4865,15 @@ function renderQCAnalyticsBody(rawAudits){
       const trendLabel=isSingleDay?'Errors Throughout the Day':'Avg Errors by Day';
       return qcAnalyticsCardHtml(item,children,'Audit Date',trendPoints,trendLabel,{level:'detail',program:drill.program,teamLeader:drill.teamLeader,agent:item.name});
     }).join('');
+    const agentNames=byAgent.map(a=>a.name);
+    const agentDropdown=qcAnalyticsMultiSelectDropdownHtml('qcAgentDropdown','qcAgentDropdownTrigger','Select Agents',agentNames,_qcAnalyticsSelectedAgents,qcAnalyticsRegisterAgentCheckbox,'qcAnalyticsToggleAgentSelect');
+    const selectedAgentCount=_qcAnalyticsSelectedAgents.size;
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byAgent.length,'Agents')}
+    <div class="qc-analytics-search-row">
+      <input type="text" class="qc-analytics-search-input" placeholder="Search agents by name…" oninput="qcAnalyticsFilterCardSearch(this.value)">
+      ${agentDropdown}
+      <button id="qcAnalyticsViewSelectedAgentsBtn" class="qc-btn primary" style="display:${selectedAgentCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedAgents()">View Analytics for Selected (${selectedAgentCount}) &rsaquo;</button>
+    </div>
     <div class="section"><div class="section-header hdr-benefit" onclick="toggleSection(this)"><span>By Agent</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">${byAgent.length?cards:qcAnalyticsEmptyRow()}</div>
     </div>`;
@@ -4925,7 +4925,7 @@ function renderQCAnalyticsBody(rawAudits){
 
   if(drill.level==='multiAgent'){
     const selected=new Set(drill.agents||[]);
-    const scoped=audits.filter(a=>(a.program||'')===drill.program&&selected.has(a.agent||''));
+    const scoped=audits.filter(a=>(a.program||'')===drill.program&&(a.teamLeader||'')===drill.teamLeader&&selected.has(a.agent||''));
     const label='Selected Agents ('+selected.size+')';
     const item=qcAggregateAll(scoped,label);
     const children=qcSortByErrorsDesc(qcAggregateBy(scoped,'agent'));
@@ -4953,7 +4953,7 @@ function renderQCAnalyticsBody(rawAudits){
   const programDropdown=qcAnalyticsMultiSelectDropdownHtml('qcProgramDropdown','qcProgramDropdownTrigger','Select Programs',programNames,_qcAnalyticsSelectedPrograms,qcAnalyticsRegisterProgramCheckbox,'qcAnalyticsToggleProgramSelect');
   return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,byProgram.length,'Programs')}
   <div class="qc-analytics-search-row">
-    <input type="text" class="qc-analytics-search-input" placeholder="Search programs by name…" oninput="qcAnalyticsFilterProgramSearch(this.value)">
+    <input type="text" class="qc-analytics-search-input" placeholder="Search programs by name…" oninput="qcAnalyticsFilterCardSearch(this.value)">
     ${programDropdown}
     <button id="qcAnalyticsViewSelectedBtn" class="qc-btn primary" style="display:${selectedCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedPrograms()">View Analytics for Selected (${selectedCount}) &rsaquo;</button>
   </div>
