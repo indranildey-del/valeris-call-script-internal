@@ -3972,7 +3972,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.18";
+const APP_VERSION = "2026-07-15.20";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4206,11 +4206,13 @@ function qcAggregateBy(audits,key){
     const errs=parseFloat(a.errorCount);
     if(!isNaN(errs)){
       groups[k].errorSum+=errs;
-      // Bucket by calendar date, not by audit — if a date range covers several
-      // audits on the same day (or several days), each point on the trend line
-      // should be that day's TOTAL errors, not one point per audit.
+      // Bucket by calendar date — each point on the multi-day trend line is
+      // that day's AVERAGE errors per audit (sum/count), not a running total,
+      // so a day with 1 audit isn't visually equated with a day with 5.
       const d=a.auditDate||'(no date)';
-      groups[k].errorByDate[d]=(groups[k].errorByDate[d]||0)+errs;
+      if(!groups[k].errorByDate[d])groups[k].errorByDate[d]={sum:0,count:0};
+      groups[k].errorByDate[d].sum+=errs;
+      groups[k].errorByDate[d].count++;
     }
     if(Array.isArray(a.failedFields)) groups[k].failedFields.push.apply(groups[k].failedFields,a.failedFields);
     if(typeof a.askedFails==='number') groups[k].askedFails+=a.askedFails;
@@ -4224,7 +4226,7 @@ function qcAggregateBy(audits,key){
     avgScore:g.scoreCount?Math.round(g.scoreSum/g.scoreCount):null,
     avgErrors:g.count?+(g.errorSum/g.count).toFixed(1):0,
     totalErrors:Math.round(g.errorSum),
-    errorTrend:Object.keys(g.errorByDate).sort().map(d=>({date:d,errors:g.errorByDate[d]})),
+    errorTrend:Object.keys(g.errorByDate).sort().map(d=>({date:d,errors:+(g.errorByDate[d].sum/g.errorByDate[d].count).toFixed(1)})),
     failedFields:g.failedFields,
     askedFails:g.askedFails,
     documentedFails:g.documentedFails
@@ -4285,20 +4287,24 @@ function qcNiceAxisMax(rawMax){
 // date (see qcAggregateBy) with a real axis — Y-axis ticks/gridlines on the
 // left, date labels along the bottom — rather than a bare unlabeled squiggle.
 // Used both inline (small opts) and in the expand modal (large opts).
+// points: [{label, value}] — a generic x/y pair (not necessarily a date; see
+// qcAnalyticsTrendPoints below, which decides whether "label" is a date, a
+// team leader/agent name, or an individual audit depending on the level and
+// whether a single day or a range is selected).
 function qcAnalyticsLineChartSvg(points,cls,opts){
   opts=opts||{};
   const w=opts.width||220,h=opts.height||120;
   const marginL=opts.marginL||26,marginB=opts.marginB||18,marginT=8,marginR=10;
   const plotW=w-marginL-marginR,plotH=h-marginT-marginB;
   const fontSize=opts.fontSize||8.5;
-  const dotR=opts.dotR||1.5,hitR=opts.hitR||7,strokeWidth=opts.strokeWidth||1;
+  const dotR=opts.dotR||8,hitR=Math.max(opts.hitR||7,dotR+2),strokeWidth=opts.strokeWidth||1;
   const strokeColor={pass:'#22c55e',warn:'#f59e0b',fail:'#ef4444',na:'#cbd5e1'}[cls]||'#94a3b8';
 
   if(!points||points.length===0){
     return `<svg class="qc-analytics-linechart" viewBox="0 0 ${w} ${h}"><text x="${w/2}" y="${h/2}" text-anchor="middle" font-size="${fontSize+1}" fill="#b6bfd1">No data</text></svg>`;
   }
-  const errVals=points.map(p=>p.errors);
-  const rawMax=Math.max.apply(null,errVals);
+  const vals=points.map(p=>p.value);
+  const rawMax=Math.max.apply(null,vals);
   const {max:axisMax,step}=qcNiceAxisMax(rawMax);
   const tickCount=Math.round(axisMax/step);
   const yAt=v=>marginT+plotH-(axisMax>0?(v/axisMax)*plotH:0);
@@ -4314,7 +4320,7 @@ function qcAnalyticsLineChartSvg(points,cls,opts){
 
   const n=points.length;
   const xAt=i=>marginL+(n>1?i*(plotW/(n-1)):plotW/2);
-  // Thin out date labels so they don't overlap when there are many points —
+  // Thin out x labels so they don't overlap when there are many points —
   // always keep the first and last so the range's boundaries stay visible.
   const minSpacing=opts.minLabelSpacing||30;
   const maxLabels=Math.max(2,Math.floor(plotW/minSpacing));
@@ -4322,13 +4328,13 @@ function qcAnalyticsLineChartSvg(points,cls,opts){
   let xLabelsSvg='';
   points.forEach((p,i)=>{
     if(i%labelEvery===0||i===n-1){
-      xLabelsSvg+=`<text x="${xAt(i).toFixed(1)}" y="${h-3}" text-anchor="middle" font-size="${fontSize}" fill="#94a3b8">${qcShortDate(p.date)}</text>`;
+      xLabelsSvg+=`<text x="${xAt(i).toFixed(1)}" y="${h-3}" text-anchor="middle" font-size="${fontSize}" fill="#94a3b8">${escHtml(qcTruncateLabel(p.label,opts.xLabelMaxChars||8))}</text>`;
     }
   });
 
-  const dotLabel=p=>qcShortDate(p.date)+': '+p.errors+' error'+(p.errors!==1?'s':'');
+  const dotLabel=p=>p.label+': '+p.value+' error'+(p.value!==1?'s':'');
   if(n===1){
-    const y=yAt(points[0].errors);
+    const y=yAt(points[0].value);
     return `<svg class="qc-analytics-linechart" viewBox="0 0 ${w} ${h}">${axisSvg}
       <line x1="${marginL}" y1="${y.toFixed(1)}" x2="${w-marginR}" y2="${y.toFixed(1)}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>
       <circle cx="${xAt(0).toFixed(1)}" cy="${y.toFixed(1)}" r="${hitR}" fill="transparent"><title>${dotLabel(points[0])}</title></circle>
@@ -4336,7 +4342,7 @@ function qcAnalyticsLineChartSvg(points,cls,opts){
       ${xLabelsSvg}
     </svg>`;
   }
-  const coords=points.map((p,i)=>[xAt(i),yAt(p.errors)]);
+  const coords=points.map((p,i)=>[xAt(i),yAt(p.value)]);
   const path=coords.map((c,i)=>(i===0?'M':'L')+c[0].toFixed(1)+','+c[1].toFixed(1)).join(' ');
   const dots=coords.map((c,i)=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${hitR}" fill="transparent"><title>${dotLabel(points[i])}</title></circle><circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${dotR}" fill="${strokeColor}" style="pointer-events:none"/>`).join('');
   return `<svg class="qc-analytics-linechart" viewBox="0 0 ${w} ${h}">${axisSvg}
@@ -4439,6 +4445,17 @@ function qcAnalyticsFilterByDate(audits){
   });
 }
 
+// "Today" or a custom range narrowed to one date both mean the Error Trend
+// box should switch from a per-day trend to a within-that-day breakdown
+// (see qcAnalyticsTrendPoints) — everything else (All Time/7d/30d/a wider
+// custom range) keeps the per-day trend.
+function qcAnalyticsIsSingleDayFilter(){
+  const f=_qcAnalyticsDateFilter;
+  if(f.mode==='today') return true;
+  if(f.mode==='custom'&&f.from&&f.to&&f.from===f.to) return true;
+  return false;
+}
+
 function qcAnalyticsDateControlsHtml(){
   const f=_qcAnalyticsDateFilter;
   const modes=[['all','All Time'],['today','Today'],['7d','Last 7 Days'],['30d','Last 30 Days'],['custom','Custom']];
@@ -4487,12 +4504,28 @@ function qcAnalyticsEmptyRow(){
   return `<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12.5px">No audits match this date range.</div>`;
 }
 
+// Builds the {label,value} points the Error Trend box plots. Rule: a single
+// selected day breaks down by whatever's one level further down (Team
+// Leader/Agent/individual audit) so you can see who/what drove that day's
+// errors; a multi-day range (or All Time) shows the per-day average instead,
+// so day-to-day trend isn't skewed by days with more or fewer audits.
+function qcAnalyticsTrendFromDates(errorTrend){
+  return errorTrend.map(p=>({label:qcShortDate(p.date),value:p.errors}));
+}
+function qcAnalyticsTrendFromChildren(children){
+  return children.map(c=>({label:c.name,value:c.avgErrors}));
+}
+function qcAnalyticsTrendFromAudits(auditsForEntity){
+  const sorted=auditsForEntity.slice().sort((a,b)=>(Date.parse(a.timestamp)||0)-(Date.parse(b.timestamp)||0));
+  return sorted.map((a,i)=>({label:'#'+(i+1),value:parseFloat(a.errorCount)||0}));
+}
+
 // One card per entity (Program / Team Leader / Agent): a header with name +
-// score + audit count, and three boxes underneath — an error-trend line
-// graph for this entity's own audits, a bar breakdown of total errors by
-// whichever grouping is one level further down the drill hierarchy, and the
-// 5 specific questions most often marked "fail" across this entity's audits.
-function qcAnalyticsCardHtml(item,childItems,childLabel,target){
+// score + audit count, and four boxes underneath — the error trend (see
+// above), a bar breakdown of total errors by whichever grouping is one level
+// further down, the 5 questions most often marked "fail", and an Asked vs
+// Documented fail-type comparison.
+function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,target){
   const pct=item.avgScore===null?0:item.avgScore;
   const cls=item.avgScore===null?'na':pct<70?'fail':pct<90?'warn':'pass';
   let clickAttr='',arrow='';
@@ -4501,7 +4534,7 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,target){
     clickAttr=` onclick="qcAnalyticsRowClick(${idx})"`;
     arrow='<span class="qc-analytics-arrow">&#8250;</span>';
   }
-  const trendIdx=qcAnalyticsRegisterChart({type:'trend',points:item.errorTrend,cls,title:item.name+' — Error Trend'});
+  const trendIdx=qcAnalyticsRegisterChart({type:'trend',points:trendPoints,cls,title:item.name+' — '+trendLabel});
   const barsIdx=qcAnalyticsRegisterChart({type:'bars',bars:childItems.map(c=>({label:c.name,value:c.totalErrors})),title:item.name+' — Errors by '+childLabel});
   const axisIdx=qcAnalyticsRegisterChart({type:'bars',bars:[{label:'Asked',value:item.askedFails||0},{label:'Documented',value:item.documentedFails||0}],title:item.name+' — Asked vs Documented Fails'});
   const expandBtn=idx=>`<span class="qc-analytics-expand-btn" onclick="event.stopPropagation();qcAnalyticsExpandChart(${idx})">&#10530; Expand</span>`;
@@ -4514,8 +4547,8 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,target){
     </div>
     <div class="qc-analytics-card-boxes">
       <div class="qc-analytics-card-box">
-        <div class="qc-analytics-card-box-label">Error Trend${expandBtn(trendIdx)}</div>
-        <div class="qc-analytics-spark-wrap">${qcAnalyticsLineChartSvg(item.errorTrend,cls)}</div>
+        <div class="qc-analytics-card-box-label">${escHtml(trendLabel)}${expandBtn(trendIdx)}</div>
+        <div class="qc-analytics-spark-wrap">${qcAnalyticsLineChartSvg(trendPoints,cls)}</div>
       </div>
       <div class="qc-analytics-card-box">
         <div class="qc-analytics-card-box-label">Errors by ${escHtml(childLabel)}${expandBtn(barsIdx)}</div>
@@ -4598,13 +4631,21 @@ function renderQCAnalyticsBody(rawAudits){
   const drill=_qcAnalyticsDrill;
   const dateControls=qcAnalyticsDateControlsHtml();
   const breadcrumb=qcAnalyticsBreadcrumbHtml();
+  const isSingleDay=qcAnalyticsIsSingleDayFilter();
 
   if(drill.level==='teamLeader'){
     const scoped=audits.filter(a=>(a.program||'')===drill.program);
     const byTL=qcSortByScoreDesc(qcAggregateBy(scoped,'teamLeader'));
     const cards=byTL.map(item=>{
       const children=qcSortByErrorsDesc(qcAggregateBy(scoped.filter(a=>(a.teamLeader||'')===item.name),'agent'));
-      return qcAnalyticsCardHtml(item,children,'Agent',{level:'agent',program:drill.program,teamLeader:item.name});
+      // Unlike Program (which can show either a day-trend or a team-leader
+      // breakdown) and Agent (day-trend or within-a-day audits), Team Leader
+      // always shows the per-agent breakdown regardless of date range — since
+      // you're already looking at one team leader, "how do my agents compare"
+      // is the more useful lens than a day-by-day trend line.
+      const trendPoints=qcAnalyticsTrendFromChildren(children);
+      const trendLabel='Avg Errors by Agent';
+      return qcAnalyticsCardHtml(item,children,'Agent',trendPoints,trendLabel,{level:'agent',program:drill.program,teamLeader:item.name});
     }).join('');
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byTL.length,'Team Leaders')}
     <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>By Team Leader</span><span class="chevron open">&#9654;</span></div>
@@ -4616,12 +4657,19 @@ function renderQCAnalyticsBody(rawAudits){
     const scoped=audits.filter(a=>(a.program||'')===drill.program&&(a.teamLeader||'')===drill.teamLeader);
     const byAgent=qcSortByScoreDesc(qcAggregateBy(scoped,'agent'));
     const cards=byAgent.map(item=>{
+      const ownAudits=scoped.filter(a=>(a.agent||'')===item.name);
       // Sort by the raw "yyyy-MM-dd" name first (sorts correctly chronologically),
       // then reformat to "Jul 15" for display — reformatting before sorting would
       // sort alphabetically and put "Jul 15" before "Jul 5".
-      const children=qcSortByNameAsc(qcAggregateBy(scoped.filter(a=>(a.agent||'')===item.name),'auditDate'))
+      const children=qcSortByNameAsc(qcAggregateBy(ownAudits,'auditDate'))
         .map(c=>({...c,name:qcShortDate(c.name)}));
-      return qcAnalyticsCardHtml(item,children,'Audit Date',{level:'detail',program:drill.program,teamLeader:drill.teamLeader,agent:item.name});
+      // Agent is the bottom of the drill hierarchy — there's no further named
+      // grouping to break a single day down by, so it breaks down by each
+      // individual audit instead (chronological within the day), rather than
+      // by team leader/agent the way Program/Team Leader do.
+      const trendPoints=isSingleDay?qcAnalyticsTrendFromAudits(ownAudits):qcAnalyticsTrendFromDates(item.errorTrend);
+      const trendLabel=isSingleDay?'Errors Throughout the Day':'Avg Errors by Day';
+      return qcAnalyticsCardHtml(item,children,'Audit Date',trendPoints,trendLabel,{level:'detail',program:drill.program,teamLeader:drill.teamLeader,agent:item.name});
     }).join('');
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byAgent.length,'Agents')}
     <div class="section"><div class="section-header hdr-benefit" onclick="toggleSection(this)"><span>By Agent</span><span class="chevron open">&#9654;</span></div>
@@ -4660,7 +4708,9 @@ function renderQCAnalyticsBody(rawAudits){
   const byProgram=qcSortByScoreDesc(qcAggregateBy(audits,'program'));
   const cards=byProgram.map(item=>{
     const children=qcSortByErrorsDesc(qcAggregateBy(audits.filter(a=>(a.program||'')===item.name),'teamLeader'));
-    return qcAnalyticsCardHtml(item,children,'Team Leader',{level:'teamLeader',program:item.name});
+    const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
+    const trendLabel=isSingleDay?'Avg Errors by Team Leader':'Avg Errors by Day';
+    return qcAnalyticsCardHtml(item,children,'Team Leader',trendPoints,trendLabel,{level:'teamLeader',program:item.name});
   }).join('');
   return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,byProgram.length,'Programs')}
   <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>By Program</span><span class="chevron open">&#9654;</span></div>
