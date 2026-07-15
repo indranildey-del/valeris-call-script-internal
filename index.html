@@ -543,7 +543,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-analytics-topfields-row{display:flex;align-items:center;gap:8px}
 .qc-analytics-topfields-rank{flex:0 0 16px;height:16px;border-radius:50%;background:#e0e7ff;color:#4338ca;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .qc-analytics-topfields-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:#374151}
-.qc-analytics-topfields-pct{flex:0 0 auto;font-weight:800;color:#6366f1;font-size:11.5px}
+.qc-analytics-topfields-count{flex:0 0 auto;font-weight:800;color:#6366f1;font-size:11.5px}
 .qc-analytics-score{font-size:13px;font-weight:800}
 .qc-analytics-score.pass{color:#15803d}
 .qc-analytics-score.warn{color:#b45309}
@@ -3972,7 +3972,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.22";
+const APP_VERSION = "2026-07-15.23";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4111,8 +4111,8 @@ async function qcSaveToSheet(){
 // ══════════════════════════════════════════════════════════════
 let _qcAnalyticsCache={mm:null,pbm:null};
 let _qcAnalyticsKind='mm';
-// Drill hierarchy: program -> teamLeader -> agent -> detail (one agent's audit history).
-let _qcAnalyticsDrill={level:'program',program:null,teamLeader:null,agent:null};
+// Drill hierarchy: kind (MM/PBM overview) -> program -> teamLeader -> agent -> detail.
+let _qcAnalyticsDrill={level:'kind',program:null,teamLeader:null,agent:null};
 let _qcAnalyticsDateFilter={mode:'all',from:'',to:''};
 // Row/breadcrumb click targets are registered here at render time and referenced by index —
 // avoids embedding free-text agent/program names (which may contain quotes/apostrophes)
@@ -4125,7 +4125,7 @@ function showQCAnalytics(){
   document.querySelectorAll(".sidebar-nav-item").forEach(el=>el.classList.remove("active"));
   qcExpandNavGroup();
   const n=document.getElementById('navQCAnalytics');if(n)n.classList.add('active');
-  _qcAnalyticsDrill={level:'program',program:null,teamLeader:null,agent:null};
+  _qcAnalyticsDrill={level:'kind',program:null,teamLeader:null,agent:null};
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(_qcAnalyticsKind);
 }
@@ -4151,7 +4151,7 @@ function renderQCAnalyticsShell(){
 
 function qcSwitchAnalyticsKind(kind){
   _qcAnalyticsKind=kind;
-  _qcAnalyticsDrill={level:'program',program:null,teamLeader:null,agent:null};
+  _qcAnalyticsDrill={level:'kind',program:null,teamLeader:null,agent:null};
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(kind);
 }
@@ -4231,6 +4231,15 @@ function qcAggregateBy(audits,key){
     askedFails:g.askedFails,
     documentedFails:g.documentedFails
   }));
+}
+
+// Same aggregation as qcAggregateBy, but collapsed into a single group
+// covering every audit passed in — used for the workflow (MM/PBM) overview
+// card, which needs the exact same shape (errorTrend, failedFields, etc.)
+// as a Program/Team Leader/Agent card, just scoped to "everything."
+function qcAggregateAll(audits,label){
+  const tagged=audits.map(a=>Object.assign({},a,{__all:label}));
+  return qcAggregateBy(tagged,'__all')[0]||{name:label,count:0,avgScore:null,avgErrors:0,totalErrors:0,errorTrend:[],failedFields:[],askedFails:0,documentedFails:0};
 }
 
 // Tallies how often each specific question was marked "fail" (across Asked +
@@ -4477,8 +4486,13 @@ function qcAnalyticsDateControlsHtml(){
 function qcAnalyticsBreadcrumbHtml(){
   const d=_qcAnalyticsDrill;
   const items=[];
-  const rootIdx=qcAnalyticsRegisterTarget({level:'program'});
-  items.push(`<span class="qc-breadcrumb-item${d.level==='program'?' active':''}" onclick="qcAnalyticsRowClick(${rootIdx})">All Programs</span>`);
+  const kindLabel=QC_KIND_META[_qcAnalyticsKind].shortLabel;
+  const kindIdx=qcAnalyticsRegisterTarget({level:'kind'});
+  items.push(`<span class="qc-breadcrumb-item${d.level==='kind'?' active':''}" onclick="qcAnalyticsRowClick(${kindIdx})">${escHtml(kindLabel)}</span>`);
+  if(d.level!=='kind'){
+    const rootIdx=qcAnalyticsRegisterTarget({level:'program'});
+    items.push(`<span class="qc-breadcrumb-item${d.level==='program'?' active':''}" onclick="qcAnalyticsRowClick(${rootIdx})">All Programs</span>`);
+  }
   if(d.program){
     const idx=qcAnalyticsRegisterTarget({level:'teamLeader',program:d.program});
     items.push(`<span class="qc-breadcrumb-item${d.level==='teamLeader'?' active':''}" onclick="qcAnalyticsRowClick(${idx})">${escHtml(d.program)}</span>`);
@@ -4543,6 +4557,7 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,t
   const trendIdx=qcAnalyticsRegisterChart({type:'trend',points:trendPoints,cls,title:item.name+' — '+trendLabel});
   const barsIdx=qcAnalyticsRegisterChart({type:'bars',bars:childItems.map(c=>({label:c.name,value:c.totalErrors})),title:item.name+' — Errors by '+childLabel});
   const axisIdx=qcAnalyticsRegisterChart({type:'bars',bars:[{label:'Asked',value:item.askedFails||0},{label:'Documented',value:item.documentedFails||0}],title:item.name+' — Asked vs Documented Fails'});
+  const topFieldsIdx=qcAnalyticsRegisterChart({type:'topfields',failedFields:item.failedFields,title:item.name+' — Top 10 Error Fields'});
   const expandBtn=idx=>`<span class="qc-analytics-expand-btn" onclick="event.stopPropagation();qcAnalyticsExpandChart(${idx})">&#10530; Expand</span>`;
   return `<div class="qc-analytics-card${target?' qc-analytics-card-clickable':''}"${clickAttr}>
     <div class="qc-analytics-card-hdr">
@@ -4561,7 +4576,7 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,t
         ${qcAnalyticsMiniBarChartHtml(childItems,childLabel)}
       </div>
       <div class="qc-analytics-card-box">
-        <div class="qc-analytics-card-box-label">Top 5 Error Fields</div>
+        <div class="qc-analytics-card-box-label">Top 5 Error Fields${expandBtn(topFieldsIdx)}</div>
         ${qcAnalyticsTopFieldsBoxHtml(item.failedFields)}
       </div>
       <div class="qc-analytics-card-box">
@@ -4582,15 +4597,22 @@ function qcAnalyticsAxisBarChartHtml(askedFails,documentedFails){
   return qcAnalyticsBarChartSvg([{label:'Asked',value:askedFails},{label:'Documented',value:documentedFails}]);
 }
 
-function qcAnalyticsTopFieldsBoxHtml(failedFields){
-  const top=qcAnalyticsTopErrorFields(failedFields||[],5);
+// Shared row markup for both the compact (top 5) box and the expand modal
+// (top 10) — count of occurrences over whatever date range is selected, not
+// a percentage, since "failed 12 times" is the actionable number; the % of
+// total was relative to a shrinking/growing denominator as the range changed
+// and read as more precise than it actually was.
+function qcAnalyticsTopFieldsListHtml(top){
   if(!top.length) return `<div class="qc-analytics-chart-empty">No errors recorded</div>`;
   return `<div class="qc-analytics-topfields-list">${top.map((f,i)=>`
     <div class="qc-analytics-topfields-row" title="${escHtml(f.label)}">
       <span class="qc-analytics-topfields-rank">${i+1}</span>
       <span class="qc-analytics-topfields-label">${escHtml(f.label)}</span>
-      <span class="qc-analytics-topfields-pct">${f.pct}%</span>
+      <span class="qc-analytics-topfields-count">${f.count}</span>
     </div>`).join('')}</div>`;
+}
+function qcAnalyticsTopFieldsBoxHtml(failedFields){
+  return qcAnalyticsTopFieldsListHtml(qcAnalyticsTopErrorFields(failedFields||[],5));
 }
 
 function qcAnalyticsMiniBarChartHtml(children,childLabel){
@@ -4612,6 +4634,8 @@ function qcAnalyticsExpandChart(idx){
   const bigOpts={width:760,height:360,marginL:44,marginB:36,fontSize:12,strokeWidth:1.5,dotR:3,hitR:11,minLabelSpacing:60,labelMaxChars:20,maxBarWidth:60};
   const chartHtml=t.type==='trend'
     ? qcAnalyticsLineChartSvg(t.points,t.cls,bigOpts)
+    : t.type==='topfields'
+    ? qcAnalyticsTopFieldsListHtml(qcAnalyticsTopErrorFields(t.failedFields||[],10))
     : qcAnalyticsBarChartSvg(t.bars,bigOpts);
   const overlay=document.createElement('div');
   overlay.id='qcChartModalOverlay';
@@ -4638,6 +4662,19 @@ function renderQCAnalyticsBody(rawAudits){
   const dateControls=qcAnalyticsDateControlsHtml();
   const breadcrumb=qcAnalyticsBreadcrumbHtml();
   const isSingleDay=qcAnalyticsIsSingleDayFilter();
+
+  if(drill.level==='kind'){
+    const kindLabel=QC_KIND_META[_qcAnalyticsKind].shortLabel;
+    const item=qcAggregateAll(audits,kindLabel);
+    const children=qcSortByErrorsDesc(qcAggregateBy(audits,'program'));
+    const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
+    const trendLabel=isSingleDay?'Avg Errors by Program':'Avg Errors by Day';
+    const card=qcAnalyticsCardHtml(item,children,'Program',trendPoints,trendLabel,{level:'program'});
+    return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,children.length,'Programs')}
+    <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>${escHtml(kindLabel)} Overview</span><span class="chevron open">&#9654;</span></div>
+      <div class="section-body">${card}</div>
+    </div>`;
+  }
 
   if(drill.level==='teamLeader'){
     const scoped=audits.filter(a=>(a.program||'')===drill.program);
