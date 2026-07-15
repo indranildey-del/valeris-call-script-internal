@@ -3984,7 +3984,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.29";
+const APP_VERSION = "2026-07-15.30";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4832,13 +4832,8 @@ function renderQCAnalyticsBody(rawAudits){
     const byTL=qcSortByScoreDesc(qcAggregateBy(scoped,'teamLeader'));
     const cards=byTL.map(item=>{
       const children=qcSortByErrorsDesc(qcAggregateBy(scoped.filter(a=>(a.teamLeader||'')===item.name),'agent'));
-      // Unlike Program (which can show either a day-trend or a team-leader
-      // breakdown) and Agent (day-trend or within-a-day audits), Team Leader
-      // always shows the per-agent breakdown regardless of date range — since
-      // you're already looking at one team leader, "how do my agents compare"
-      // is the more useful lens than a day-by-day trend line.
-      const trendPoints=qcAnalyticsTrendFromChildren(children);
-      const trendLabel='Avg Errors by Agent';
+      const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
+      const trendLabel=isSingleDay?'Avg Errors by Agent':'Avg Errors by Day';
       return qcAnalyticsCardHtml(item,children,'Agent',trendPoints,trendLabel,{level:'agent',program:drill.program,teamLeader:item.name});
     }).join('');
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byTL.length,'Team Leaders')}
