@@ -3990,7 +3990,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.2";
+const APP_VERSION = "2026-07-16.4";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5043,16 +5043,24 @@ function qcSectionBand(pct){
   return {label:'Fail',cls:'fail'};
 }
 
-// Certain named "critical" items, if marked Fail on either axis, trigger an
-// additional percentage-point deduction straight off the OVERALL score — on
-// top of the points that item's own weight already costs it — since conduct
-// like data fabrication/manipulation shouldn't just "cost a few points" the
-// way an ordinary miss does. If multiple groups are triggered at once, only
-// the single largest deduction applies (not stacked) — "deduct 100%" already
-// means the score is zero, so piling more deductions on top is meaningless.
+// Certain named "critical" items are scored (Pass/Fail/N/A, shown in the
+// UI like any other row) but excluded entirely from normal per-section
+// weighted scoring — passing or failing one costs zero points through the
+// ordinary mechanism. Their only effect on the score is the flat deduction
+// below, applied straight to the clean total from every other item, so a
+// critical failure never double-costs (once via its own weight, again via
+// the deduction).
+const QC_CRITICAL_ITEM_LABELS=new Set(['Data Fabrication','HIPAA Verification','Opening Statement','Data Manipulation','Case Disposition','Representation Protocol','Program Specific Pushback']);
+
+// Groups are checked worst-first (100 → 50 → 30 → 5); within a group, EVERY
+// failed item applies that group's percentage as its own separate
+// multiplicative hit — two 30%-group items both failing is two ×0.7
+// multiplications (≈49% of the original), not one. Order across groups
+// doesn't change the final number (multiplication commutes) but keeps the
+// banner's trail readable worst-first.
 const QC_DEDUCTION_GROUPS=[
   {pct:100,labels:['Data Fabrication','HIPAA Verification','Opening Statement']},
-  {pct:50,labels:['Data Manipulation','Opening Statement']},
+  {pct:50,labels:['Data Manipulation']},
   {pct:30,labels:['Case Disposition','Representation Protocol']},
   {pct:5,labels:['Program Specific Pushback']},
 ];
@@ -5085,10 +5093,15 @@ function qcRecalc(){
       totalCount+=2; // asked + documented
       const st=qcState.scores[si+'_'+ii];
       const half=it.w*0.5;
+      // Critical items still show/score normally in the UI (and still count
+      // toward "# of Errors" / progress) but never touch secNum/secDen —
+      // they cost nothing through ordinary weighting, only through the flat
+      // deduction below.
+      const excluded=QC_CRITICAL_ITEM_LABELS.has(it.label);
       ['asked','documented'].forEach(axis=>{
         const sc=st&&st[axis];
-        if(sc==='pass'){secNum+=half;secDen+=half;scoredCount++;}
-        else if(sc==='fail'){secDen+=half;errCount++;scoredCount++;if(it.fatal)fatalFail=true;}
+        if(sc==='pass'){if(!excluded){secNum+=half;secDen+=half;}scoredCount++;}
+        else if(sc==='fail'){if(!excluded){secDen+=half;}errCount++;scoredCount++;if(it.fatal)fatalFail=true;}
         else if(sc==='na'){scoredCount++;}
       });
     });
@@ -5112,21 +5125,23 @@ function qcRecalc(){
   });
   const rawPct=weightedDenPct>0?Math.min(100,Math.max(0,Math.round(weightedNum/weightedDenPct))):null;
 
-  // Each triggered group multiplies the *running* score by (1 - pct/100) —
-  // not a flat point subtraction — and every triggered group stacks in turn
-  // (a 50% hit followed by a 30% hit leaves 35%, not 20%), rather than only
-  // the single worst group counting. Order doesn't change the result
-  // (multiplication commutes) but we always apply worst-first for a
-  // consistent, readable trail in the banner.
+  // Every individual failed critical item applies its own group's percentage
+  // as a separate multiplicative hit on the clean rawPct (which no longer
+  // includes these items at all — see QC_CRITICAL_ITEM_LABELS above). Two
+  // items failing from the same group means two separate multiplications,
+  // not one — deliberately more punishing than treating the group as a
+  // single yes/no flag. Order across groups (worst-first) doesn't change the
+  // final number (multiplication commutes) but keeps the banner readable.
   let pct=rawPct;
   const triggeredDeductions=[];
   if(pct!==null){
     QC_DEDUCTION_GROUPS.forEach(g=>{
-      const hit=g.labels.filter(l=>qcItemFailedByLabel(l));
-      if(hit.length){
-        pct=pct*(1-g.pct/100);
-        triggeredDeductions.push({pct:g.pct,labels:hit});
-      }
+      g.labels.forEach(label=>{
+        if(qcItemFailedByLabel(label)){
+          pct=pct*(1-g.pct/100);
+          triggeredDeductions.push({pct:g.pct,label});
+        }
+      });
     });
     pct=Math.max(0,Math.round(pct));
   }
@@ -5142,7 +5157,7 @@ function qcRecalc(){
   if(banner){
     if(triggeredDeductions.length){
       banner.style.display='';
-      const parts=triggeredDeductions.map(d=>escHtml(d.labels.join(', '))+' ('+d.pct+'% deduction)').join(', ');
+      const parts=triggeredDeductions.map(d=>escHtml(d.label)+' ('+d.pct+'% deduction)').join(', ');
       banner.innerHTML='&#9888; '+parts+' — overall score reduced from '+rawPct+'% to '+pct+'%.';
     } else if(fatalFail){
       banner.style.display='';
