@@ -3972,7 +3972,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.23";
+const APP_VERSION = "2026-07-15.24";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4309,7 +4309,10 @@ function qcNiceAxisMax(rawMax){
 function qcAnalyticsLineChartSvg(points,cls,opts){
   opts=opts||{};
   const w=opts.width||220,h=opts.height||120;
-  const marginL=opts.marginL||26,marginB=opts.marginB||18,marginT=8,marginR=10;
+  // marginT is taller than the axis strictly needs — the value label sitting
+  // above each dot needs headroom too, or a point at/near the axis max would
+  // get its label clipped off the top of the chart.
+  const marginL=opts.marginL||26,marginB=opts.marginB||18,marginT=opts.marginT||22,marginR=opts.marginR||10;
   const plotW=w-marginL-marginR,plotH=h-marginT-marginB;
   const fontSize=opts.fontSize||8.5;
   const dotR=opts.dotR||6,hitR=Math.max(opts.hitR||7,dotR+2),strokeWidth=opts.strokeWidth||1;
@@ -4348,21 +4351,25 @@ function qcAnalyticsLineChartSvg(points,cls,opts){
   });
 
   const dotLabel=p=>p.label+': '+p.value+' error'+(p.value!==1?'s':'');
+  const valueLabelAt=(x,y,v)=>`<text x="${x.toFixed(1)}" y="${(y-dotR-4).toFixed(1)}" text-anchor="middle" font-size="${fontSize}" font-weight="700" fill="${strokeColor}">${v}</text>`;
   if(n===1){
     const y=yAt(points[0].value);
     return `<svg class="qc-analytics-linechart" viewBox="0 0 ${w} ${h}">${axisSvg}
       <line x1="${marginL}" y1="${y.toFixed(1)}" x2="${w-marginR}" y2="${y.toFixed(1)}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>
       <circle cx="${xAt(0).toFixed(1)}" cy="${y.toFixed(1)}" r="${hitR}" fill="transparent"><title>${dotLabel(points[0])}</title></circle>
       <circle cx="${xAt(0).toFixed(1)}" cy="${y.toFixed(1)}" r="${dotR}" fill="${strokeColor}" style="pointer-events:none"/>
+      ${valueLabelAt(xAt(0),y,points[0].value)}
       ${xLabelsSvg}
     </svg>`;
   }
   const coords=points.map((p,i)=>[xAt(i),yAt(p.value)]);
   const path=coords.map((c,i)=>(i===0?'M':'L')+c[0].toFixed(1)+','+c[1].toFixed(1)).join(' ');
   const dots=coords.map((c,i)=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${hitR}" fill="transparent"><title>${dotLabel(points[i])}</title></circle><circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${dotR}" fill="${strokeColor}" style="pointer-events:none"/>`).join('');
+  const valueLabels=coords.map((c,i)=>valueLabelAt(c[0],c[1],points[i].value)).join('');
   return `<svg class="qc-analytics-linechart" viewBox="0 0 ${w} ${h}">${axisSvg}
     <path d="${path}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>
     ${dots}
+    ${valueLabels}
     ${xLabelsSvg}
   </svg>`;
 }
@@ -4374,7 +4381,9 @@ function qcAnalyticsLineChartSvg(points,cls,opts){
 function qcAnalyticsBarChartSvg(bars,opts){
   opts=opts||{};
   const w=opts.width||220,h=opts.height||120;
-  const marginL=opts.marginL||26,marginB=opts.marginB||26,marginT=8,marginR=10;
+  // marginT leaves headroom for the value label sitting above each bar — a
+  // bar reaching the axis max would otherwise have its label clipped off.
+  const marginL=opts.marginL||26,marginB=opts.marginB||26,marginT=opts.marginT||18,marginR=opts.marginR||10;
   const plotW=w-marginL-marginR,plotH=h-marginT-marginB;
   const fontSize=opts.fontSize||8.5;
   const barColor=opts.barColor||'#6366f1';
@@ -4405,6 +4414,7 @@ function qcAnalyticsBarChartSvg(bars,opts){
     const barH=axisMax>0?(b.value/axisMax)*plotH:0;
     const y=marginT+plotH-barH;
     barsSvg+=`<rect x="${(cx-barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(barH,1).toFixed(1)}" rx="2" fill="${barColor}"><title>${escHtml(b.label)}: ${b.value} error${b.value!==1?'s':''}</title></rect>`;
+    barsSvg+=`<text x="${cx.toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="${fontSize}" font-weight="700" fill="${barColor}">${b.value}</text>`;
     labelsSvg+=`<text x="${cx.toFixed(1)}" y="${h-marginB+13}" text-anchor="middle" font-size="${fontSize}" fill="#94a3b8">${escHtml(qcTruncateLabel(b.label,labelMaxChars))}</text>`;
   });
   return `<svg class="qc-analytics-barchart" viewBox="0 0 ${w} ${h}">${axisSvg}${barsSvg}${labelsSvg}</svg>`;
