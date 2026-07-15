@@ -1530,6 +1530,9 @@ const QC_SECTIONS_MM=[
   {title:"Effective Communication",hdr:"hdr-opening",weightPct:2,items:[
     {label:"White Glove Service",q:"Demonstrated professionalism through appropriate tone, disposition, pace, word choice, enunciation, and active listening (focused, did not interrupt, questioned unclear responses).",w:1},
     {label:"Demonstrated Expertise",q:"Demonstrated expertise of the program, drug, and payer terminology throughout the call.",w:1},
+    {label:"Data Fabrication",q:"Did not ask the question and did not receive the data point from the payer, but still entered a value for it in the dashboard.",w:4,fatal:true},
+    {label:"Data Manipulation",q:"Received a data point from the payer but intentionally entered an incorrect value for it in the dashboard.",w:4,fatal:true},
+    {label:"Program Specific Pushback",q:"Followed the program-specific pushback protocol correctly when required by the case.",w:4,fatal:true},
   ]},
 ];
 
@@ -1617,6 +1620,9 @@ const QC_SECTIONS_PBM=[
   {title:"Effective Communication",hdr:"hdr-opening",weightPct:2,items:[
     {label:"White Glove Service",q:"Demonstrated professionalism through appropriate tone, disposition, pace, word choice, enunciation, and active listening (focused, did not interrupt, questioned unclear responses).",w:1},
     {label:"Demonstrated Expertise",q:"Demonstrated expertise of the program, drug, and payer terminology throughout the call.",w:1},
+    {label:"Data Fabrication",q:"Did not ask the question and did not receive the data point from the payer, but still entered a value for it in the dashboard.",w:4,fatal:true},
+    {label:"Data Manipulation",q:"Received a data point from the payer but intentionally entered an incorrect value for it in the dashboard.",w:4,fatal:true},
+    {label:"Program Specific Pushback",q:"Followed the program-specific pushback protocol correctly when required by the case.",w:4,fatal:true},
   ]},
 ];
 
@@ -3984,7 +3990,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-15.30";
+const APP_VERSION = "2026-07-16.1";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5037,6 +5043,32 @@ function qcSectionBand(pct){
   return {label:'Fail',cls:'fail'};
 }
 
+// Certain named "critical" items, if marked Fail on either axis, trigger an
+// additional percentage-point deduction straight off the OVERALL score — on
+// top of the points that item's own weight already costs it — since conduct
+// like data fabrication/manipulation shouldn't just "cost a few points" the
+// way an ordinary miss does. If multiple groups are triggered at once, only
+// the single largest deduction applies (not stacked) — "deduct 100%" already
+// means the score is zero, so piling more deductions on top is meaningless.
+const QC_DEDUCTION_GROUPS=[
+  {pct:100,labels:['Data Fabrication','HIPAA Verification','Opening Statement']},
+  {pct:50,labels:['Data Manipulation','Opening Statement']},
+  {pct:30,labels:['Case Disposition','Representation Protocol']},
+  {pct:5,labels:['Program Specific Pushback']},
+];
+function qcItemFailedByLabel(label){
+  for(let si=0;si<QC_SECTIONS.length;si++){
+    const items=QC_SECTIONS[si].items;
+    for(let ii=0;ii<items.length;ii++){
+      if(items[ii].label===label){
+        const st=qcState.scores[si+'_'+ii];
+        return !!(st&&(st.asked==='fail'||st.documented==='fail'));
+      }
+    }
+  }
+  return false;
+}
+
 function qcRecalc(){
   // Two-level scoring: each section computes its own 0-100% sub-score first
   // (item weights 1/2/4 rank importance *within* that section, N/A excluded,
@@ -5078,7 +5110,15 @@ function qcRecalc(){
       if(labelEl){ labelEl.textContent=''; labelEl.className='qc-section-label'; }
     }
   });
-  const pct=weightedDenPct>0?Math.min(100,Math.max(0,Math.round(weightedNum/weightedDenPct))):null;
+  const rawPct=weightedDenPct>0?Math.min(100,Math.max(0,Math.round(weightedNum/weightedDenPct))):null;
+
+  let deductionPct=0,deductionLabels=[];
+  QC_DEDUCTION_GROUPS.forEach(g=>{
+    const hit=g.labels.filter(l=>qcItemFailedByLabel(l));
+    if(hit.length&&g.pct>deductionPct){ deductionPct=g.pct; deductionLabels=hit; }
+  });
+  const pct=rawPct===null?null:Math.max(0,rawPct-deductionPct);
+
   const numEl=document.getElementById('qcOverallScore');
   if(numEl){
     numEl.textContent=pct===null?'—':pct+'%';
@@ -5086,8 +5126,19 @@ function qcRecalc(){
   }
   const errEl=document.getElementById('qcErrorCount');if(errEl)errEl.textContent=errCount;
   const progressEl=document.getElementById('qcProgress');if(progressEl)progressEl.textContent=`${scoredCount} / ${totalCount} scored`;
-  const banner=document.getElementById('qcFatalBanner');if(banner)banner.style.display=fatalFail?'':'none';
-  return {pct,errCount,scoredCount,totalCount,fatalFail};
+  const banner=document.getElementById('qcFatalBanner');
+  if(banner){
+    if(deductionPct>0){
+      banner.style.display='';
+      banner.innerHTML='&#9888; '+escHtml(deductionLabels.join(', '))+' marked Fail — '+deductionPct+'% deducted from the overall score.';
+    } else if(fatalFail){
+      banner.style.display='';
+      banner.innerHTML='&#9888; A fatal item is marked Fail. This is counted in the score and error count like any other item, but flagged here for visibility.';
+    } else {
+      banner.style.display='none';
+    }
+  }
+  return {pct,errCount,scoredCount,totalCount,fatalFail,deductionPct};
 }
 
 function qcResetAudit(){
