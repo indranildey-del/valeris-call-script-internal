@@ -530,6 +530,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-analytics-card-clickable:hover{border-color:#c7d2fe;box-shadow:0 2px 10px rgba(79,70,229,.1)}
 .qc-analytics-card-hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .qc-analytics-card-title{font-size:14px;font-weight:800;color:#1f2937;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qc-analytics-card-subtitle{font-size:11.5px;font-weight:600;color:#6366f1;background:#eef2ff;border-radius:20px;padding:2px 9px;white-space:nowrap}
 .qc-analytics-card-boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 @media(max-width:700px){.qc-analytics-card-boxes{grid-template-columns:1fr}}
 .qc-analytics-card-box{background:#f8faff;border-radius:8px;padding:10px 12px}
@@ -4002,7 +4003,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.8";
+const APP_VERSION = "2026-07-16.9";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4158,6 +4159,11 @@ let _qcAnalyticsSelectedPrograms=new Set();
 // place to see their combined performance.
 let _qcAnalyticsWorkflowTab='program';
 let _qcAnalyticsSelectedWorkflowAgents=new Set();
+// Team leaders checked in the "Filter by Team Leader" dropdown on the
+// workflow-level "By Agent" list — a pure narrowing filter (like the search
+// box), not a "combine into one card" selection like Select Agents above, so
+// it has no paired "View Analytics for Selected" action.
+let _qcAnalyticsWorkflowTLFilter=new Set();
 
 function showQCAnalytics(){
   currentView='qc_analytics';currentProgId='';
@@ -4169,6 +4175,7 @@ function showQCAnalytics(){
   _qcAnalyticsSelectedPrograms=new Set();
   _qcAnalyticsSelectedAgents=new Set();
   _qcAnalyticsSelectedWorkflowAgents=new Set();
+  _qcAnalyticsWorkflowTLFilter=new Set();
   _qcAnalyticsWorkflowTab='program';
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(_qcAnalyticsKind);
@@ -4199,6 +4206,7 @@ function qcSwitchAnalyticsKind(kind){
   _qcAnalyticsSelectedPrograms=new Set();
   _qcAnalyticsSelectedAgents=new Set();
   _qcAnalyticsSelectedWorkflowAgents=new Set();
+  _qcAnalyticsWorkflowTLFilter=new Set();
   _qcAnalyticsWorkflowTab='program';
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(kind);
@@ -4600,6 +4608,25 @@ function qcAnalyticsViewSelectedWorkflowAgents(){
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
   if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
 }
+// "Filter by Team Leader" on the workflow-level "By Agent" list — a pure
+// narrowing filter, not a selection-for-combined-view like Select Agents, so
+// toggling it just updates the trigger count and re-applies the live filter;
+// there's no paired "View Analytics for Selected" button/action for it.
+let _qcAnalyticsWorkflowTLCheckboxTargets=[];
+function qcAnalyticsRegisterWorkflowTLCheckbox(name){
+  _qcAnalyticsWorkflowTLCheckboxTargets.push(name);
+  return _qcAnalyticsWorkflowTLCheckboxTargets.length-1;
+}
+function qcAnalyticsToggleWorkflowTLFilterSelect(idx,checked){
+  const name=_qcAnalyticsWorkflowTLCheckboxTargets[idx];
+  if(name==null) return;
+  if(checked) _qcAnalyticsWorkflowTLFilter.add(name);
+  else _qcAnalyticsWorkflowTLFilter.delete(name);
+  const n=_qcAnalyticsWorkflowTLFilter.size;
+  const trigger=document.getElementById('qcWorkflowTLDropdownTrigger');
+  if(trigger) trigger.textContent='Filter by Team Leader ('+n+') ▾';
+  qcAnalyticsApplyCardFilters();
+}
 function qcAnalyticsSetWorkflowTab(tab){
   _qcAnalyticsWorkflowTab=tab;
   const bodyEl=document.getElementById('qcAnalyticsBody');
@@ -4616,14 +4643,21 @@ function qcAnalyticsSetWorkflowTab(tab){
 function qcAnalyticsApplyCardFilters(){
   const searchInput=document.querySelector('.qc-analytics-search-input');
   const q=(searchInput?searchInput.value:'').trim().toLowerCase();
+  const isWorkflowAgentTab=_qcAnalyticsDrill.level==='kind'&&_qcAnalyticsWorkflowTab==='agent';
   const selectedSet=_qcAnalyticsDrill.level==='agent'?_qcAnalyticsSelectedAgents
-    :(_qcAnalyticsDrill.level==='kind'&&_qcAnalyticsWorkflowTab==='agent')?_qcAnalyticsSelectedWorkflowAgents
+    :isWorkflowAgentTab?_qcAnalyticsSelectedWorkflowAgents
     :_qcAnalyticsSelectedPrograms;
   document.querySelectorAll('.qc-analytics-card[data-entity-name]').forEach(card=>{
     const name=card.getAttribute('data-entity-name')||'';
     const matchesSearch=!q||name.toLowerCase().includes(q);
     const matchesSelection=selectedSet.size===0||selectedSet.has(name);
-    card.style.display=(matchesSearch&&matchesSelection)?'':'none';
+    // Team leader filter only applies on the workflow-level "By Agent" list —
+    // an agent's card is tagged with every distinct team leader across their
+    // audits (they can differ per program), so it stays visible if ANY of
+    // its team leaders is checked.
+    const matchesTL=!isWorkflowAgentTab||_qcAnalyticsWorkflowTLFilter.size===0
+      ||(card.getAttribute('data-team-leaders')||'').split('|').some(tl=>_qcAnalyticsWorkflowTLFilter.has(tl));
+    card.style.display=(matchesSearch&&matchesSelection&&matchesTL)?'':'none';
   });
 }
 
@@ -4778,7 +4812,11 @@ function qcAnalyticsTrendFromAudits(auditsForEntity){
 // above), a bar breakdown of total errors by whichever grouping is one level
 // further down, the 5 questions most often marked "fail", and an Asked vs
 // Documented fail-type comparison.
-function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,target){
+// meta is optional and only used by the workflow-level "By Agent" list today —
+// {subtitle: text shown next to the name (e.g. team leader(s)), teamLeaders:
+// array stamped as a data-team-leaders attribute for the live TL filter to
+// read}. Every other call site omits it and gets the plain card unchanged.
+function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,target,meta){
   const pct=item.avgScore===null?0:item.avgScore;
   const cls=item.avgScore===null?'na':pct<70?'fail':pct<90?'warn':'pass';
   let clickAttr='',arrow='';
@@ -4787,14 +4825,17 @@ function qcAnalyticsCardHtml(item,childItems,childLabel,trendPoints,trendLabel,t
     clickAttr=` onclick="qcAnalyticsRowClick(${idx})"`;
     arrow='<span class="qc-analytics-arrow">&#8250;</span>';
   }
+  const subtitleHtml=meta&&meta.subtitle?`<span class="qc-analytics-card-subtitle">${escHtml(meta.subtitle)}</span>`:'';
+  const tlAttr=meta&&meta.teamLeaders&&meta.teamLeaders.length?` data-team-leaders="${escHtml(meta.teamLeaders.join('|'))}"`:'';
   const trendIdx=qcAnalyticsRegisterChart({type:'trend',points:trendPoints,cls,title:item.name+' — '+trendLabel});
   const barsIdx=qcAnalyticsRegisterChart({type:'bars',bars:childItems.map(c=>({label:c.name,value:c.totalErrors})),title:item.name+' — Errors by '+childLabel});
   const axisIdx=qcAnalyticsRegisterChart({type:'bars',bars:[{label:'Asked',value:item.askedFails||0},{label:'Documented',value:item.documentedFails||0}],title:item.name+' — Asked vs Documented Fails'});
   const topFieldsIdx=qcAnalyticsRegisterChart({type:'topfields',failedFields:item.failedFields,title:item.name+' — Top 10 Error Fields'});
   const expandBtn=idx=>`<span class="qc-analytics-expand-btn" onclick="event.stopPropagation();qcAnalyticsExpandChart(${idx})">&#10530; Expand</span>`;
-  return `<div class="qc-analytics-card${target?' qc-analytics-card-clickable':''}" data-entity-name="${escHtml(item.name)}"${clickAttr}>
+  return `<div class="qc-analytics-card${target?' qc-analytics-card-clickable':''}" data-entity-name="${escHtml(item.name)}"${tlAttr}${clickAttr}>
     <div class="qc-analytics-card-hdr">
       <span class="qc-analytics-card-title" title="${escHtml(item.name)}">${escHtml(item.name)}</span>
+      ${subtitleHtml}
       <span class="qc-analytics-score ${cls}">${item.avgScore===null?'—':item.avgScore+'%'}</span>
       <span class="qc-analytics-meta">${item.count} audit${item.count!==1?'s':''} &middot; ${item.avgErrors} avg errors</span>
       ${arrow}
@@ -4889,6 +4930,8 @@ function renderQCAnalyticsBody(rawAudits){
   _qcAnalyticsChartTargets=[];
   _qcAnalyticsProgramCheckboxTargets=[];
   _qcAnalyticsAgentCheckboxTargets=[];
+  _qcAnalyticsWorkflowAgentCheckboxTargets=[];
+  _qcAnalyticsWorkflowTLCheckboxTargets=[];
   if(!rawAudits||!rawAudits.length){
     return `${qcAnalyticsDateControlsHtml()}<div style="padding:40px;text-align:center;color:#94a3b8">No saved audits yet for this program type.</div>`;
   }
@@ -4916,15 +4959,23 @@ function renderQCAnalyticsBody(rawAudits){
         const children=qcSortByErrorsDesc(qcAggregateBy(ownAudits,'program'));
         const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
         const trendLabel=isSingleDay?'Avg Errors by Program':'Avg Errors by Day';
-        return qcAnalyticsCardHtml(item,children,'Program',trendPoints,trendLabel,{level:'workflowAgentDetail',agent:item.name});
+        // An agent can report to different team leaders on different
+        // programs — collect every distinct one they've had, rather than
+        // assuming a single fixed TL, so the badge never silently drops one.
+        const teamLeaders=Array.from(new Set(ownAudits.map(a=>a.teamLeader).filter(Boolean))).sort();
+        const subtitle=teamLeaders.length?'TL: '+teamLeaders.join(', '):'';
+        return qcAnalyticsCardHtml(item,children,'Program',trendPoints,trendLabel,{level:'workflowAgentDetail',agent:item.name},{subtitle,teamLeaders});
       }).join('');
       const agentNames=byAgent.map(a=>a.name);
       const agentDropdown=qcAnalyticsMultiSelectDropdownHtml('qcWorkflowAgentDropdown','qcWorkflowAgentDropdownTrigger','Select Agents',agentNames,_qcAnalyticsSelectedWorkflowAgents,qcAnalyticsRegisterWorkflowAgentCheckbox,'qcAnalyticsToggleWorkflowAgentSelect');
       const selectedCount=_qcAnalyticsSelectedWorkflowAgents.size;
+      const allTeamLeaders=Array.from(new Set(audits.map(a=>a.teamLeader).filter(Boolean))).sort();
+      const tlDropdown=qcAnalyticsMultiSelectDropdownHtml('qcWorkflowTLDropdown','qcWorkflowTLDropdownTrigger','Filter by Team Leader',allTeamLeaders,_qcAnalyticsWorkflowTLFilter,qcAnalyticsRegisterWorkflowTLCheckbox,'qcAnalyticsToggleWorkflowTLFilterSelect');
       return `${dateControls}${breadcrumb}${workflowTabsHtml}${qcAnalyticsSummaryStrip(audits,byAgent.length,'Agents')}
       <div class="qc-analytics-search-row">
         <input type="text" class="qc-analytics-search-input" placeholder="Search agents by name…" oninput="qcAnalyticsApplyCardFilters()">
         ${agentDropdown}
+        ${tlDropdown}
         <button id="qcAnalyticsViewSelectedWorkflowAgentsBtn" class="qc-btn primary" style="display:${selectedCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedWorkflowAgents()">View Analytics for Selected (${selectedCount}) &rsaquo;</button>
         <button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button>
       </div>
@@ -5701,11 +5752,19 @@ function printToPDF(type){
     clone.querySelectorAll('.qc-analytics-search-row, .qc-analytics-expand-btn, .qc-analytics-dropdown-panel').forEach(el=>el.remove());
     const kindLabel=QC_KIND_META[_qcAnalyticsKind].shortLabel;
     const d=_qcAnalyticsDrill;
+    const isWorkflowAgentTab=d.level==='kind'&&_qcAnalyticsWorkflowTab==='agent';
+    // The team leader filter only hides cards live — it never touches the
+    // drill level/title above — so without this the exported PDF would show
+    // a filtered subset of agents under a title that still just says "By
+    // Agent (All Programs)", with no record of which filter produced it.
+    const tlFilterSuffix=(isWorkflowAgentTab&&_qcAnalyticsWorkflowTLFilter.size)
+      ?' — Team Leader: '+Array.from(_qcAnalyticsWorkflowTLFilter).sort().join(', ')
+      :'';
     const title=d.level==='teamLeader'?kindLabel+' QC Analytics — '+d.program+' — By Team Leader'
       :d.level==='agent'?kindLabel+' QC Analytics — '+d.program+' — '+d.teamLeader+' — By Agent'
       :d.level==='workflowAgentDetail'?kindLabel+' QC Analytics — '+d.agent+' — All Programs'
       :d.level==='workflowMultiAgent'?kindLabel+' QC Analytics — Selected Agents — All Programs'
-      :(d.level==='kind'&&_qcAnalyticsWorkflowTab==='agent')?kindLabel+' QC Analytics — By Agent (All Programs)'
+      :isWorkflowAgentTab?kindLabel+' QC Analytics — By Agent (All Programs)'+tlFilterSuffix
       :kindLabel+' QC Analytics — By Program';
     const styleHtml=[...document.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"], style')].map(el=>el.outerHTML).join('\n');
     const win=window.open('','_blank','width=1100,height=900');
