@@ -553,7 +553,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-analytics-score.warn{color:#b45309}
 .qc-analytics-score.fail{color:#dc2626}
 .qc-analytics-score.na{color:#94a3b8}
-.qc-analytics-meta{font-size:11px;color:#94a3b8;white-space:nowrap}
+.qc-analytics-meta{font-size:11px;color:#64748b;white-space:nowrap}
 .qc-analytics-arrow{color:#94a3b8;font-size:16px;text-align:center}
 .qc-breadcrumb{display:flex;align-items:center;gap:7px;margin-bottom:14px;font-size:12.5px;flex-wrap:wrap}
 .qc-breadcrumb-item{color:#4263eb;cursor:pointer;font-weight:600}
@@ -4003,7 +4003,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.9";
+const APP_VERSION = "2026-07-16.11";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4659,6 +4659,41 @@ function qcAnalyticsApplyCardFilters(){
       ||(card.getAttribute('data-team-leaders')||'').split('|').some(tl=>_qcAnalyticsWorkflowTLFilter.has(tl));
     card.style.display=(matchesSearch&&matchesSelection&&matchesTL)?'':'none';
   });
+  qcAnalyticsUpdateSummaryStripForFilter();
+}
+
+// The summary strip's Audits/Avg Score/Agent count are otherwise computed
+// once at render time from the full unfiltered list — on the agent-list
+// screens (per-team-leader "By Agent", and the workflow-level "By Agent"
+// tab, the only two places with agent/team-leader filtering) those numbers
+// should track whatever's actually visible below, not the totals before
+// filtering. Recomputed straight from the still-visible cards' names against
+// the raw audits (not from the pre-aggregated per-card values), so Avg Score
+// stays a true audit-weighted average rather than a mean-of-per-agent-means.
+function qcAnalyticsUpdateSummaryStripForFilter(){
+  const drill=_qcAnalyticsDrill;
+  const isWorkflowAgentTab=drill.level==='kind'&&_qcAnalyticsWorkflowTab==='agent';
+  const isPerTLAgentList=drill.level==='agent';
+  if(!isWorkflowAgentTab&&!isPerTLAgentList) return;
+  const cached=_qcAnalyticsCache[_qcAnalyticsKind];
+  if(!cached) return;
+  const visibleNames=new Set(
+    [...document.querySelectorAll('.qc-analytics-card[data-entity-name]')]
+      .filter(card=>card.style.display!=='none')
+      .map(card=>card.getAttribute('data-entity-name')||'')
+  );
+  let scoped=qcAnalyticsFilterByDate(cached.data);
+  if(isPerTLAgentList) scoped=scoped.filter(a=>(a.program||'')===drill.program&&(a.teamLeader||'')===drill.teamLeader);
+  const filtered=scoped.filter(a=>visibleNames.has(a.agent||''));
+  const scored=filtered.map(a=>parseFloat(a.overallScore)).filter(n=>!isNaN(n));
+  const avg=scored.length?Math.round(scored.reduce((s,n)=>s+n,0)/scored.length):null;
+  const cls=avg===null?'na':avg<70?'fail':avg<90?'warn':'pass';
+  const countEl=document.getElementById('qcSummaryAuditCount');
+  if(countEl) countEl.textContent=filtered.length;
+  const avgEl=document.getElementById('qcSummaryAvgScore');
+  if(avgEl){ avgEl.textContent=avg===null?'—':avg+'%'; avgEl.className='qc-score-num '+cls; }
+  const groupEl=document.getElementById('qcSummaryGroupCount');
+  if(groupEl) groupEl.textContent=visibleNames.size;
 }
 
 function qcAnalyticsRowClick(idx){
@@ -4779,11 +4814,11 @@ function qcAnalyticsSummaryStrip(audits,groupCount,groupLabel){
   const avg=scored.length?Math.round(scored.reduce((s,n)=>s+n,0)/scored.length):null;
   const cls=avg===null?'na':avg<70?'fail':avg<90?'warn':'pass';
   return `<div class="qc-score-strip">
-    <div class="qc-score-big"><div class="qc-score-num pass">${audits.length}</div><div class="qc-score-caption">Audits (filtered)</div></div>
+    <div class="qc-score-big"><div class="qc-score-num pass" id="qcSummaryAuditCount">${audits.length}</div><div class="qc-score-caption">Audits (filtered)</div></div>
     <div class="qc-score-divider"></div>
-    <div class="qc-score-big"><div class="qc-score-num ${cls}">${avg===null?'—':avg+'%'}</div><div class="qc-score-caption">Avg Score</div></div>
+    <div class="qc-score-big"><div class="qc-score-num ${cls}" id="qcSummaryAvgScore">${avg===null?'—':avg+'%'}</div><div class="qc-score-caption">Avg Score</div></div>
     <div class="qc-score-divider"></div>
-    <div class="qc-score-big"><div class="qc-score-num na">${groupCount}</div><div class="qc-score-caption">${escHtml(groupLabel)}</div></div>
+    <div class="qc-score-big"><div class="qc-score-num na" id="qcSummaryGroupCount">${groupCount}</div><div class="qc-score-caption">${escHtml(groupLabel)}</div></div>
   </div>`;
 }
 
