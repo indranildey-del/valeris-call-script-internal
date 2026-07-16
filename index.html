@@ -3990,7 +3990,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.5";
+const APP_VERSION = "2026-07-16.6";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4520,6 +4520,7 @@ function qcAnalyticsToggleProgramSelect(idx,checked){
   if(trigger) trigger.textContent='Select Programs ('+n+') ▾';
   const btn=document.getElementById('qcAnalyticsViewSelectedBtn');
   if(btn){ btn.style.display=n>0?'':'none'; btn.textContent='View Analytics for Selected ('+n+') ›'; }
+  qcAnalyticsApplyCardFilters();
 }
 function qcAnalyticsViewSelectedPrograms(){
   if(_qcAnalyticsSelectedPrograms.size===0) return;
@@ -4539,6 +4540,7 @@ function qcAnalyticsToggleAgentSelect(idx,checked){
   if(trigger) trigger.textContent='Select Agents ('+n+') ▾';
   const btn=document.getElementById('qcAnalyticsViewSelectedAgentsBtn');
   if(btn){ btn.style.display=n>0?'':'none'; btn.textContent='View Analytics for Selected ('+n+') ›'; }
+  qcAnalyticsApplyCardFilters();
 }
 function qcAnalyticsViewSelectedAgents(){
   if(_qcAnalyticsSelectedAgents.size===0) return;
@@ -4549,14 +4551,20 @@ function qcAnalyticsViewSelectedAgents(){
 }
 
 // Pure DOM filter, not a re-render — re-rendering the whole body on every
-// keystroke would blow away the input's focus/cursor position. Generic over
-// whatever cards are currently in the DOM (program cards, agent cards, ...)
-// since every qcAnalyticsCardHtml() card already carries data-entity-name.
-function qcAnalyticsFilterCardSearch(val){
-  const q=val.trim().toLowerCase();
+// keystroke/checkbox click would blow away the search input's focus/cursor
+// position. A card shows only if it matches the current search text AND
+// (if anything is checked) is among the checked entities — checking boxes
+// never rebuilds the cards, so a still-visible card's click-to-drill
+// behavior is completely unaffected by filtering.
+function qcAnalyticsApplyCardFilters(){
+  const searchInput=document.querySelector('.qc-analytics-search-input');
+  const q=(searchInput?searchInput.value:'').trim().toLowerCase();
+  const selectedSet=_qcAnalyticsDrill.level==='agent'?_qcAnalyticsSelectedAgents:_qcAnalyticsSelectedPrograms;
   document.querySelectorAll('.qc-analytics-card[data-entity-name]').forEach(card=>{
-    const name=(card.getAttribute('data-entity-name')||'').toLowerCase();
-    card.style.display=(!q||name.includes(q))?'':'none';
+    const name=card.getAttribute('data-entity-name')||'';
+    const matchesSearch=!q||name.toLowerCase().includes(q);
+    const matchesSelection=selectedSet.size===0||selectedSet.has(name);
+    card.style.display=(matchesSearch&&matchesSelection)?'':'none';
   });
 }
 
@@ -4871,7 +4879,7 @@ function renderQCAnalyticsBody(rawAudits){
     const selectedAgentCount=_qcAnalyticsSelectedAgents.size;
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byAgent.length,'Agents')}
     <div class="qc-analytics-search-row">
-      <input type="text" class="qc-analytics-search-input" placeholder="Search agents by name…" oninput="qcAnalyticsFilterCardSearch(this.value)">
+      <input type="text" class="qc-analytics-search-input" placeholder="Search agents by name…" oninput="qcAnalyticsApplyCardFilters()">
       ${agentDropdown}
       <button id="qcAnalyticsViewSelectedAgentsBtn" class="qc-btn primary" style="display:${selectedAgentCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedAgents()">View Analytics for Selected (${selectedAgentCount}) &rsaquo;</button>
     </div>
@@ -4954,7 +4962,7 @@ function renderQCAnalyticsBody(rawAudits){
   const programDropdown=qcAnalyticsMultiSelectDropdownHtml('qcProgramDropdown','qcProgramDropdownTrigger','Select Programs',programNames,_qcAnalyticsSelectedPrograms,qcAnalyticsRegisterProgramCheckbox,'qcAnalyticsToggleProgramSelect');
   return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,byProgram.length,'Programs')}
   <div class="qc-analytics-search-row">
-    <input type="text" class="qc-analytics-search-input" placeholder="Search programs by name…" oninput="qcAnalyticsFilterCardSearch(this.value)">
+    <input type="text" class="qc-analytics-search-input" placeholder="Search programs by name…" oninput="qcAnalyticsApplyCardFilters()">
     ${programDropdown}
     <button id="qcAnalyticsViewSelectedBtn" class="qc-btn primary" style="display:${selectedCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedPrograms()">View Analytics for Selected (${selectedCount}) &rsaquo;</button>
   </div>
