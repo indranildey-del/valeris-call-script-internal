@@ -578,6 +578,18 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-analytics-detail-row>div:nth-child(4),.qc-analytics-detail-row>div:nth-child(5){text-align:right}
 .qc-analytics-detail-row:last-child{border-bottom:none}
 @media(max-width:900px){.qc-analytics-detail-hdr{display:none}.qc-analytics-detail-row{grid-template-columns:1fr 1fr;gap:4px}}
+/* Workflow-level agent detail adds a Program column (audits here span every
+   program the agent works on, unlike the program-scoped detail table above),
+   shifting every later column over by one — a standalone class rather than
+   an override, so it doesn't inherit the base table's column positions. */
+.qc-analytics-detail-hdr-wf{display:grid;grid-template-columns:100px 130px 120px 1fr 60px 70px 1.4fr 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
+.qc-analytics-detail-row-wf{display:grid;grid-template-columns:100px 130px 120px 1fr 60px 70px 1.4fr 1fr;gap:10px;padding:8px 0;font-size:12.5px;color:#334155;border-bottom:1px solid #f1f4fb;align-items:center}
+.qc-analytics-detail-row-wf>div{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qc-analytics-detail-row-wf>div:nth-child(3),.qc-analytics-detail-row-wf>div:nth-child(7){white-space:normal;overflow-wrap:anywhere;text-overflow:clip}
+.qc-analytics-detail-hdr-wf>span:nth-child(5),.qc-analytics-detail-hdr-wf>span:nth-child(6){text-align:right}
+.qc-analytics-detail-row-wf>div:nth-child(5),.qc-analytics-detail-row-wf>div:nth-child(6){text-align:right}
+.qc-analytics-detail-row-wf:last-child{border-bottom:none}
+@media(max-width:900px){.qc-analytics-detail-hdr-wf{display:none}.qc-analytics-detail-row-wf{grid-template-columns:1fr 1fr;gap:4px}}
 #qcUpdateBanner{position:fixed;top:0;left:0;right:0;z-index:99999;background:#1d4ed8;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:13.5px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.25);font-family:'Inter',sans-serif}
 #qcUpdateBanner button{background:#fff;color:#1d4ed8;border:none;border-radius:6px;padding:6px 14px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif}
 #qcUpdateBanner button:hover{background:#e0e7ff}
@@ -3990,7 +4002,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.7";
+const APP_VERSION = "2026-07-16.8";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4140,6 +4152,12 @@ let _qcAnalyticsRowTargets=[];
 // persists across re-renders (date filter changes, etc.) within a kind, reset
 // on kind switch since program names differ between MM and PBM.
 let _qcAnalyticsSelectedPrograms=new Set();
+// Which sub-view the workflow (kind) level shows — 'program' is today's single
+// Overview card; 'agent' is the flattened cross-program agent list, since one
+// agent can work across multiple programs and there was previously no single
+// place to see their combined performance.
+let _qcAnalyticsWorkflowTab='program';
+let _qcAnalyticsSelectedWorkflowAgents=new Set();
 
 function showQCAnalytics(){
   currentView='qc_analytics';currentProgId='';
@@ -4150,6 +4168,8 @@ function showQCAnalytics(){
   _qcAnalyticsDrill={level:'kind',program:null,teamLeader:null,agent:null};
   _qcAnalyticsSelectedPrograms=new Set();
   _qcAnalyticsSelectedAgents=new Set();
+  _qcAnalyticsSelectedWorkflowAgents=new Set();
+  _qcAnalyticsWorkflowTab='program';
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(_qcAnalyticsKind);
 }
@@ -4178,6 +4198,8 @@ function qcSwitchAnalyticsKind(kind){
   _qcAnalyticsDrill={level:'kind',program:null,teamLeader:null,agent:null};
   _qcAnalyticsSelectedPrograms=new Set();
   _qcAnalyticsSelectedAgents=new Set();
+  _qcAnalyticsSelectedWorkflowAgents=new Set();
+  _qcAnalyticsWorkflowTab='program';
   document.getElementById('main').innerHTML=renderQCAnalyticsShell();
   qcLoadAnalytics(kind);
 }
@@ -4550,6 +4572,41 @@ function qcAnalyticsViewSelectedAgents(){
   if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
 }
 
+// Same pattern as program/agent selection, but for the workflow-level
+// "By Agent" tab — a separate registry+Set from the per-team-leader agent
+// selection above, since they're different scopes (this one spans every
+// program in the whole workflow) and shouldn't cross-contaminate.
+let _qcAnalyticsWorkflowAgentCheckboxTargets=[];
+function qcAnalyticsRegisterWorkflowAgentCheckbox(name){
+  _qcAnalyticsWorkflowAgentCheckboxTargets.push(name);
+  return _qcAnalyticsWorkflowAgentCheckboxTargets.length-1;
+}
+function qcAnalyticsToggleWorkflowAgentSelect(idx,checked){
+  const name=_qcAnalyticsWorkflowAgentCheckboxTargets[idx];
+  if(name==null) return;
+  if(checked) _qcAnalyticsSelectedWorkflowAgents.add(name);
+  else _qcAnalyticsSelectedWorkflowAgents.delete(name);
+  const n=_qcAnalyticsSelectedWorkflowAgents.size;
+  const trigger=document.getElementById('qcWorkflowAgentDropdownTrigger');
+  if(trigger) trigger.textContent='Select Agents ('+n+') ▾';
+  const btn=document.getElementById('qcAnalyticsViewSelectedWorkflowAgentsBtn');
+  if(btn){ btn.style.display=n>0?'':'none'; btn.textContent='View Analytics for Selected ('+n+') ›'; }
+  qcAnalyticsApplyCardFilters();
+}
+function qcAnalyticsViewSelectedWorkflowAgents(){
+  if(_qcAnalyticsSelectedWorkflowAgents.size===0) return;
+  _qcAnalyticsDrill={level:'workflowMultiAgent',agents:Array.from(_qcAnalyticsSelectedWorkflowAgents),program:null,teamLeader:null,agent:null};
+  const bodyEl=document.getElementById('qcAnalyticsBody');
+  const cached=_qcAnalyticsCache[_qcAnalyticsKind];
+  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+}
+function qcAnalyticsSetWorkflowTab(tab){
+  _qcAnalyticsWorkflowTab=tab;
+  const bodyEl=document.getElementById('qcAnalyticsBody');
+  const cached=_qcAnalyticsCache[_qcAnalyticsKind];
+  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+}
+
 // Pure DOM filter, not a re-render — re-rendering the whole body on every
 // keystroke/checkbox click would blow away the search input's focus/cursor
 // position. A card shows only if it matches the current search text AND
@@ -4559,7 +4616,9 @@ function qcAnalyticsViewSelectedAgents(){
 function qcAnalyticsApplyCardFilters(){
   const searchInput=document.querySelector('.qc-analytics-search-input');
   const q=(searchInput?searchInput.value:'').trim().toLowerCase();
-  const selectedSet=_qcAnalyticsDrill.level==='agent'?_qcAnalyticsSelectedAgents:_qcAnalyticsSelectedPrograms;
+  const selectedSet=_qcAnalyticsDrill.level==='agent'?_qcAnalyticsSelectedAgents
+    :(_qcAnalyticsDrill.level==='kind'&&_qcAnalyticsWorkflowTab==='agent')?_qcAnalyticsSelectedWorkflowAgents
+    :_qcAnalyticsSelectedPrograms;
   document.querySelectorAll('.qc-analytics-card[data-entity-name]').forEach(card=>{
     const name=card.getAttribute('data-entity-name')||'';
     const matchesSearch=!q||name.toLowerCase().includes(q);
@@ -4646,12 +4705,23 @@ function qcAnalyticsBreadcrumbHtml(){
   const kindLabel=QC_KIND_META[_qcAnalyticsKind].shortLabel;
   const kindIdx=qcAnalyticsRegisterTarget({level:'kind'});
   items.push(`<span class="qc-breadcrumb-item${d.level==='kind'?' active':''}" onclick="qcAnalyticsRowClick(${kindIdx})">${escHtml(kindLabel)}</span>`);
-  if(d.level!=='kind'){
+  // Reached via the workflow-level "By Agent" tab, which flattens every
+  // program for this kind — there's no single "All Programs" node in this
+  // path, so show a "By Agent" crumb pointing back to the kind level instead
+  // (the workflow tab stays 'agent' since qcAnalyticsRowClick doesn't touch it).
+  const isWorkflowAgentPath=d.level==='workflowAgentDetail'||d.level==='workflowMultiAgent';
+  if(d.level!=='kind'&&!isWorkflowAgentPath){
     const rootIdx=qcAnalyticsRegisterTarget({level:'program'});
     items.push(`<span class="qc-breadcrumb-item${d.level==='program'?' active':''}" onclick="qcAnalyticsRowClick(${rootIdx})">All Programs</span>`);
   }
+  if(isWorkflowAgentPath){
+    items.push(`<span class="qc-breadcrumb-item" onclick="qcAnalyticsRowClick(${kindIdx})">By Agent</span>`);
+  }
   if(d.level==='multi'){
     items.push(`<span class="qc-breadcrumb-item active">Selected Programs (${(d.programs||[]).length})</span>`);
+  }
+  if(d.level==='workflowMultiAgent'){
+    items.push(`<span class="qc-breadcrumb-item active">Selected Agents (${(d.agents||[]).length})</span>`);
   }
   if(d.program){
     const idx=qcAnalyticsRegisterTarget({level:'teamLeader',program:d.program});
@@ -4830,12 +4900,44 @@ function renderQCAnalyticsBody(rawAudits){
 
   if(drill.level==='kind'){
     const kindLabel=QC_KIND_META[_qcAnalyticsKind].shortLabel;
+    // One agent can work across multiple programs — the "By Program" tab is
+    // today's single kind-wide Overview card; "By Agent" flattens every
+    // agent in this workflow (regardless of which program(s) they're on)
+    // into its own list, mirroring the "By Program"/"By Agent" list pattern
+    // used one level down, just scoped to the whole kind instead of one program.
+    const workflowTabsHtml=`<div class="tabs" style="margin-bottom:14px">
+      <div class="tab${_qcAnalyticsWorkflowTab==='program'?' active-mm':''}" onclick="qcAnalyticsSetWorkflowTab('program')">By Program</div>
+      <div class="tab${_qcAnalyticsWorkflowTab==='agent'?' active-mm':''}" onclick="qcAnalyticsSetWorkflowTab('agent')">By Agent</div>
+    </div>`;
+    if(_qcAnalyticsWorkflowTab==='agent'){
+      const byAgent=qcSortByScoreDesc(qcAggregateBy(audits,'agent'));
+      const cards=byAgent.map(item=>{
+        const ownAudits=audits.filter(a=>(a.agent||'')===item.name);
+        const children=qcSortByErrorsDesc(qcAggregateBy(ownAudits,'program'));
+        const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
+        const trendLabel=isSingleDay?'Avg Errors by Program':'Avg Errors by Day';
+        return qcAnalyticsCardHtml(item,children,'Program',trendPoints,trendLabel,{level:'workflowAgentDetail',agent:item.name});
+      }).join('');
+      const agentNames=byAgent.map(a=>a.name);
+      const agentDropdown=qcAnalyticsMultiSelectDropdownHtml('qcWorkflowAgentDropdown','qcWorkflowAgentDropdownTrigger','Select Agents',agentNames,_qcAnalyticsSelectedWorkflowAgents,qcAnalyticsRegisterWorkflowAgentCheckbox,'qcAnalyticsToggleWorkflowAgentSelect');
+      const selectedCount=_qcAnalyticsSelectedWorkflowAgents.size;
+      return `${dateControls}${breadcrumb}${workflowTabsHtml}${qcAnalyticsSummaryStrip(audits,byAgent.length,'Agents')}
+      <div class="qc-analytics-search-row">
+        <input type="text" class="qc-analytics-search-input" placeholder="Search agents by name…" oninput="qcAnalyticsApplyCardFilters()">
+        ${agentDropdown}
+        <button id="qcAnalyticsViewSelectedWorkflowAgentsBtn" class="qc-btn primary" style="display:${selectedCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedWorkflowAgents()">View Analytics for Selected (${selectedCount}) &rsaquo;</button>
+        <button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button>
+      </div>
+      <div class="section"><div class="section-header hdr-benefit" onclick="toggleSection(this)"><span>By Agent (All Programs)</span><span class="chevron open">&#9654;</span></div>
+        <div class="section-body">${byAgent.length?cards:qcAnalyticsEmptyRow()}</div>
+      </div>`;
+    }
     const item=qcAggregateAll(audits,kindLabel);
     const children=qcSortByErrorsDesc(qcAggregateBy(audits,'program'));
     const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
     const trendLabel=isSingleDay?'Avg Errors by Program':'Avg Errors by Day';
     const card=qcAnalyticsCardHtml(item,children,'Program',trendPoints,trendLabel,{level:'program'});
-    return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,children.length,'Programs')}
+    return `${dateControls}${breadcrumb}${workflowTabsHtml}${qcAnalyticsSummaryStrip(audits,children.length,'Programs')}
     <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>${escHtml(kindLabel)} Overview</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">${card}</div>
     </div>`;
@@ -4947,6 +5049,54 @@ function renderQCAnalyticsBody(rawAudits){
     const card=qcAnalyticsCardHtml(item,children,'Agent',trendPoints,trendLabel,null);
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,children.length,'Agents')}
     <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>Selected Agents</span><span class="chevron open">&#9654;</span></div>
+      <div class="section-body">${card}</div>
+    </div>`;
+  }
+
+  if(drill.level==='workflowAgentDetail'){
+    // Not scoped to a single program/team leader — this agent's full history
+    // spans every program they've worked on, which is the entire point of
+    // the workflow-level "By Agent" view, so the table adds a Program column.
+    const scoped=audits.filter(a=>(a.agent||'')===drill.agent)
+      .slice().sort((a,b)=>(b.auditDate||'').localeCompare(a.auditDate||''));
+    const auditRows=scoped.map(a=>{
+      const score=a.overallScore===''||a.overallScore==null?null:Math.round(parseFloat(a.overallScore));
+      const cls=score===null?'na':score<70?'fail':score<90?'warn':'pass';
+      const erroredFields=Array.isArray(a.failedFields)?Array.from(new Set(a.failedFields)):[];
+      const erroredFieldsText=erroredFields.length?erroredFields.join(', '):'—';
+      return `<div class="qc-analytics-detail-row-wf">
+        <div>${escHtml(a.auditDate||'—')}</div>
+        <div title="${escHtml(a.program||'')}">${escHtml(a.program||'—')}</div>
+        <div title="${escHtml(a.srNumber||'')}">${escHtml(a.srNumber||'—')}</div>
+        <div title="${escHtml(a.payer||'')}">${escHtml(a.payer||'—')}</div>
+        <div class="qc-analytics-score ${cls}">${score===null?'—':score+'%'}</div>
+        <div>${a.errorCount===''||a.errorCount==null?'—':a.errorCount}</div>
+        <div title="${escHtml(erroredFieldsText)}">${escHtml(erroredFieldsText)}</div>
+        <div title="${escHtml(a.savedBy||'')}">${escHtml(a.auditor||'—')}</div>
+      </div>`;
+    }).join('');
+    return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,scoped.length,'Audits')}
+    <div class="section"><div class="section-header hdr-closing" onclick="toggleSection(this)"><span>Audit History — ${escHtml(drill.agent)} (All Programs)</span><span class="chevron open">&#9654;</span></div>
+      <div class="section-body">
+        <div class="qc-analytics-detail-hdr-wf"><span>Audit Date</span><span>Program</span><span>SR / Case #</span><span>Payer</span><span>Score</span><span># Errors</span><span>Errored Fields</span><span>Auditor</span></div>
+        ${auditRows||qcAnalyticsEmptyRow()}
+      </div>
+    </div>`;
+  }
+
+  if(drill.level==='workflowMultiAgent'){
+    const selected=new Set(drill.agents||[]);
+    const scoped=audits.filter(a=>selected.has(a.agent||''));
+    const label='Selected Agents ('+selected.size+')';
+    const item=qcAggregateAll(scoped,label);
+    const children=qcSortByErrorsDesc(qcAggregateBy(scoped,'agent'));
+    const trendPoints=isSingleDay?qcAnalyticsTrendFromChildren(children):qcAnalyticsTrendFromDates(item.errorTrend);
+    const trendLabel=isSingleDay?'Avg Errors by Agent':'Avg Errors by Day';
+    // No target — an arbitrary multi-agent selection isn't a real hierarchy
+    // node, so there's nowhere further to drill from here.
+    const card=qcAnalyticsCardHtml(item,children,'Agent',trendPoints,trendLabel,null);
+    return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,children.length,'Agents')}
+    <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>Selected Agents (All Programs)</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">${card}</div>
     </div>`;
   }
@@ -5553,6 +5703,9 @@ function printToPDF(type){
     const d=_qcAnalyticsDrill;
     const title=d.level==='teamLeader'?kindLabel+' QC Analytics — '+d.program+' — By Team Leader'
       :d.level==='agent'?kindLabel+' QC Analytics — '+d.program+' — '+d.teamLeader+' — By Agent'
+      :d.level==='workflowAgentDetail'?kindLabel+' QC Analytics — '+d.agent+' — All Programs'
+      :d.level==='workflowMultiAgent'?kindLabel+' QC Analytics — Selected Agents — All Programs'
+      :(d.level==='kind'&&_qcAnalyticsWorkflowTab==='agent')?kindLabel+' QC Analytics — By Agent (All Programs)'
       :kindLabel+' QC Analytics — By Program';
     const styleHtml=[...document.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"], style')].map(el=>el.outerHTML).join('\n');
     const win=window.open('','_blank','width=1100,height=900');
