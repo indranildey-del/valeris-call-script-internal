@@ -3990,7 +3990,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.6";
+const APP_VERSION = "2026-07-16.7";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4851,6 +4851,7 @@ function renderQCAnalyticsBody(rawAudits){
       return qcAnalyticsCardHtml(item,children,'Agent',trendPoints,trendLabel,{level:'agent',program:drill.program,teamLeader:item.name});
     }).join('');
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byTL.length,'Team Leaders')}
+    <div class="qc-analytics-search-row"><button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button></div>
     <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>By Team Leader</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">${byTL.length?cards:qcAnalyticsEmptyRow()}</div>
     </div>`;
@@ -4882,6 +4883,7 @@ function renderQCAnalyticsBody(rawAudits){
       <input type="text" class="qc-analytics-search-input" placeholder="Search agents by name…" oninput="qcAnalyticsApplyCardFilters()">
       ${agentDropdown}
       <button id="qcAnalyticsViewSelectedAgentsBtn" class="qc-btn primary" style="display:${selectedAgentCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedAgents()">View Analytics for Selected (${selectedAgentCount}) &rsaquo;</button>
+      <button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button>
     </div>
     <div class="section"><div class="section-header hdr-benefit" onclick="toggleSection(this)"><span>By Agent</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">${byAgent.length?cards:qcAnalyticsEmptyRow()}</div>
@@ -4965,6 +4967,7 @@ function renderQCAnalyticsBody(rawAudits){
     <input type="text" class="qc-analytics-search-input" placeholder="Search programs by name…" oninput="qcAnalyticsApplyCardFilters()">
     ${programDropdown}
     <button id="qcAnalyticsViewSelectedBtn" class="qc-btn primary" style="display:${selectedCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedPrograms()">View Analytics for Selected (${selectedCount}) &rsaquo;</button>
+    <button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button>
   </div>
   <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>By Program</span><span class="chevron open">&#9654;</span></div>
     <div class="section-body">${byProgram.length?cards:qcAnalyticsEmptyRow()}</div>
@@ -5532,6 +5535,34 @@ function printToPDF(type){
       .qc-row{display:grid!important;grid-template-columns:180px 1fr 100px 100px 50px 1fr!important}
       .qc-row-label,.qc-row-question,.qc-comment-input{grid-column:auto!important}
     </style></head><body>${mainClone.outerHTML}</body></html>`);
+    win.document.close();
+    setTimeout(()=>{win.focus();win.print();},700);
+    return;
+  }
+  /* ══ QC ANALYTICS — print an exact clone of the current drill level's
+     cards/charts (respecting whatever search/checkbox filtering is
+     currently hiding cards, same "print what you see" fidelity as the
+     scorecard above), with the interactive-only controls stripped out
+     since they're meaningless on paper. ══ */
+  if(type==='qcAnalytics'){
+    const bodyEl=document.getElementById('qcAnalyticsBody');
+    if(!bodyEl){alert('Nothing to print.');return;}
+    const clone=bodyEl.cloneNode(true);
+    clone.querySelectorAll('.qc-analytics-search-row, .qc-analytics-expand-btn, .qc-analytics-dropdown-panel').forEach(el=>el.remove());
+    const kindLabel=QC_KIND_META[_qcAnalyticsKind].shortLabel;
+    const d=_qcAnalyticsDrill;
+    const title=d.level==='teamLeader'?kindLabel+' QC Analytics — '+d.program+' — By Team Leader'
+      :d.level==='agent'?kindLabel+' QC Analytics — '+d.program+' — '+d.teamLeader+' — By Agent'
+      :kindLabel+' QC Analytics — By Program';
+    const styleHtml=[...document.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"], style')].map(el=>el.outerHTML).join('\n');
+    const win=window.open('','_blank','width=1100,height=900');
+    if(!win){alert('Please allow pop-ups in your browser to use this feature.');return;}
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>${styleHtml}<style>
+      body{height:auto!important;overflow:visible!important;display:block!important;padding:24px}
+      #qcAnalyticsBody{height:auto!important;overflow:visible!important}
+      @page{size:A4 landscape;margin:10mm}
+      .qc-analytics-card{break-inside:avoid;page-break-inside:avoid}
+    </style></head><body><h2 style="font-family:Arial,Helvetica,sans-serif;margin-bottom:16px">${title}</h2>${clone.outerHTML}</body></html>`);
     win.document.close();
     setTimeout(()=>{win.focus();win.print();},700);
     return;
