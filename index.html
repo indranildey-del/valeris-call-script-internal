@@ -6,6 +6,11 @@
 <title>Valeris — Call Script Dashboard</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f1729'/><rect x='18' y='18' width='64' height='64' rx='8' fill='%234263eb'/><rect x='30' y='30' width='40' height='40' rx='4' fill='%230f1729'/><rect x='38' y='38' width='24' height='24' rx='2' fill='%23f1f5f9'/></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- ExcelJS, not the xlsx library above — that one is Community Edition and
+     silently drops cell styling (fonts/fills/colors/column widths) on write,
+     confirmed by direct test. QC Analytics report export needs a real
+     colored/frozen-header report, not a plain dump, so it uses this instead. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -4016,7 +4021,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-17.4";
+const APP_VERSION = "2026-07-17.5";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4179,6 +4184,12 @@ let _qcAnalyticsSelectedWorkflowAgents=new Set();
 // box), not a "combine into one card" selection like Select Agents above, so
 // it has no paired "View Analytics for Selected" action.
 let _qcAnalyticsWorkflowTLFilter=new Set();
+// Captured by renderQCAnalyticsBody at each of the four "list" levels (By
+// Program, By Team Leader, By Agent, workflow By-Agent) right where their
+// items/audits are already computed — the Export Report button reads this
+// instead of re-deriving the same aggregation, and cross-references live DOM
+// visibility (search/select/TL-filter) so the export matches what's on screen.
+let _qcAnalyticsExportCtx=null;
 
 function showQCAnalytics(){
   currentView='qc_analytics';currentProgId='';
@@ -5013,6 +5024,7 @@ function renderQCAnalyticsBody(rawAudits){
   _qcAnalyticsAgentCheckboxTargets=[];
   _qcAnalyticsWorkflowAgentCheckboxTargets=[];
   _qcAnalyticsWorkflowTLCheckboxTargets=[];
+  _qcAnalyticsExportCtx=null;
   if(!rawAudits||!rawAudits.length){
     return `${qcAnalyticsDateControlsHtml()}<div style="padding:40px;text-align:center;color:#94a3b8">No saved audits yet for this program type.</div>`;
   }
@@ -5052,6 +5064,7 @@ function renderQCAnalyticsBody(rawAudits){
       const selectedCount=_qcAnalyticsSelectedWorkflowAgents.size;
       const allTeamLeaders=Array.from(new Set(audits.map(a=>a.teamLeader).filter(Boolean))).sort();
       const tlDropdown=qcAnalyticsMultiSelectDropdownHtml('qcWorkflowTLDropdown','qcWorkflowTLDropdownTrigger','Filter by Team Leader',allTeamLeaders,_qcAnalyticsWorkflowTLFilter,qcAnalyticsRegisterWorkflowTLCheckbox,'qcAnalyticsToggleWorkflowTLFilterSelect');
+      _qcAnalyticsExportCtx={title:kindLabel+' — By Agent (All Programs)',scopeAudits:audits,items:byAgent,entityField:'agent',childLabel:'Agent'};
       return `${dateControls}${breadcrumb}${workflowTabsHtml}${qcAnalyticsSummaryStrip(audits,byAgent.length,'Agents')}
       <div class="qc-analytics-search-row">
         <input type="text" class="qc-analytics-search-input" placeholder="Search agents by name…" oninput="qcAnalyticsApplyCardFilters()">
@@ -5059,6 +5072,7 @@ function renderQCAnalyticsBody(rawAudits){
         ${tlDropdown}
         <button id="qcAnalyticsViewSelectedWorkflowAgentsBtn" class="qc-btn primary" style="display:${selectedCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedWorkflowAgents()">View Analytics for Selected (${selectedCount}) &rsaquo;</button>
         <button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button>
+        <button class="qc-btn" onclick="qcAnalyticsExportExcelReport()">&#128202; Export Report</button>
       </div>
       <div class="section"><div class="section-header hdr-benefit" onclick="toggleSection(this)"><span>By Agent (All Programs)</span><span class="chevron open">&#9654;</span></div>
         <div class="section-body">${byAgent.length?cards:qcAnalyticsEmptyRow()}</div>
@@ -5084,8 +5098,9 @@ function renderQCAnalyticsBody(rawAudits){
       const trendLabel=isSingleDay?'Avg Errors by Agent':'Avg Errors by Day';
       return qcAnalyticsCardHtml(item,children,'Agent',trendPoints,trendLabel,{level:'agent',program:drill.program,teamLeader:item.name});
     }).join('');
+    _qcAnalyticsExportCtx={title:QC_KIND_META[_qcAnalyticsKind].shortLabel+' — '+drill.program+' — By Team Leader',scopeAudits:scoped,items:byTL,entityField:'teamLeader',childLabel:'Team Leader'};
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byTL.length,'Team Leaders')}
-    <div class="qc-analytics-search-row"><button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button></div>
+    <div class="qc-analytics-search-row"><button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button><button class="qc-btn" onclick="qcAnalyticsExportExcelReport()">&#128202; Export Report</button></div>
     <div class="section"><div class="section-header hdr-opening" onclick="toggleSection(this)"><span>By Team Leader</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">${byTL.length?cards:qcAnalyticsEmptyRow()}</div>
     </div>`;
@@ -5112,12 +5127,14 @@ function renderQCAnalyticsBody(rawAudits){
     const agentNames=byAgent.map(a=>a.name);
     const agentDropdown=qcAnalyticsMultiSelectDropdownHtml('qcAgentDropdown','qcAgentDropdownTrigger','Select Agents',agentNames,_qcAnalyticsSelectedAgents,qcAnalyticsRegisterAgentCheckbox,'qcAnalyticsToggleAgentSelect');
     const selectedAgentCount=_qcAnalyticsSelectedAgents.size;
+    _qcAnalyticsExportCtx={title:QC_KIND_META[_qcAnalyticsKind].shortLabel+' — '+drill.program+' — '+drill.teamLeader+' — By Agent',scopeAudits:scoped,items:byAgent,entityField:'agent',childLabel:'Agent'};
     return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(scoped,byAgent.length,'Agents')}
     <div class="qc-analytics-search-row">
       <input type="text" class="qc-analytics-search-input" placeholder="Search agents by name…" oninput="qcAnalyticsApplyCardFilters()">
       ${agentDropdown}
       <button id="qcAnalyticsViewSelectedAgentsBtn" class="qc-btn primary" style="display:${selectedAgentCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedAgents()">View Analytics for Selected (${selectedAgentCount}) &rsaquo;</button>
       <button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button>
+      <button class="qc-btn" onclick="qcAnalyticsExportExcelReport()">&#128202; Export Report</button>
     </div>
     <div class="section"><div class="section-header hdr-benefit" onclick="toggleSection(this)"><span>By Agent</span><span class="chevron open">&#9654;</span></div>
       <div class="section-body">${byAgent.length?cards:qcAnalyticsEmptyRow()}</div>
@@ -5244,12 +5261,14 @@ function renderQCAnalyticsBody(rawAudits){
   const selectedCount=_qcAnalyticsSelectedPrograms.size;
   const programNames=byProgram.map(p=>p.name);
   const programDropdown=qcAnalyticsMultiSelectDropdownHtml('qcProgramDropdown','qcProgramDropdownTrigger','Select Programs',programNames,_qcAnalyticsSelectedPrograms,qcAnalyticsRegisterProgramCheckbox,'qcAnalyticsToggleProgramSelect');
+  _qcAnalyticsExportCtx={title:QC_KIND_META[_qcAnalyticsKind].shortLabel+' — By Program',scopeAudits:audits,items:byProgram,entityField:'program',childLabel:'Program'};
   return `${dateControls}${breadcrumb}${qcAnalyticsSummaryStrip(audits,byProgram.length,'Programs')}
   <div class="qc-analytics-search-row">
     <input type="text" class="qc-analytics-search-input" placeholder="Search programs by name…" oninput="qcAnalyticsApplyCardFilters()">
     ${programDropdown}
     <button id="qcAnalyticsViewSelectedBtn" class="qc-btn primary" style="display:${selectedCount>0?'':'none'}" onclick="qcAnalyticsViewSelectedPrograms()">View Analytics for Selected (${selectedCount}) &rsaquo;</button>
     <button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button>
+    <button class="qc-btn" onclick="qcAnalyticsExportExcelReport()">&#128202; Export Report</button>
   </div>
   <div class="section"><div class="section-header hdr-plan" onclick="toggleSection(this)"><span>By Program</span><span class="chevron open">&#9654;</span></div>
     <div class="section-body">${byProgram.length?cards:qcAnalyticsEmptyRow()}</div>
@@ -5857,6 +5876,149 @@ function qcSyncFormValuesIntoClone(liveRoot,cloneRoot){
       cloneEl.setAttribute('value',liveEl.value);
     }
   });
+}
+
+// True most-frequent failed field for one report row — deliberately NOT
+// qcAnalyticsTopErrorFields, which force-ranks "Case Disposition" into the
+// #1 slot even at zero occurrences (useful for the always-visible on-screen
+// box, misleading in a static report cell implying it's the actual top issue).
+function qcAnalyticsTopFieldLabel(failedFields){
+  if(!failedFields||!failedFields.length) return '';
+  const counts={};
+  failedFields.forEach(f=>{counts[f]=(counts[f]||0)+1;});
+  let top=null,topCount=0;
+  Object.keys(counts).forEach(k=>{ if(counts[k]>topCount){top=k;topCount=counts[k];} });
+  return top?top+' ('+topCount+')':'';
+}
+function qcAnalyticsScoreBand(avgScore){
+  if(avgScore===null||avgScore===undefined) return 'na';
+  return avgScore<70?'fail':avgScore<90?'warn':'pass';
+}
+function qcAnalyticsDateFilterLabel(){
+  const f=_qcAnalyticsDateFilter;
+  const labels={all:'All Time',today:'Today','7d':'Last 7 Days','30d':'Last 30 Days'};
+  if(f.mode==='custom') return 'Custom range: '+(f.from||'…')+' to '+(f.to||'…');
+  return labels[f.mode]||'All Time';
+}
+const QC_REPORT_HEADER_FILL='FF0C447C';
+const QC_REPORT_HEADER_FONT='FFE6F1FB';
+// Same band colors as the dashboard's own score classes (fail/warn/pass),
+// just as spreadsheet fill+font pairs instead of CSS classes.
+const QC_REPORT_BAND_COLORS={
+  pass:{fill:'FFEAF3DE',font:'FF27500A'},
+  warn:{fill:'FFFAEEDA',font:'FF633806'},
+  fail:{fill:'FFFCEBEB',font:'FF791F1F'},
+  na:{fill:'FFF1EFE8',font:'FF5F5E5A'}
+};
+function qcApplyHeaderRowStyle(row){
+  row.eachCell(cell=>{
+    cell.font={bold:true,color:{argb:QC_REPORT_HEADER_FONT}};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:QC_REPORT_HEADER_FILL}};
+  });
+}
+function qcApplyBandColor(cell,band){
+  const c=QC_REPORT_BAND_COLORS[band]||QC_REPORT_BAND_COLORS.na;
+  cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:c.fill}};
+  cell.font={bold:true,color:{argb:c.font}};
+}
+
+// Builds a proper multi-sheet, formatted report (Summary + Breakdown + Raw
+// Audit Log) from whichever "list" level's Export Report button was clicked,
+// respecting whatever is currently visible on screen — same "print what you
+// see" rule the PDF export already follows, so an active search/selection/
+// team-leader filter narrows the report exactly like it narrows the cards.
+async function qcAnalyticsExportExcelReport(){
+  const ctx=_qcAnalyticsExportCtx;
+  if(!ctx){ alert('Nothing to export.'); return; }
+  if(typeof ExcelJS==='undefined'){ alert('Report library failed to load — check your connection and try again.'); return; }
+
+  const visibleNames=new Set(
+    [...document.querySelectorAll('.qc-analytics-card[data-entity-name]')]
+      .filter(card=>card.style.display!=='none')
+      .map(card=>card.getAttribute('data-entity-name')||'')
+  );
+  const items=ctx.items.filter(it=>visibleNames.has(it.name));
+  const audits=ctx.scopeAudits.filter(a=>visibleNames.has((a[ctx.entityField]||'').toString()));
+
+  const wb=new ExcelJS.Workbook();
+  wb.creator='Valeris';
+  wb.created=new Date();
+
+  const summary=wb.addWorksheet('Summary');
+  summary.columns=[{width:30},{width:18}];
+  const scored=audits.map(a=>parseFloat(a.overallScore)).filter(n=>!isNaN(n));
+  const avgScore=scored.length?Math.round(scored.reduce((s,n)=>s+n,0)/scored.length):null;
+  const totalErrors=audits.reduce((s,a)=>{const e=parseFloat(a.errorCount);return s+(isNaN(e)?0:e);},0);
+  const titleRow=summary.addRow([ctx.title]);
+  titleRow.font={bold:true,size:14};
+  summary.mergeCells(titleRow.number,1,titleRow.number,2);
+  const metaRow=summary.addRow(['Generated '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})+' — '+qcAnalyticsDateFilterLabel()]);
+  metaRow.font={italic:true,color:{argb:'FF5F5E5A'}};
+  summary.mergeCells(metaRow.number,1,metaRow.number,2);
+  summary.addRow([]);
+  qcApplyHeaderRowStyle(summary.addRow(['Metric','Value']));
+  summary.addRow(['Total audits',audits.length]);
+  const avgRow=summary.addRow(['Average score',avgScore===null?null:avgScore/100]);
+  if(avgScore!==null){ avgRow.getCell(2).numFmt='0%'; qcApplyBandColor(avgRow.getCell(2),qcAnalyticsScoreBand(avgScore)); }
+  summary.addRow(['Total errors',Math.round(totalErrors)]);
+  summary.addRow([ctx.childLabel+'s',items.length]);
+  summary.addRow([]);
+  qcApplyHeaderRowStyle(summary.addRow(['Top error fields (org-wide)','Occurrences']));
+  const allFailedFields=items.flatMap(it=>it.failedFields||[]);
+  const topFields=qcAnalyticsTopErrorFields(allFailedFields,5).filter(f=>f.count>0);
+  (topFields.length?topFields:[{label:'No errors recorded',count:0}]).forEach(f=>summary.addRow([f.label,f.count]));
+
+  const bd=wb.addWorksheet(('By '+ctx.childLabel).slice(0,31));
+  bd.columns=[
+    {header:ctx.childLabel,key:'name',width:28},
+    {header:'Audits',key:'count',width:10},
+    {header:'Avg Score',key:'score',width:12},
+    {header:'Avg Errors',key:'errors',width:12},
+    {header:'Top Error Field',key:'topField',width:34}
+  ];
+  qcApplyHeaderRowStyle(bd.getRow(1));
+  bd.views=[{state:'frozen',ySplit:1}];
+  bd.autoFilter='A1:E1';
+  const sortedItems=items.slice().sort((a,b)=>(a.avgScore===null?-1:a.avgScore)-(b.avgScore===null?-1:b.avgScore));
+  sortedItems.forEach(it=>{
+    const row=bd.addRow([it.name,it.count,it.avgScore===null?null:it.avgScore/100,it.avgErrors,qcAnalyticsTopFieldLabel(it.failedFields)]);
+    if(it.avgScore!==null){ row.getCell(3).numFmt='0%'; qcApplyBandColor(row.getCell(3),qcAnalyticsScoreBand(it.avgScore)); }
+  });
+
+  const raw=wb.addWorksheet('Raw Audit Log');
+  raw.columns=[
+    {header:'Audit Date',key:'date',width:12},
+    {header:ctx.childLabel,key:'entity',width:24},
+    {header:'SR / Case #',key:'sr',width:16},
+    {header:'Payer',key:'payer',width:18},
+    {header:'Score',key:'score',width:10},
+    {header:'# Errors',key:'errCount',width:10},
+    {header:'Errored Fields',key:'fields',width:38},
+    {header:'Auditor',key:'auditor',width:18}
+  ];
+  qcApplyHeaderRowStyle(raw.getRow(1));
+  raw.views=[{state:'frozen',ySplit:1}];
+  raw.autoFilter='A1:H1';
+  const sortedAudits=audits.slice().sort((a,b)=>(b.auditDate||'').localeCompare(a.auditDate||''));
+  sortedAudits.forEach(a=>{
+    const score=a.overallScore===''||a.overallScore==null?null:Math.round(parseFloat(a.overallScore));
+    const erroredFields=Array.isArray(a.failedFields)?Array.from(new Set(a.failedFields)).join(', '):'';
+    const row=raw.addRow([a.auditDate||'',a[ctx.entityField]||'',a.srNumber||'',a.payer||'',score===null?null:score/100,a.errorCount===''||a.errorCount==null?null:a.errorCount,erroredFields,a.auditor||'']);
+    if(score!==null){ row.getCell(5).numFmt='0%'; qcApplyBandColor(row.getCell(5),qcAnalyticsScoreBand(score)); }
+  });
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const slug=ctx.title.replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'');
+  const today=new Date().toISOString().slice(0,10);
+  const link=document.createElement('a');
+  link.href=url;
+  link.download='Valeris_QC_Report_'+slug+'_'+today+'.xlsx';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function printToPDF(type){
