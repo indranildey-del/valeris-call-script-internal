@@ -497,6 +497,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-field input,.qc-field select{width:100%;padding:7px 10px;border:1px solid #e2e6f0;border-radius:6px;font-size:12.5px;font-family:'Inter',sans-serif;color:#1f2937;background:#fbfbfe}
 .qc-field input:focus,.qc-field select:focus{outline:none;border-color:#4263eb}
 .qc-field input.qc-field-error,.qc-field select.qc-field-error{border-color:#dc2626;background:#fef2f2}
+.qc-agent-combobox{position:relative}
+.qc-agent-combobox .qc-analytics-dropdown-panel{width:100%;box-sizing:border-box}
 .qc-section-count{font-size:11px;color:#94a3b8;font-weight:600;margin-left:auto;padding-right:8px}
 .qc-table-hdr{display:grid;grid-template-columns:180px 1fr 100px 100px 50px 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
 @media(max-width:1100px){.qc-table-hdr{display:none}}
@@ -523,6 +525,15 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-save-status{font-size:11.5px;font-weight:600;min-height:14px}
 .qc-save-status.ok{color:#15803d}
 .qc-save-status.err{color:#dc2626}
+.qc-feedback-box{width:100%;text-align:left}
+.qc-feedback-box label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;margin-bottom:4px}
+.qc-feedback-textarea{width:100%;min-height:80px;padding:9px 12px;border:1px solid #e2e6f0;border-radius:8px;font-size:12.5px;font-family:'Inter',sans-serif;color:#1f2937;background:#fbfbfe;resize:vertical}
+.qc-feedback-textarea:focus{outline:none;border-color:#4263eb}
+/* Print-only stand-in for the textarea above — a plain block of flowing
+   text has no fixed scrollable height the way a <textarea> does, so long
+   feedback always renders in full on the printed page instead of being
+   clipped to whatever height the box happened to be on screen. */
+.qc-feedback-print{width:100%;white-space:pre-wrap;word-break:break-word;font-size:12.5px;color:#1f2937;border:1px solid #e2e6f0;border-radius:8px;padding:9px 12px;min-height:20px;text-align:left}
 /* ── QC ANALYTICS ── */
 .qc-analytics-card{border:1px solid #eef1f8;border-radius:10px;padding:14px 16px;margin-bottom:12px;background:#fff}
 .qc-analytics-card:last-child{margin-bottom:0}
@@ -1444,6 +1455,7 @@ const QC_SECTIONS_MM=[
     {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:4,fatal:true},
     {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:4,fatal:true},
     {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:4,fatal:true},
+    {label:"Human Call Required",q:"Correctly determined whether this case required a Human call (versus AI-only) and placed one when required.",w:4,fatal:true},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
     {label:"Case Disposition",q:"Selected and documented the correct case disposition reflecting the outcome/status of this call.",w:4},
   ]},
@@ -1564,6 +1576,7 @@ const QC_SECTIONS_PBM=[
     {label:"Opening Statement",q:"Stated Agent Name, Program Name, the call-recording disclaimer, and the purpose of the call (verifying coverage for the named patient/medication) at the beginning of the call, before any information exchange.",w:4,fatal:true},
     {label:"HIPAA Verification",q:"Completed HIPAA verification (minimum 3 patient identifiers) before disclosing any patient-specific clinical, financial, or treatment information.",w:4,fatal:true},
     {label:"Representation Protocol",q:"Avoided misrepresentation — did not claim to be calling directly from the provider's office, from a pharmacy, or as the patient; correctly stated program affiliation when asked “Where are you calling from?”",w:4,fatal:true},
+    {label:"Human Call Required",q:"Correctly determined whether this case required a Human call (versus AI-only) and placed one when required.",w:4,fatal:true},
     {label:"Call Preparedness",q:"Demonstrated preparedness for the call (reviewed payer trends / legacy case info before dialing).",w:1},
     {label:"Case Disposition",q:"Selected and documented the correct case disposition reflecting the outcome/status of this call.",w:4},
   ]},
@@ -3995,7 +4008,7 @@ function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS
 //  Deploy google-apps-script/Code.gs as a Web App (see that file's header
 //  comment for exact steps), then paste the resulting /exec URL below.
 // ══════════════════════════════════════════════════════════════
-const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxqt-RwuHcx_6QSR1EvKCgkGMcfkn39TKygRI_pQzL1OHCGEXpNNwuavvw-HL3LuV0P/exec";
+const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzY-rFH5HfdkZiUmIDmTP34-34Vll61-fvYHqk2OJUXaTD1HKcLBmBToMWXXPtrxSDk/exec";
 function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
 
 // Bump this string on every push (any change is enough — date+counter is a
@@ -4003,7 +4016,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-16.11";
+const APP_VERSION = "2026-07-17.2";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4072,6 +4085,8 @@ function qcBuildSavePayload(){
       values.push(st.asked||'',st.documented||'',st.comment||'');
     });
   });
+  headers.push('Overall Feedback');
+  values.push(c.feedback||'');
   return {kind:currentQCKind,idToken:qcAuthToken,headers,values};
 }
 
@@ -4745,6 +4760,35 @@ function qcAnalyticsFilterByDate(audits){
   });
 }
 
+// Every save appends a new row (see Code.gs) — including a re-save of the
+// same SR/Case Number — so a case that's been re-audited appears as
+// multiple rows. Analytics treats one SR/Case Number as ONE audit, using
+// whichever row was actually saved most recently, so counts/avg score/error
+// totals aren't inflated by re-audits of the same case. "Most recent" means
+// save Timestamp, not the auditor-entered Audit Date — a re-audit of the
+// same call often keeps that call's original date.
+function qcAuditSaveTime(a){
+  const t=Date.parse(a.timestamp);
+  if(!isNaN(t)) return t;
+  // Fallback: AuditID embeds its creation-time millisecond timestamp as
+  // "qc_<ms>_<rand>" (see Code.gs), used only if Timestamp is missing/unparseable.
+  const m=/^qc_(\d+)_/.exec(a.auditId||'');
+  return m?parseInt(m[1],10):0;
+}
+function qcDedupeAuditsBySrNumber(audits){
+  const bySr=new Map();
+  audits.forEach(a=>{
+    const sr=(a.srNumber||'').trim();
+    // Blank SR numbers can't be meaningfully deduped against each other —
+    // keep every one as its own entry instead of collapsing unrelated
+    // blank-SR audits down to a single row.
+    if(!sr){ bySr.set(Symbol(),a); return; }
+    const existing=bySr.get(sr);
+    if(!existing||qcAuditSaveTime(a)>=qcAuditSaveTime(existing)) bySr.set(sr,a);
+  });
+  return Array.from(bySr.values());
+}
+
 // "Today" or a custom range narrowed to one date both mean the Error Trend
 // box should switch from a per-day trend to a within-that-day breakdown
 // (see qcAnalyticsTrendPoints) — everything else (All Time/7d/30d/a wider
@@ -4970,7 +5014,7 @@ function renderQCAnalyticsBody(rawAudits){
   if(!rawAudits||!rawAudits.length){
     return `${qcAnalyticsDateControlsHtml()}<div style="padding:40px;text-align:center;color:#94a3b8">No saved audits yet for this program type.</div>`;
   }
-  const audits=qcAnalyticsFilterByDate(rawAudits);
+  const audits=qcDedupeAuditsBySrNumber(qcAnalyticsFilterByDate(rawAudits));
   const drill=_qcAnalyticsDrill;
   const dateControls=qcAnalyticsDateControlsHtml();
   const breadcrumb=qcAnalyticsBreadcrumbHtml();
@@ -5297,7 +5341,7 @@ function qcSectionBand(pct){
 // below, applied straight to the clean total from every other item, so a
 // critical failure never double-costs (once via its own weight, again via
 // the deduction).
-const QC_CRITICAL_ITEM_LABELS=new Set(['Data Fabrication','HIPAA Verification','Opening Statement','Data Manipulation','Case Disposition','Representation Protocol','Program Specific Pushback']);
+const QC_CRITICAL_ITEM_LABELS=new Set(['Data Fabrication','HIPAA Verification','Opening Statement','Human Call Required','Data Manipulation','Case Disposition','Representation Protocol','Program Specific Pushback']);
 
 // Groups are checked worst-first (100 → 50 → 30 → 5); within a group, EVERY
 // failed item applies that group's percentage as its own separate
@@ -5306,7 +5350,7 @@ const QC_CRITICAL_ITEM_LABELS=new Set(['Data Fabrication','HIPAA Verification','
 // doesn't change the final number (multiplication commutes) but keeps the
 // banner's trail readable worst-first.
 const QC_DEDUCTION_GROUPS=[
-  {pct:100,labels:['Data Fabrication','HIPAA Verification','Opening Statement']},
+  {pct:100,labels:['Data Fabrication','HIPAA Verification','Opening Statement','Human Call Required']},
   {pct:50,labels:['Data Manipulation']},
   {pct:30,labels:['Case Disposition','Representation Protocol']},
   {pct:5,labels:['Program Specific Pushback']},
@@ -5488,13 +5532,76 @@ function qcScoreSelectHtml(si,ii,axis,val){
   </select></div>`;
 }
 
+// Fixed roster, not free text — Agent Name is exactly what QC Analytics
+// groups and filters by, and a hand-typed variant (typo, extra space,
+// nickname) would silently fragment one agent's stats into two "different"
+// agents, the same reason Team Leader/Type are already closed dropdowns.
+// Sorted for scanability; trimmed since a few source entries had stray
+// trailing spaces that would otherwise create an invisible duplicate name.
+const QC_AGENT_NAME_OPTIONS=['Haseena P','Manjith Kumar Durthati','PAVAN KUMAR KALASU','Abu Talha','Junaid R','KELAM SIVA SANKAR','Sudharshan. S','TRILOK SRINIVAS','Keerthana K','Afraa Fathima','SANTHOSH S','Intiyaj Sharif','Jennifer Sb','Manoj G','Mohammed Zeeshan Rathod','Rakhesh Rohidas Pal','Ajuba Yelmo','Megha Rai','Sneha PN','Saiyad Noorulla','B Riyaz ur Rehman','VINOTH N','Sandhya V','Anil Kumar H S','P Hymavathi','ABHISHEK NINGAPPANAVAR','N Arbiya Taj','R Dravid Kumar','Sharanya','NANDHINI RAVI','Likith Kumar Ambruthaluru','Vighneshwar Hegde','KOTHOLLU DEVENDRA','PALLAVI N','Sehreen Taj','Syed Sahil','Naveena M','Kimdiana Grace','HEMALATHA P','Pooja v','Challa Pavan Kumar','Srinivasan Baskaran','Nandha kumar R','Sanjay S Kumar','Sindhu M','Shreya','Dr. Thanmai Yeruva'].map(n=>n.trim()).sort((a,b)=>a.localeCompare(b));
+
+// Registered at render/filter time and referenced by index (not embedded
+// directly in onmousedown="..." strings) — same reason row/breadcrumb
+// targets elsewhere in this file avoid inlining free-text names: a name
+// containing a quote/apostrophe would otherwise break the attribute string.
+let _qcAgentNameOptionTargets=[];
+function qcAgentNameOptionsHtml(names){
+  _qcAgentNameOptionTargets=names;
+  if(!names.length) return `<div class="qc-analytics-dropdown-empty">No matching agents</div>`;
+  return names.map((name,idx)=>`<div class="qc-analytics-dropdown-option" onmousedown="event.preventDefault();qcSelectAgentNameByIdx(${idx})">${escHtml(name)}</div>`).join('');
+}
+function qcFilterAgentNameOptions(query){
+  const q=(query||'').trim().toLowerCase();
+  const filtered=QC_AGENT_NAME_OPTIONS.filter(n=>n.toLowerCase().includes(q));
+  const panel=document.getElementById('qcAgentNameDropdownPanel');
+  if(panel){ panel.innerHTML=qcAgentNameOptionsHtml(filtered); panel.classList.add('open'); }
+}
+function qcOpenAgentNameDropdown(){
+  qcFilterAgentNameOptions(document.getElementById('qcAgentNameInput')?document.getElementById('qcAgentNameInput').value:'');
+}
+// Runs on blur, delayed — clicking an option fires via onmousedown (which
+// runs before blur and calls qcSelectAgentNameByIdx directly), so by the
+// time this timeout fires the state/input are already correct; this only
+// needs to clean up when the user types a search then clicks away without
+// picking anything, reverting the box back to whatever was actually saved.
+function qcCloseAgentNameDropdown(){
+  setTimeout(()=>{
+    const panel=document.getElementById('qcAgentNameDropdownPanel');
+    if(panel) panel.classList.remove('open');
+    const input=document.getElementById('qcAgentNameInput');
+    if(input) input.value=qcState.case.agentName||'';
+  },150);
+}
+function qcSelectAgentNameByIdx(idx){
+  const name=_qcAgentNameOptionTargets[idx];
+  if(name==null) return;
+  qcUpdateCase('agentName',name);
+  const input=document.getElementById('qcAgentNameInput');
+  if(input) input.value=name;
+  const panel=document.getElementById('qcAgentNameDropdownPanel');
+  if(panel) panel.classList.remove('open');
+}
+function qcAgentNameFieldHtml(){
+  const c=qcState.case||{};
+  const val=(c.agentName||'').toString();
+  return `<div class="qc-field qc-agent-combobox">
+    <label>Agent Name<span class="qc-required-star">*</span></label>
+    <input data-field="agentName" type="text" id="qcAgentNameInput" autocomplete="off" placeholder="Search agent name…"
+      value="${escHtml(val)}"
+      oninput="qcFilterAgentNameOptions(this.value)"
+      onfocus="this.select();qcOpenAgentNameDropdown()"
+      onblur="qcCloseAgentNameDropdown()"
+      onkeydown="if(event.key==='Escape')this.blur()">
+    <div class="qc-analytics-dropdown-panel" id="qcAgentNameDropdownPanel">${qcAgentNameOptionsHtml(QC_AGENT_NAME_OPTIONS)}</div>
+  </div>`;
+}
+
 function renderQCDashboard(){
   const meta=QC_KIND_META[currentQCKind];
   const c=qcState.case;
   const kindProgs=programs.filter(meta.progFilter);
   const progOptions=`<option value="">&#8212; Select Program &#8212;</option>`+kindProgs.map(p=>`<option value="${p.id}" ${c.program===p.id?'selected':''}>${p.label}</option>`).join('');
   const fields=[
-    {k:'agentName',label:'Agent Name',type:'text'},
     {k:'srNumber',label:'SR / Case Number',type:'text'},
     {k:'auditorName',label:'Auditor Name',type:'text'},
     {k:'auditDate',label:'Audit Date',type:'date'},
@@ -5556,7 +5663,7 @@ function renderQCDashboard(){
         <div id="qcSaveStatus" class="qc-save-status" data-role="qc-save-status"></div>
       </div>
     </div>
-    <div class="qc-fields-grid">${programField}${typeField}${teamLeaderField}${fieldsHtml}</div>
+    <div class="qc-fields-grid">${programField}${typeField}${teamLeaderField}${qcAgentNameFieldHtml()}${fieldsHtml}</div>
   </div>
   <div id="qcFatalBanner" class="qc-egregious-banner" style="display:none">&#9888; A fatal item is marked Fail. This is counted in the score and error count like any other item, but flagged here for visibility.</div>
   <div class="qc-score-strip">
@@ -5568,7 +5675,11 @@ function renderQCDashboard(){
   </div>
   <div class="script-search-wrap"><span style="color:#b0bac9;font-size:15px">&#128269;</span><input class="script-search" id="qcSearchInput" type="text" placeholder="Search sections or questions..." oninput="filterQC(this.value)" autocomplete="off"><button class="script-search-clear" onclick="document.getElementById('qcSearchInput').value='';filterQC('')" title="Clear">&#10005;</button><div class="script-search-divider"></div><button class="btn-sec-toggle" onclick="qcExpandAll()" title="Expand all sections">&#8661; Expand All</button><button class="btn-sec-toggle" onclick="qcCollapseAll()" title="Collapse all sections">&#8661; Collapse All</button></div>
   <div class="qc-sections-wrap">${sectionsHtml}</div>
-  <div class="qc-header" style="margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:6px">
+  <div class="qc-header" style="margin-top:8px;padding-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div class="qc-feedback-box">
+      <label for="qcFeedbackTextarea">Overall Feedback / Comments</label>
+      <textarea id="qcFeedbackTextarea" class="qc-feedback-textarea" placeholder="Overall feedback for this audit (optional)…" oninput="qcUpdateCase('feedback',this.value)">${escHtml((c.feedback||'').toString())}</textarea>
+    </div>
     <button class="qc-btn primary" data-role="qc-save-btn" onclick="qcSaveToSheet()">&#9729; Save to Sheet</button>
     <div class="qc-save-status" data-role="qc-save-status"></div>
   </div>`;
@@ -5753,6 +5864,17 @@ function printToPDF(type){
     if(!mainEl){alert('Nothing to print.');return;}
     const mainClone=mainEl.cloneNode(true);
     qcSyncFormValuesIntoClone(mainEl,mainClone);
+    // A <textarea> prints as the fixed-height scrollable box it is on
+    // screen — long feedback would get clipped instead of expanding onto
+    // the page — so swap it for a plain flowing block in the print-only clone.
+    const feedbackLive=mainEl.querySelector('#qcFeedbackTextarea');
+    const feedbackClone=mainClone.querySelector('#qcFeedbackTextarea');
+    if(feedbackLive&&feedbackClone){
+      const feedbackDiv=document.createElement('div');
+      feedbackDiv.className='qc-feedback-print';
+      feedbackDiv.textContent=feedbackLive.value;
+      feedbackClone.replaceWith(feedbackDiv);
+    }
     const qcTitle=QC_KIND_META[currentQCKind].title;
     const styleHtml=[...document.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"], style')].map(el=>el.outerHTML).join('\n');
     const win=window.open('','_blank','width=1100,height=900');
