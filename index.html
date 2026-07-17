@@ -4016,7 +4016,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-17.3";
+const APP_VERSION = "2026-07-17.4";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4239,6 +4239,7 @@ async function qcLoadAnalytics(kind){
   const FRESH_MS=5*60*1000;
   if(cached&&(Date.now()-cached.ts)<FRESH_MS){
     bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+    qcAnalyticsApplyCardFilters();
     return;
   }
   if(!qcWebhookConfigured()){
@@ -4261,6 +4262,7 @@ async function qcLoadAnalytics(kind){
     if(data.status!=='ok')throw new Error(data.message||'Unknown error');
     _qcAnalyticsCache[kind]={data:data.audits,ts:Date.now()};
     bodyEl.innerHTML=renderQCAnalyticsBody(data.audits);
+    qcAnalyticsApplyCardFilters();
   }catch(err){
     bodyEl.innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626">&#10005; Could not load analytics: ${escHtml(err.message)}</div>`;
   }
@@ -4572,7 +4574,7 @@ function qcAnalyticsViewSelectedPrograms(){
   _qcAnalyticsDrill={level:'multi',programs:Array.from(_qcAnalyticsSelectedPrograms),program:null,teamLeader:null,agent:null};
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
-  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+  if(bodyEl&&cached){ bodyEl.innerHTML=renderQCAnalyticsBody(cached.data); qcAnalyticsApplyCardFilters(); }
 }
 
 function qcAnalyticsToggleAgentSelect(idx,checked){
@@ -4592,7 +4594,7 @@ function qcAnalyticsViewSelectedAgents(){
   _qcAnalyticsDrill={level:'multiAgent',program:_qcAnalyticsDrill.program,teamLeader:_qcAnalyticsDrill.teamLeader,agents:Array.from(_qcAnalyticsSelectedAgents),agent:null};
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
-  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+  if(bodyEl&&cached){ bodyEl.innerHTML=renderQCAnalyticsBody(cached.data); qcAnalyticsApplyCardFilters(); }
 }
 
 // Same pattern as program/agent selection, but for the workflow-level
@@ -4621,7 +4623,7 @@ function qcAnalyticsViewSelectedWorkflowAgents(){
   _qcAnalyticsDrill={level:'workflowMultiAgent',agents:Array.from(_qcAnalyticsSelectedWorkflowAgents),program:null,teamLeader:null,agent:null};
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
-  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+  if(bodyEl&&cached){ bodyEl.innerHTML=renderQCAnalyticsBody(cached.data); qcAnalyticsApplyCardFilters(); }
 }
 // "Filter by Team Leader" on the workflow-level "By Agent" list — a pure
 // narrowing filter, not a selection-for-combined-view like Select Agents, so
@@ -4646,7 +4648,7 @@ function qcAnalyticsSetWorkflowTab(tab){
   _qcAnalyticsWorkflowTab=tab;
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
-  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+  if(bodyEl&&cached){ bodyEl.innerHTML=renderQCAnalyticsBody(cached.data); qcAnalyticsApplyCardFilters(); }
 }
 
 // Pure DOM filter, not a re-render — re-rendering the whole body on every
@@ -4721,21 +4723,21 @@ function qcAnalyticsRowClick(idx){
   _qcAnalyticsDrill={level:t.level,program:t.program||null,teamLeader:t.teamLeader||null,agent:t.agent||null};
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
-  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+  if(bodyEl&&cached){ bodyEl.innerHTML=renderQCAnalyticsBody(cached.data); qcAnalyticsApplyCardFilters(); }
 }
 
 function qcAnalyticsSetDateMode(mode){
   _qcAnalyticsDateFilter.mode=mode;
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
-  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+  if(bodyEl&&cached){ bodyEl.innerHTML=renderQCAnalyticsBody(cached.data); qcAnalyticsApplyCardFilters(); }
 }
 
 function qcAnalyticsSetCustomDate(which,val){
   _qcAnalyticsDateFilter[which]=val;
   const bodyEl=document.getElementById('qcAnalyticsBody');
   const cached=_qcAnalyticsCache[_qcAnalyticsKind];
-  if(bodyEl&&cached) bodyEl.innerHTML=renderQCAnalyticsBody(cached.data);
+  if(bodyEl&&cached){ bodyEl.innerHTML=renderQCAnalyticsBody(cached.data); qcAnalyticsApplyCardFilters(); }
 }
 
 function qcAnalyticsFilterByDate(audits){
