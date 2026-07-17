@@ -521,7 +521,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-score-select.v-fail{background:#fef2f2;color:#dc2626;border-color:#fecaca}
 .qc-score-select.v-na{background:#f8fafc;color:#64748b;border-color:#e2e8f0}
 .qc-weight{font-size:11.5px;color:#94a3b8;text-align:center;padding-top:7px;font-weight:600}
-.qc-comment-input{width:100%;padding:6px 8px;border:1px solid #e2e6f0;border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;color:#334155}
+.qc-comment-input{width:100%;padding:6px 8px;border:1px solid #e2e6f0;border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;color:#334155;min-height:30px;resize:vertical;overflow-wrap:anywhere}
 .qc-comment-input:focus{outline:none;border-color:#4263eb}
 .qc-empty-note{font-size:11.5px;color:#94a3b8;padding:10px 0 2px}
 .qc-signedin-chip{display:inline-flex;align-items:center;gap:6px;background:#1e293b;color:#dcfce7;border:1px solid #334155;border-radius:20px;padding:5px 10px 5px 12px;font-size:12px;font-weight:600;white-space:nowrap}
@@ -4013,7 +4013,7 @@ function qcSaveState(){ qcStates[currentQCKind]=qcState; editStore[QC_STATE_KEYS
 //  Deploy google-apps-script/Code.gs as a Web App (see that file's header
 //  comment for exact steps), then paste the resulting /exec URL below.
 // ══════════════════════════════════════════════════════════════
-const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzY-rFH5HfdkZiUmIDmTP34-34Vll61-fvYHqk2OJUXaTD1HKcLBmBToMWXXPtrxSDk/exec";
+const QC_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxaAddEduq-rSRaWIbyaC8d3N04pSC3L3gQX0EJGXhF3HC9LOJH-eNrudYRxj9Q3sKJ/exec";
 function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexOf('PASTE_YOUR')===-1; }
 
 // Bump this string on every push (any change is enough — date+counter is a
@@ -4021,7 +4021,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-17.6";
+const APP_VERSION = "2026-07-17.8";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5305,7 +5305,16 @@ function showQCDashboard(kind){
   const n=document.getElementById(QC_KIND_META[currentQCKind].navId);if(n)n.classList.add("active");
   document.getElementById("main").innerHTML=renderQCDashboard();
   document.querySelectorAll("#main .qc-sections-wrap .section-header .chevron").forEach(c=>c.classList.add("open"));
+  // Comment boxes start at a fixed one-line height (see .qc-comment-input) —
+  // grow any that already hold a saved multi-line comment so it's fully
+  // visible on load, not just after the auditor next types into it.
+  document.querySelectorAll('#main .qc-comment-input').forEach(qcAutoGrowTextarea);
   qcRecalc();
+}
+
+function qcAutoGrowTextarea(el){
+  el.style.height='auto';
+  el.style.height=el.scrollHeight+'px';
 }
 
 function qcProgramInfoHtml(progId){
@@ -5652,7 +5661,7 @@ function renderQCDashboard(){
         ${qcScoreSelectHtml(si,ii,'asked',st.asked||'')}
         ${qcScoreSelectHtml(si,ii,'documented',st.documented||'')}
         <div class="qc-weight">${it.w}</div>
-        <input class="qc-comment-input" placeholder="Comments…" value="${commentVal}" oninput="qcUpdateComment(${si},${ii},this.value)">
+        <textarea class="qc-comment-input" placeholder="Comments…" rows="1" oninput="qcUpdateComment(${si},${ii},this.value);qcAutoGrowTextarea(this)">${commentVal}</textarea>
       </div>`;
     }).join('');
     return `<div class="section">
