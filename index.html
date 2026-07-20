@@ -836,17 +836,17 @@ const programs = [
     mm:mmNucala(),pbm:pbmNucala()
   },
   {
-    id:"spravato",company:"J&J",label:"Spravato (J&J)",icon:"🧠",type:"both",
-    subtitle:"Spravato (esketamine) — REMS Program | Nasal Spray | Office-Administered",
+    id:"jj-neuro",company:"J&J",label:"J&J Neuroscience",icon:"🧠",type:"both",
+    subtitle:"Somatuline Depot · Dysport · Onivyde (MM/PBM) · Tazverik (PBM)",
     programName:"J&J Innovative Medicine sponsored patient support program",
-    callbacks:[{therapy:"Spravato",number:"844-479-4846"}],
+    callbacks:[{therapy:"J&J Neuroscience",number:"844-494-8463"}],
     drugs:[
-      {name:"Spravato",type:"MM",strength:"28mg nasal spray",supply:"1 treatment session",cpt:"99222",jcode:"J3490 / J3590",ndc:"50458-0028-03"},
-      {name:"Spravato",type:"MM",strength:"56mg nasal spray",supply:"1 treatment session",cpt:"99222",jcode:"J3490 / J3590",ndc:"50458-0056-03"},
-      {name:"Spravato",type:"PBM",strength:"28mg nasal spray",supply:"1 day",cpt:"—",jcode:"—",ndc:"50458-0028-03"},
-      {name:"Spravato",type:"PBM",strength:"56mg nasal spray",supply:"1 day",cpt:"—",jcode:"—",ndc:"50458-0056-03"},
+      {name:"Somatuline Depot (injection)",type:"MM/PBM",strength:"60mg, 90mg, 120mg",supply:"28 days",cpt:"96372",jcode:"J1930",ndc:"120mg: 15054-1120-03 | 90mg: 15054-1090-03 | 60mg: 15054-1060-03"},
+      {name:"Dysport (injection)",type:"MM/PBM",strength:"300u, 500u",supply:"90 days",cpt:"64616",jcode:"J0586",ndc:"500u: 15054-0500-01 | 300u: 15054-0530-06"},
+      {name:"Onivyde (infusion, LDD)",type:"MM/PBM",strength:"50mg",supply:"14 days",cpt:"96413",jcode:"J9205",ndc:"15054-0043-01"},
+      {name:"Tazverik (tablet, LDD)",type:"PBM only",strength:"200mg/tab",supply:"as written",cpt:"—",jcode:"—",ndc:"72607-100-00"},
     ],
-    mm:mmSpravato(),pbm:pbmSpravato()
+    mm:mmJJNeuro(),pbm:pbmJJNeuro()
   }
 ];
 
@@ -1271,11 +1271,10 @@ function pbmNucala(){
   return b;
 }
 
-function mmSpravato(){
+function mmJJNeuro(){
   const b=mmStandard("J&J Innovative Medicine sponsored patient support program");
-  // Custom opening — identifies patient and doctor (Spravato MM format)
-  b[0].steps[0]={type:"statement",label:"Script",text:`This is <span class='placeholder'>[Insert Name]</span> with <strong>J&amp;J Innovative Medicine sponsored patient support program</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <strong>Spravato</strong>. Would you please assist me with a determination of coverage?`};
-  // Replace generic Copay Accumulator/Maximizer section with full vendor-list version
+  b[0].steps[0]={type:"statement",label:"Script",text:`This is <span class='placeholder'>[Insert Name]</span> with <strong>J&amp;J Innovative Medicine sponsored patient support program</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <span class='placeholder'>[Drug Name]</span>. Would you please assist me with a determination of coverage?`};
+  b[0].steps.splice(2,0,{type:"instruction",label:"Benefits Collection Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; patient has OON benefits:</strong> only OON benefits collected<br><strong>If Provider network status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> INN benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`});
   const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
   if(accIdx!==-1) b.splice(accIdx,1,{title:"Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
     {type:"question",label:"Q",text:"Is there a Copay Accumulator / Maximizer attached to the policy?",field:"→ Yes / No"},
@@ -1294,26 +1293,32 @@ function mmSpravato(){
     {type:"question",label:"AFP d.",text:"Is member enrollment or participation required before coverage can be approved or paid?",field:"→ Enrollment Required: Yes / No"},
     {type:"question",label:"AFP e.",text:"Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",field:"→ Requirements / Next Steps"},
   ]});
-  // Add REMS question in Drug Acquisition (Spravato-specific — unique REMS requirement)
   const daiIdx=b.findIndex(s=>s.title==="Drug Acquisition");
   if(daiIdx!==-1){
     const spIdx=b[daiIdx].steps.findIndex(s=>s.field&&s.field.includes("Preferred / Open / Mandated"));
-    if(spIdx!==-1) b[daiIdx].steps.splice(spIdx+1,0,{type:"question",label:"⚠️ REMS",text:"Is this Specialty Pharmacy REMS-certified for Spravato?",field:"→ REMS Certified: Yes / No"});
+    if(spIdx!==-1) b[daiIdx].steps.splice(spIdx+1,0,{type:"question",label:"⚠️ REMS",text:"Is this Specialty Pharmacy REMS-certified?",field:"→ REMS Certified: Yes / No"});
   }
   return b;
 }
 
-function pbmSpravato(){
+function pbmJJNeuro(){
   const b=pbmStandard("J&J Innovative Medicine sponsored patient support program",[]);
-  // JJ-style opening (Spravato PBM)
   b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling from a <strong>Johnson &amp; Johnson Innovative Medicine sponsored patient support program</strong> on behalf of <span class='placeholder'>[Insert Provider office / pharmacy / patient name, as applicable]</span> to verify insurance benefits for a patient. Before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes.`};
-  // Add REMS question after preferred SP in Coverage Details (Spravato-specific)
   const ci=b.findIndex(s=>s.title==="Coverage Details");
-  if(ci!==-1){
-    const spStep=b[ci].steps.findIndex(s=>s.text&&s.text.includes("preferred SP"));
-    if(spStep!==-1) b[ci].steps.splice(spStep+1,0,{type:"question",label:"⚠️ REMS",text:"Is this Specialty Pharmacy REMS-certified for Spravato?",field:"→ REMS Certified: Yes / No"});
-  }
-  // Replace the single Copay Accumulator step in Benefit Details with full vendor-list version
+  b[ci].steps=[
+    {type:"statement",label:"Script",text:`I'd like to see if the patient is covered for <span class='placeholder'>[specific drug name]</span> with <span class='placeholder'>[strength, quantity / day supply]</span>. Can you run a test claim?`},
+    {type:"instruction",label:"NOTE",text:"Be sure to provide/verify Medication by NDC."},
+    {type:"question",label:"Q",text:"Is the drug covered?",field:"→ Drug Name, Strength, Qty/Day Supply | Covered: Yes/No"},
+    {type:"question",label:"Q",text:"Is there a PA required for [Drug name]? If not — is there a Formulary Exception?",field:"→ Prior Auth or Formulary Exception"},
+    {type:"branch",label:"PA on file — APPROVED",text:"PA dept name & number | PA Ref ID | Effective date | End date | Total Approved units | Verify provider name matches BV request | Confirm J-code / CPT / DX are on auth"},
+    {type:"branch",label:"PA on file — DENIED",text:"PA dept name & number | Denial date | Denial reason | Submission method (Phone/Fax/Portal) | TAT | Check for other active auth"},
+    {type:"branch",label:"PA on file — PENDING",text:"PA dept name & number | Reference Number | Submitted On | Submission Method | TAT | Verify provider name matches BV request"},
+    {type:"branch",label:"PA NOT on file",text:"PA dept name & number | Submission method (Phone/Fax/Portal) | PA form required? Download instructions | TAT Standard | TAT Urgent"},
+    {type:"branch",label:"Appeal (drug not covered & PA not required)",text:"Approved: dept, number, ref#, submitted on, count | Denied: dept, number, method, TAT | Pending: dept, number, ref#, submitted on, notification, TAT, website, count | Not on file: dept, number, method, TAT, notification, website, count"},
+    {type:"question",label:"Q",text:"Can you help me with the name of the preferred SP(s) who can dispense [Drug name], phone number and fax number?",field:"→ Preferred SP | SP Phone | SP Fax"},
+    {type:"question",label:"⚠️ REMS",text:"Is this Specialty Pharmacy REMS-certified?",field:"→ REMS Certified: Yes / No"},
+    {type:"instruction",label:"If drug not covered",text:"Ask for Prior Auth. If PA not required → ask for Formulary Exception info."},
+  ];
   const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
   const caIdx=b[bdIdx].steps.findIndex(s=>s.field&&s.field.includes("Accumulator"));
   if(caIdx!==-1) b[bdIdx].steps.splice(caIdx,1,
