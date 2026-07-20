@@ -1273,24 +1273,9 @@ function mmJJNeuro(){
   const b=mmStandard("J&J Innovative Medicine sponsored patient support program");
   b[0].steps[0]={type:"statement",label:"Script",text:`This is <span class='placeholder'>[Insert Name]</span> with <strong>J&amp;J Innovative Medicine sponsored patient support program</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <span class='placeholder'>[Drug Name]</span>. Would you please assist me with a determination of coverage?`};
   b[0].steps.splice(2,0,{type:"instruction",label:"Benefits Collection Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; patient has OON benefits:</strong> only OON benefits collected<br><strong>If Provider network status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> INN benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`});
-  const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
-  if(accIdx!==-1) b.splice(accIdx,1,{title:"Copay Maximizer Programs & AFPs",hdr:"hdr-benefit",steps:[
-    {type:"question",label:"Q",text:"Is there a Copay Accumulator / Maximizer attached to the policy?",field:"→ Yes / No"},
-    {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
-    {type:"instruction",label:"If rep asks for clarification",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
-    {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
-    {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
-    {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
-    {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
-    {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
-    {type:"branch",label:"If NO",text:"Continue with rest of script."},
-    {type:"branch",label:"If YES — ask",text:"Answer each question below:"},
-    {type:"question",label:"AFP a.",text:"Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?",field:"→ AFP Type"},
-    {type:"question",label:"AFP b.",text:"What is the name of the program, vendor, or organization administering this requirement?",field:"→ Program / Vendor Name"},
-    {type:"question",label:"AFP c.",text:"Is there a dedicated phone number, website, or contact department for this program?",field:"→ Phone | Website | Department"},
-    {type:"question",label:"AFP d.",text:"Is member enrollment or participation required before coverage can be approved or paid?",field:"→ Enrollment Required: Yes / No"},
-    {type:"question",label:"AFP e.",text:"Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?",field:"→ Requirements / Next Steps"},
-  ]});
+  // Copay Accumulator / Maximizer section is left as mmStandard()'s default
+  // here — just the one Yes/No question, no AFP sub-flow (unlike Sandoz,
+  // which still overrides this section with the fuller AFP-inclusive version).
   const daiIdx=b.findIndex(s=>s.title==="Drug Acquisition");
   if(daiIdx!==-1){
     const spIdx=b[daiIdx].steps.findIndex(s=>s.field&&s.field.includes("Preferred / Open / Mandated"));
@@ -4022,7 +4007,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-17.10";
+const APP_VERSION = "2026-07-17.11";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
