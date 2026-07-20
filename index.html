@@ -1341,7 +1341,7 @@ function pbmJJNeuro(){
 function mmSandoz(){
   const b=mmStandard("Sandoz One Source™");
   // Override opening statement
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, I am <span class='placeholder'>[Insert Name]</span> from <strong>Sandoz One Source™</strong>. I am calling <strong>on behalf of the provider's office</strong> to verify insurance benefits for a patient; before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes. I am calling to verify member eligibility for benefits specific to <span class='placeholder'>WYOST/Jubbonti</span> and its administration, which will be done in the <span class='placeholder'>[physician office / hospital outpatient facility / site of care]</span>. First, I have some general questions about the policy. Are you able to assist me?`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient Access Manager's Name]</span>, and I'm calling on behalf of <strong>TC Script Pharmacy</strong>, with the <strong>Sandoz One Source™</strong> program, on a recorded line to verify benefits for member <span class='placeholder'>[Patient's Name]</span> with date of birth <span class='placeholder'>[DOB]</span>. My callback number is <span class='placeholder'>[Callback Number]</span>.`};
   // Remove the generic "Copay Accumulator / Maximizer" section
   const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
   if(accIdx!==-1) b.splice(accIdx,1);
@@ -1371,9 +1371,7 @@ function mmSandoz(){
 function pbmSandoz(){
   return [
     {title:"Opening Statement",hdr:"hdr-opening",steps:[
-      {type:"instruction",label:"⚠️ PAYER-DEPENDENT",text:"Use the correct opening based on which payer you are calling."},
-      {type:"statement",label:"All Payers EXCEPT Prime &amp; OptumRx",text:`Hello, I am <span class='placeholder'>[Insert Name]</span> from <strong>Sandoz One Source™</strong>. I am calling <strong>on behalf of the provider's office</strong> to verify insurance benefits for a patient; before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes. I am calling to verify member eligibility for benefits specific to <span class='placeholder'>WYOST/Jubbonti</span> and its administration, which will be done in the <span class='placeholder'>[physician office / hospital outpatient facility / site of care]</span>. First, I have some general questions about the policy. Are you able to assist me?`},
-      {type:"instruction",label:"🟢 Prime &amp; OptumRx ONLY",text:`Hello, I am <span class='placeholder'>[Insert Name]</span> from <strong>Sandoz One Source™</strong>. I am calling <strong>on behalf of TC Scripts</strong> to verify insurance benefits for a patient; before we begin, I need to inform you that this call is being recorded for quality assurance and training purposes. I am calling to verify member eligibility for benefits specific to <span class='placeholder'>WYOST/Jubbonti</span> and its administration, which will be done in the <span class='placeholder'>[physician office / hospital outpatient facility / site of care]</span>. First, I have some general questions about the policy. Are you able to assist me?`},
+      {type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient Access Manager's Name]</span>, and I'm calling on behalf of <strong>TC Script Pharmacy</strong>, with the <strong>Sandoz One Source™</strong> program, on a recorded line to verify benefits for member <span class='placeholder'>[Patient's Name]</span> with date of birth <span class='placeholder'>[DOB]</span>. My callback number is <span class='placeholder'>[Callback Number]</span>.`},
       {type:"instruction",label:"NOTE",text:"Only share the drug name you are confirming benefits for — do not provide names of both drugs in same call."},
     ]},
     {title:"Step 1 — General Policy Information",hdr:"hdr-plan",steps:[
@@ -4024,7 +4022,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-17.9";
+const APP_VERSION = "2026-07-17.10";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
