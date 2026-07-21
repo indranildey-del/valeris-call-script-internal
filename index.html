@@ -1651,7 +1651,7 @@ const sidebarEl=document.getElementById("sidebar");
 // ── Drug Reference nav item ──
 const navSection=document.createElement("div");
 navSection.className="sidebar-nav-section";
-navSection.innerHTML=`<div class="sidebar-nav-item" id="navDrugInfo" onclick="showDrugInfo()">💊 <span>Drug Reference</span></div><div class="sidebar-nav-item" id="navTerms" onclick="showTerminology()">📚 <span>Terminologies</span></div><div class="sidebar-nav-item" id="navFieldRef" onclick="showFieldRef()">📋 <span>PBM Field Reference</span></div><div class="sidebar-nav-item sidebar-nav-parent" id="navQCGroup" onclick="qcToggleNavGroup()">🎯 <span style="flex:1">QC</span><span class="nav-chevron" id="qcNavChevron">&#9654;</span></div><div class="sidebar-nav-children" id="qcNavChildren" style="display:none"><div class="sidebar-nav-item sidebar-nav-child" id="navQC" onclick="showQCDashboard('mm')">🎯 <span>MM QC Scorecard</span></div><div class="sidebar-nav-item sidebar-nav-child" id="navQCPBM" onclick="showQCDashboard('pbm')">💊 <span>PBM QC Scorecard</span></div><div class="sidebar-nav-item sidebar-nav-child" id="navQCAnalytics" onclick="showQCAnalytics()">📊 <span>QC Analytics</span></div></div>`;
+navSection.innerHTML=`<div class="sidebar-nav-item" id="navDrugInfo" onclick="showDrugInfo()">💊 <span>Drug Reference</span></div><div class="sidebar-nav-item" id="navTerms" onclick="showTerminology()">📚 <span>Terminologies</span></div><div class="sidebar-nav-item" id="navFieldRef" onclick="showFieldRef()">📋 <span>PBM Field Reference</span></div><div class="sidebar-nav-item" id="navCallFlow" onclick="showCallFlow()">🔀 <span>Call Flow</span></div><div class="sidebar-nav-item sidebar-nav-parent" id="navQCGroup" onclick="qcToggleNavGroup()">🎯 <span style="flex:1">QC</span><span class="nav-chevron" id="qcNavChevron">&#9654;</span></div><div class="sidebar-nav-children" id="qcNavChildren" style="display:none"><div class="sidebar-nav-item sidebar-nav-child" id="navQC" onclick="showQCDashboard('mm')">🎯 <span>MM QC Scorecard</span></div><div class="sidebar-nav-item sidebar-nav-child" id="navQCPBM" onclick="showQCDashboard('pbm')">💊 <span>PBM QC Scorecard</span></div><div class="sidebar-nav-item sidebar-nav-child" id="navQCAnalytics" onclick="showQCAnalytics()">📊 <span>QC Analytics</span></div></div>`;
 sidebarEl.appendChild(navSection);
 companies.forEach(co=>{
   const group=programs.filter(p=>p.company===co);
@@ -4007,7 +4007,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-17.12";
+const APP_VERSION = "2026-07-17.13";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -4176,6 +4176,228 @@ let _qcAnalyticsWorkflowTLFilter=new Set();
 // instead of re-deriving the same aggregation, and cross-references live DOM
 // visibility (search/select/TL-filter) so the export matches what's on screen.
 let _qcAnalyticsExportCtx=null;
+
+// ══════════════════════════════════════════════════════════════
+//  CALL FLOW — Human Case Flow Decision Tree
+// ══════════════════════════════════════════════════════════════
+function showCallFlow(){
+  currentView="callflow";currentProgId="";
+  document.querySelectorAll(".sidebar-item").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".sidebar-nav-item").forEach(el=>el.classList.remove("active"));
+  const n=document.getElementById("navCallFlow");if(n)n.classList.add("active");
+  document.getElementById("main").innerHTML=renderCallFlow();
+}
+
+function renderCallFlow(){
+  return `
+<div style="max-width:1200px;margin:0 auto">
+<div style="background:#fff;border-radius:12px;padding:20px 24px;margin-bottom:18px;border:1px solid #e5e9f2;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+  <div style="width:46px;height:46px;border-radius:12px;background:#eff2ff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🔀</div>
+  <div>
+    <div style="font-size:19px;font-weight:700;color:#111827;letter-spacing:-.2px">Human Case Flow</div>
+    <div style="font-size:12px;color:#6b7280;margin-top:3px">Post-AI-call human review decision tree — 4 outcome pathways</div>
+  </div>
+</div>
+
+<div style="background:#0f1117;border-radius:12px;border:1px solid #1e2433;padding:28px 20px 40px;overflow-x:auto">
+
+<!-- legend -->
+<div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-bottom:26px">
+  ${[['#2a7ab0','Verification Checks'],['#c9922a','Decision Gate'],['#2a7a4b','Audit / Action'],['#a0253b','Human Call'],['#2dbe6c','Mark Complete']].map(([c,l])=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#aab2c8"><div style="width:12px;height:12px;border-radius:2px;background:${c};flex-shrink:0"></div>${l}</div>`).join('')}
+</div>
+
+<!-- entry -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:0;margin-bottom:0">
+  <div style="background:#3b4bdb;border:2px solid #5c6ef8;border-radius:8px;padding:10px 28px;font-size:13px;font-weight:700;color:#fff;text-align:center;min-width:200px">📋 Case from Client</div>
+  <div style="width:2px;height:14px;background:#3b4bdb;margin:0 auto"></div>
+  <div style="background:#1e2a4a;border:2px solid #3b4bdb;border-radius:8px;padding:10px 28px;font-size:13px;font-weight:600;color:#a8b4e8;text-align:center;min-width:200px">🤖 AI Call Executed</div>
+  <div style="width:2px;height:10px;background:#3a3f52;margin:0 auto"></div>
+  <div style="font-size:9px;font-weight:700;color:#555a78;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">4 possible outcomes</div>
+</div>
+
+<!-- splitter bar -->
+<div style="position:relative;max-width:1100px;margin:0 auto 0;height:18px">
+  <div style="position:absolute;top:50%;left:12.5%;right:12.5%;height:2px;background:#3a3f52;transform:translateY(-50%)"></div>
+  ${['12.5%','37.5%','62.5%','87.5%'].map(l=>`<div style="position:absolute;left:${l};top:0;width:2px;height:18px;background:#3a3f52;transform:translateX(-50%)"></div>`).join('')}
+</div>
+
+<!-- 4 branches -->
+<div style="display:flex;gap:14px;align-items:flex-start;max-width:1100px;margin:0 auto">
+
+${cfBranch({
+  hdr:'OUTCOME 1',sub:'All Info Received',bc:'#2a7ab0',hc:'#1a3a5c',tc:'#7ac4f8',
+  body:`
+    ${cfNode('check','✅ Check 1','All fields in correct slots?','#2a7ab0','#132840','#a8d4f5')}
+    ${cfConn('#2a7ab0')}
+    ${cfNode('check','🔍 Check 2','Review AI audit report','#2a7ab0','#132840','#a8d4f5')}
+    ${cfConn('#2a7ab0')}
+    ${cfNode('check','📎 Check 3','Click Evidence button','#2a7ab0','#132840','#a8d4f5')}
+    ${cfConn('#2a7ab0')}
+    ${cfNode('check','🧠 Check 4 — C.O.T.','Chain of Thoughts review','#2a7ab0','#132840','#a8d4f5')}
+    ${cfConn('#c9922a')}
+    ${cfDiamond('Changes<br>Needed?')}
+    <div style="display:flex;width:100%;gap:6px;margin-top:4px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="font-size:9px;font-weight:700;background:#0f3a20;color:#2dbe6c;padding:2px 6px;border-radius:3px">YES</div>
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','▶ Start Human Audit','','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','✏️ Make Changes','','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfComplete()}
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="font-size:9px;font-weight:700;background:#3a0f14;color:#e05565;padding:2px 6px;border-radius:3px">NO</div>
+        ${cfConn('#3a3f52')}
+        ${cfComplete()}
+        ${cfConn('#3a3f52')}
+        ${cfNode('note','','Leave notes explaining why closed without changes','#555a78','#1e1e2e','#8891a8',true)}
+      </div>
+    </div>
+    <div style="font-size:9px;font-weight:700;color:#555a78;letter-spacing:1px;text-transform:uppercase;text-align:center;margin:10px 0 2px">— or after C.O.T. —</div>
+    ${cfDiamond('Human Call<br>Needed?')}
+    ${cfConn('#a0253b')}
+    ${cfNode('human','📞 Make Human Call','','#a0253b','#2b1118','#f5a8b8')}
+    ${cfConn('#2a7a4b')}
+    ${cfNode('action','📝 Update fields','Before disposing call','#2a7a4b','#112b1e','#7af5b4')}
+    ${cfConn('#2a7a4b')}
+    ${cfNode('note','⚠ If forgot during call','▶ Start Human Audit → Update fields','#555a78','#1e1e2e','#8891a8',true)}
+    ${cfConn('#2a7a4b')}
+    ${cfComplete()}
+  `
+})}
+
+${cfBranch({
+  hdr:'OUTCOME 2',sub:'Partial Info Received',bc:'#b07a2a',hc:'#3a2a1a',tc:'#f8c47a',
+  body:`
+    ${cfNode('check','✅ Check 1','All fields in correct slots?','#b07a2a','#2a1e0f','#f5d8a0')}
+    ${cfConn('#c9922a')}
+    ${cfDiamond('Extraction<br>Issue?')}
+    <div style="display:flex;width:100%;gap:6px;margin-top:4px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="font-size:9px;font-weight:700;background:#0f3a20;color:#2dbe6c;padding:2px 6px;border-radius:3px">YES</div>
+        ${cfConn('#2a7ab0')}
+        ${cfNode('check','📎 Evidence','Click for blank fields','#2a7ab0','#132840','#a8d4f5')}
+        ${cfConn('#2a7ab0')}
+        ${cfNode('check','🧠 C.O.T.','Review chain of thoughts','#2a7ab0','#132840','#a8d4f5')}
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','▶ Start Human Audit','','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','✏️ Update blank fields','','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfComplete()}
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="font-size:9px;font-weight:700;background:#3a0f14;color:#e05565;padding:2px 6px;border-radius:3px">NO</div>
+        ${cfConn('#3a3f52')}
+        ${cfNode('note','','No extraction issue &amp; no payer-specific rules','#555a78','#1e1e2e','#8891a8',true)}
+        ${cfConn('#a0253b')}
+        ${cfNode('human','📞 Human Call','','#a0253b','#2b1118','#f5a8b8')}
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','📝 Update all fields','Per scenario','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfComplete()}
+      </div>
+    </div>
+  `
+})}
+
+${cfBranch({
+  hdr:'OUTCOME 3',sub:'No Info Received',bc:'#7a2ab0',hc:'#2a1a3a',tc:'#c87af8',
+  body:`
+    ${cfNode('check','✅ Check 1','Any data in fields?','#7a2ab0','#1e1030','#d4a8f5')}
+    ${cfConn('#c9922a')}
+    ${cfDiamond('Extraction<br>Issue?')}
+    <div style="display:flex;width:100%;gap:6px;margin-top:4px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="font-size:9px;font-weight:700;background:#0f3a20;color:#2dbe6c;padding:2px 6px;border-radius:3px">YES</div>
+        ${cfConn('#2a7ab0')}
+        ${cfNode('check','📎 Evidence','Click for blank fields','#7a2ab0','#1e1030','#d4a8f5')}
+        ${cfConn('#2a7ab0')}
+        ${cfNode('check','🧠 C.O.T.','Review chain of thoughts','#7a2ab0','#1e1030','#d4a8f5')}
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','▶ Start Human Audit','','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','✏️ Update blank fields','','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfComplete()}
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="font-size:9px;font-weight:700;background:#3a0f14;color:#e05565;padding:2px 6px;border-radius:3px">NO</div>
+        ${cfConn('#3a3f52')}
+        ${cfNode('note','','No extraction issue &amp; no payer-specific rules','#555a78','#1e1e2e','#8891a8',true)}
+        ${cfConn('#a0253b')}
+        ${cfNode('human','📞 Human Call','','#a0253b','#2b1118','#f5a8b8')}
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','📝 Update all fields','Per scenario','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfComplete()}
+      </div>
+    </div>
+  `
+})}
+
+${cfBranch({
+  hdr:'OUTCOME 4',sub:'Member Not Found',bc:'#2ab07a',hc:'#1a3a2a',tc:'#7af8c4',
+  body:`
+    ${cfNode('note','','Member ID does not exist or not found by AI','#2ab07a','#0f2d1a','#7af5c4',true)}
+    ${cfConn('#c9922a')}
+    ${cfDiamond('2 Reps × 2 AI Calls tried MemberID + Name + DOB?')}
+    <div style="font-size:9px;color:#8891a8;text-align:center;margin-bottom:4px">Both attempts still failed?</div>
+    <div style="display:flex;width:100%;gap:6px;margin-top:0">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="font-size:9px;font-weight:700;background:#0f3a20;color:#2dbe6c;padding:2px 6px;border-radius:3px">YES</div>
+        ${cfConn('#2a7a4b')}
+        ${cfNode('note','','No human call needed','#2dbe6c','#0f2d1a','#2dbe6c',true)}
+        ${cfConn('#2a7a4b')}
+        ${cfComplete()}
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="font-size:9px;font-weight:700;background:#3a0f14;color:#e05565;padding:2px 6px;border-radius:3px">NO</div>
+        ${cfConn('#a0253b')}
+        ${cfNode('human','📞 Human Call','','#a0253b','#2b1118','#f5a8b8')}
+        ${cfConn('#2a7a4b')}
+        ${cfNode('action','📝 Update all fields','Per scenario','#2a7a4b','#112b1e','#7af5b4')}
+        ${cfConn('#2a7a4b')}
+        ${cfComplete()}
+      </div>
+    </div>
+  `
+})}
+
+</div><!-- end branches -->
+</div><!-- end dark panel -->
+</div>`;
+}
+
+function cfBranch({hdr,sub,bc,hc,tc,body}){
+  return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0;min-width:0">
+    <div style="background:${hc};border:2px solid ${bc};border-bottom:none;border-radius:8px 8px 0 0;padding:9px 8px;font-size:10px;font-weight:700;text-align:center;width:100%;color:${tc};letter-spacing:.3px;line-height:1.4">${hdr}<br><span style="font-weight:500;font-size:9px;opacity:.85">${sub}</span></div>
+    <div style="width:100%;border-left:2px solid ${bc};border-right:2px solid ${bc};border-bottom:2px solid ${bc};border-radius:0 0 8px 8px;padding:10px 8px 14px;display:flex;flex-direction:column;align-items:center;gap:0">${body}</div>
+  </div>`;
+}
+
+function cfNode(type,label,text,borderColor,bg,color,italic=false){
+  const lbl=label?`<div style="font-size:9px;font-weight:700;color:${color};margin-bottom:2px;opacity:.8">${label}</div>`:'';
+  const txt=text?`<div style="font-size:10px;color:${color};line-height:1.4;${italic?'font-style:italic;opacity:.8':''}">${text}</div>`:'';
+  return `<div style="width:100%;border-radius:6px;padding:7px 8px;text-align:center;background:${bg};border:1.5px ${italic?'dashed':'solid'} ${borderColor}">${lbl}${txt}</div>`;
+}
+
+function cfConn(color){
+  return `<div style="width:2px;height:12px;background:${color};margin:0 auto;flex-shrink:0"></div>`;
+}
+
+function cfDiamond(text){
+  return `<div style="display:flex;flex-direction:column;align-items:center;width:100%;margin:2px 0">
+    <div style="width:68px;height:68px;transform:rotate(45deg);border-radius:4px;background:#3a2a08;border:2px solid #c9922a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <div style="transform:rotate(-45deg);font-size:9px;font-weight:700;text-align:center;color:#f5c97a;line-height:1.25;width:80px;padding:2px">${text}</div>
+    </div>
+  </div>`;
+}
+
+function cfComplete(){
+  return `<div style="width:100%;border-radius:6px;padding:7px 8px;text-align:center;background:#0f2d1a;border:2px solid #2dbe6c;font-size:11px;font-weight:700;color:#2dbe6c">✔ Mark Complete</div>`;
+}
 
 function showQCAnalytics(){
   currentView='qc_analytics';currentProgId='';
@@ -4874,8 +5096,29 @@ function qcAnalyticsEmptyRow(){
 // Leader/Agent/individual audit) so you can see who/what drove that day's
 // errors; a multi-day range (or All Time) shows the per-day average instead,
 // so day-to-day trend isn't skewed by days with more or fewer audits.
+// The trend line only ever shows the 5 most recent working days (Mon–Fri),
+// including today — independent of whatever broader date-range filter is
+// selected above it (All Time/30d/Custom can still pull in far more history
+// for the audit count/avg score/etc., but the line itself stays capped so
+// it's always readable at a glance instead of stretching across months).
+// "Today" only counts if it's itself a weekday; a weekend "today" just
+// means the most recent weekday becomes the newest of the 5 points.
+function qcAnalyticsLastNWorkingDayStrings(n){
+  const out=[];
+  const d=new Date(); d.setHours(0,0,0,0);
+  while(out.length<n){
+    const dow=d.getDay(); // 0=Sun, 6=Sat
+    if(dow!==0&&dow!==6){
+      const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+      out.unshift(y+'-'+m+'-'+day);
+    }
+    d.setDate(d.getDate()-1);
+  }
+  return out; // oldest first
+}
 function qcAnalyticsTrendFromDates(errorTrend){
-  return errorTrend.map(p=>({label:qcShortDate(p.date),value:p.errors}));
+  const workingDays=new Set(qcAnalyticsLastNWorkingDayStrings(5));
+  return errorTrend.filter(p=>workingDays.has(p.date)).map(p=>({label:qcShortDate(p.date),value:p.errors}));
 }
 function qcAnalyticsTrendFromChildren(children){
   return children.map(c=>({label:c.name,value:c.avgErrors}));
