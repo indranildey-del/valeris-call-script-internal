@@ -1326,7 +1326,7 @@ function pbmJJNeuro(){
 function mmSandoz(){
   const b=mmStandard("Sandoz One Source™");
   // Override opening statement
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient Access Manager's Name]</span>, and I'm calling on behalf of <strong>TC Script Pharmacy</strong>, with the <strong>Sandoz One Source™</strong> program, on a recorded line to verify benefits for member <span class='placeholder'>[Patient's Name]</span> with date of birth <span class='placeholder'>[DOB]</span>. My callback number is <span class='placeholder'>[Callback Number]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, my name is <span class='placeholder'>[Patient Access Manager's name]</span>, calling on behalf of <strong>TC Script Pharmacy</strong>, from the <strong>Sandoz Patient Support</strong> for <span class='placeholder'>&lt;drug name&gt;</span>, on a recorded line to verify benefits for member <span class='placeholder'>[patient's name]</span>, date of birth <span class='placeholder'>[DOB]</span>.`};
   // Remove the generic "Copay Accumulator / Maximizer" section
   const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
   if(accIdx!==-1) b.splice(accIdx,1);
@@ -1356,7 +1356,7 @@ function mmSandoz(){
 function pbmSandoz(){
   return [
     {title:"Opening Statement",hdr:"hdr-opening",steps:[
-      {type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient Access Manager's Name]</span>, and I'm calling on behalf of <strong>TC Script Pharmacy</strong>, with the <strong>Sandoz One Source™</strong> program, on a recorded line to verify benefits for member <span class='placeholder'>[Patient's Name]</span> with date of birth <span class='placeholder'>[DOB]</span>. My callback number is <span class='placeholder'>[Callback Number]</span>.`},
+      {type:"statement",label:"Script",text:`Hi, my name is <span class='placeholder'>[Patient Access Manager's name]</span>, calling on behalf of <strong>TC Script Pharmacy</strong>, from the <strong>Sandoz Patient Support</strong> for <span class='placeholder'>&lt;drug name&gt;</span>, on a recorded line to verify benefits for member <span class='placeholder'>[patient's name]</span>, date of birth <span class='placeholder'>[DOB]</span>.`},
       {type:"instruction",label:"NOTE",text:"Only share the drug name you are confirming benefits for — do not provide names of both drugs in same call."},
     ]},
     {title:"Step 1 — General Policy Information",hdr:"hdr-plan",steps:[
