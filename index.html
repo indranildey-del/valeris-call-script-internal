@@ -1327,6 +1327,9 @@ function mmSandoz(){
   const b=mmStandard("Sandoz One Source™");
   // Override opening statement
   b[0].steps[0]={type:"statement",label:"Script",text:`Hi, my name is <span class='placeholder'>[Patient Access Manager's name]</span>, calling on behalf of <strong>TC Script Pharmacy</strong>, from the <strong>Sandoz Patient Support</strong> for <span class='placeholder'>&lt;drug name&gt;</span>, on a recorded line to verify benefits for member <span class='placeholder'>[patient's name]</span>, date of birth <span class='placeholder'>[DOB]</span>.`};
+  // Override Benefits Details opening statement (J-code → Q-code)
+  const bdIdx=b.findIndex(s=>s.title==="Benefits Details");
+  if(bdIdx!==-1) b[bdIdx].steps[0]={type:"statement",label:"Script",text:`The provider would like to know — is <span class='placeholder'>[Drug Q-code]</span> with <span class='placeholder'>[DX code]</span> covered under the patient's plan? Services are being rendered outpatient in the specialist office with no office visit being billed.`};
   // Remove the generic "Copay Accumulator / Maximizer" section
   const accIdx=b.findIndex(s=>s.title==="Copay Accumulator / Maximizer");
   if(accIdx!==-1) b.splice(accIdx,1);
