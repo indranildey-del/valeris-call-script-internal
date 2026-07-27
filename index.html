@@ -1869,7 +1869,7 @@ function renderScript(sections,progId,tabType){
   }).join("");
   const searchBar=`<div class="script-search-wrap"><span style="color:#b0bac9;font-size:15px">&#128269;</span><input class="script-search" id="scriptSearchInput" type="text" placeholder="Search sections or questions..." oninput="filterScript(this.value)" autocomplete="off"><button class="script-search-clear" onclick="document.getElementById('scriptSearchInput').value='';filterScript('')" title="Clear">&#10005;</button><div class="script-search-divider"></div><button class="btn-sec-toggle" onclick="expandAllSections()" title="Expand all sections">&#8661; Expand All</button><button class="btn-sec-toggle" onclick="collapseAllSections()" title="Collapse all sections">&#8661; Collapse All</button><div class="script-search-divider"></div><button class="btn-clear-answers" onclick="clearAllAnswers()" title="Erase all typed answers">&#10005; Clear Answers</button></div>`;
   const naPanel=tabType==='pbm'?renderNAPanel():'';
-  const naLegend=tabType==='pbm'?`<div class="na-legend"><span class="na-legend-label">Badge Legend:</span><div class="na-legend-item"><span class="na-accept-badge na-ok">✓ N/A OK</span><span class="na-legend-desc">Payer saying "not available" is acceptable — record and move on</span></div><div class="na-legend-item"><span class="na-accept-badge na-no">✗ N/A</span><span class="na-legend-desc">Must obtain a value — "not available" is not acceptable for this field</span></div></div>`:'';
+  const naLegend=(tabType==='pbm'||tabType==='mm'||tabType==='other')?`<div class="na-legend"><span class="na-legend-label">Badge Legend:</span><div class="na-legend-item"><span class="na-accept-badge na-ok">✓ N/A OK</span><span class="na-legend-desc">Payer saying "not available" is acceptable — record and move on</span></div><div class="na-legend-item"><span class="na-accept-badge na-no">✗ N/A</span><span class="na-legend-desc">Must obtain a value — "not available" is not acceptable for this field</span></div></div>`:'';
   return naLegend+naPanel+searchBar+restoreBar+`<div class="script-container" ondragover="event.preventDefault()" ondrop="dropSection(event,'${progId}','${tabType}')">${sectionsHtml}</div>`;
 }
 
@@ -1987,7 +1987,7 @@ function renderAddedStep(s,progId,tabType,si,ai,dAttrs=''){
   return `<div class="step ${typeClass}" ${dAttrs} id="addstep_${CSS.escape(addedKey)}">
     <div class="step-label">${s.label||cap} <span class="added-badge">Added</span></div>
     <div class="step-text step-content-text">${applyScriptHL(s.text,s.type)}</div>
-    ${(()=>{const isPBM=tabType==='pbm';const ns=isPBM&&s.type==='question'?getPBMNAInfo(s.field,s.text):null;const nb=ns===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:ns===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';return s.field?`<div class="step-field step-content-field"><span>${s.field}</span>${nb}</div>`:nb?`<div class="step-field">${nb}</div>`:''})()}
+    ${(()=>{const ns=s.type==='question'?(tabType==='pbm'?getPBMNAInfo(s.field,s.text):tabType==='mm'?getMMNAInfo(s.field,s.text):tabType==='other'?getTransportNAInfo(s.field,s.text):null):null;const nb=ns===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:ns===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';return s.field?`<div class="step-field step-content-field"><span>${s.field}</span>${nb}</div>`:nb?`<div class="step-field">${nb}</div>`:''})()}
     ${addedAnswerHtml}
     <button class="copy-btn" onclick="(function(btn){const el=btn.closest('.step');if(!el)return;const textEl=el.querySelector('.step-content-text');const fieldEl=el.querySelector('.step-content-field span');let txt='';if(textEl)txt+=textEl.innerText||textEl.textContent||'';if(fieldEl)txt+='\\n'+(fieldEl.innerText||fieldEl.textContent||'');navigator.clipboard.writeText(txt.trim()).then(()=>{const orig=btn.innerHTML;btn.innerHTML='✓ Copied';btn.style.color='#10b981';setTimeout(()=>{btn.innerHTML=orig;btn.style.color='';},1500)});})(this)" title="Copy question">&#128203;</button>
   </div>`;
@@ -2087,6 +2087,111 @@ function getPBMNAInfo(field,text){
   if(f.includes('calendar / fiscal')||f.includes('renewal month')) return true;
   return null;
 }
+
+function getMMNAInfo(field,text){
+  if(!field) return null;
+  const f=field.toLowerCase();
+  const t=(text||'').replace(/<[^>]+>/g,'').toLowerCase();
+  // Plan Info
+  if(f.includes('plan effective date')) return false;
+  if(f.includes('plan term')||f.includes('term/end date')) return true;
+  if(f.includes('benefit year type')||f.includes('renewal date')) return false;
+  if(f.includes('plan type:')) return false;
+  if(f.includes('commercial /')||f==='→ commercial / medicare / medicare advantage / tricare') return true;
+  if(f.includes('hcp network status')||f.includes('in / oon')) return true;
+  if(f.includes('cob:')||f.includes('primary / secondary / tertiary')) return false;
+  if(f.includes('other insurance on file')||f.includes('primary plan: yes / no')) return true;
+  // Referral
+  if(f.includes('referral number')) return false;
+  if(f.includes('referral start date')||f.includes('referral end date')) return false;
+  if(f.includes('approved visits')) return false;
+  // Benefits Details
+  if(f.includes('is drug covered')) return false;
+  if(f.includes('j-code copay')||f.includes('q-code copay')) return false;
+  if(f.includes('covered @ 100%')) return false;
+  if(f.includes('individual deductible:')) return false;
+  if(f.includes('family deductible:')) return false;
+  if(f.includes('individual oop max:')) return false;
+  if(f.includes('family oop max:')) return false;
+  if(f.includes('admin (cpt code)')) return false;
+  if(f.includes('specialist office visit copay')) return false;
+  if(f.includes('authorization required:')) return false;
+  // Step Therapy
+  if(f.includes('step therapy required')||f.includes('step therapy drug')||f.includes('step therapy process')) return true;
+  // Copay Accumulator / Maximizer
+  if(f==='→ yes / no'&&(t.includes('accumulator')||t.includes('maximizer'))) return true;
+  // Generic Yes / No
+  if(f==='→ yes / no') return false;
+  // Drug Acquisition / Specialty Pharmacy
+  if(f.includes('buy and bill')) return false;
+  if(f.includes('sp + major medical')||f.includes('specialty pharmacy allowed')) return false;
+  if(f.includes('benefits same:')) return false;
+  if(f.includes('preferred specialty pharmacy')||f.includes('sp phone')||f.includes('sp fax')) return true;
+  if(f.includes('preferred / open / mandated')) return null;
+  // AFP
+  if(f.includes('afp required:')||f.includes('→ afp required')) return true;
+  if(f.includes('afp type')) return true;
+  if(f.includes('program / vendor name')) return true;
+  if(f.includes('phone | website | department')) return true;
+  if(f.includes('enrollment required:')) return true;
+  if(f.includes('requirements / next steps')) return true;
+  // PA
+  if(f.includes('pa required:')||f.includes('→ pa required')) return false;
+  if(f.includes('pa on file:')||f.includes('→ pa on file')) return false;
+  if(f.includes('authorization status')) return false;
+  if(f.includes('pa ref id')) return false;
+  if(f==='→ pa dept name'||f.includes('pa dept name')) return true;
+  if(f.includes('pa dept phone')||f.includes('pa dept #')) return false;
+  if(f.includes('standard tat')||f.includes('urgent tat')) return true;
+  if(f.includes('phone:')&&f.includes('fax:')&&f.includes('portal')) return false;
+  if(f==='→ effective date') return false;
+  if(f==='→ end date') return false;
+  if(f==='→ reference #') return false;
+  if(f==='→ submitted on') return null;
+  if(f==='→ submission method') return false;
+  // Appeal
+  if(f.includes('appeal available:')) return false;
+  if(f.includes('appeal status:')) return false;
+  if(f.includes('available appeal count')) return false;
+  if(f.includes('submitted appeal count')) return null;
+  if(f.includes('denied on')) return null;
+  if(f.includes('denial reason')) return null;
+  if(f.includes('notification method')) return null;
+  if(f.includes('contact website')||f.includes('portal url')) return true;
+  return null;
+}
+
+function getTransportNAInfo(field,text){
+  if(!field) return null;
+  const f=field.toLowerCase();
+  // Plan Info
+  if(f.includes('plan type')) return false;
+  if(f.includes('effective date')) return false;
+  if(f.includes('term date')) return true;
+  // PATH A — Vendor
+  if(f.includes('trips allowed')) return true;
+  if(f.includes('mileage limit')) return true;
+  if(f.includes('dollar cap')) return true;
+  if(f.includes('geographic restrictions')||f.includes('in-state only')) return true;
+  if(f.includes('approval required:')||f.includes('yes/no | tat')) return false;
+  if(f.includes('vendor name')||f.includes('vendor')) return false;
+  if(f.includes('scheduling method')) return false;
+  if(f.includes('copay $')||f.includes('coinsurance %')) return false;
+  if(f.includes('coverage amount')||f.includes('receipts')) return true;
+  if(f.includes('meal allowance')||f.includes('meals covered')) return true;
+  if(f.includes('local transport')) return true;
+  // PATH B — Reimbursement
+  if(f.includes('reimbursable expense types')) return false;
+  if(f.includes('reimbursement rate')) return false;
+  if(f.includes('per-trip cap')||f.includes('annual cap')) return false;
+  if(f.includes('required documentation')||f.includes('documentation')) return false;
+  if(f.includes('submission method')) return false;
+  if(f.includes('caregiver reimbursement')) return true;
+  // Record keeping
+  if(f.includes('rep name')||f.includes('reference #')) return false;
+  return null;
+}
+
 // ══════════════════════════════════════════════════════════════
 //  PA / PRE-D DYNAMIC SELECTOR
 // ══════════════════════════════════════════════════════════════
@@ -2325,7 +2430,9 @@ function renderStep(s,key,dAttrs=''){
   const isEdited=!!saved;
   const editedBadge=isEdited?`<span class="edited-badge">Edited</span>`:"";
   const isPBM=key&&key.includes('__pbm__');
-  const naStatus=isPBM&&s.type==='question'?getPBMNAInfo(displayField,s.text):null;
+  const isMM=key&&key.includes('__mm__');
+  const isTransport=key&&key.includes('__other__');
+  const naStatus=s.type==='question'?(isPBM?getPBMNAInfo(displayField,s.text):isMM?getMMNAInfo(displayField,s.text):isTransport?getTransportNAInfo(displayField,s.text):null):null;
   const naBadge=naStatus===true?`<span class="na-accept-badge na-ok">✓ N/A OK</span>`:naStatus===false?`<span class="na-accept-badge na-no">✗ N/A</span>`:'';
   const fieldHtml=displayField!=null&&displayField!==''?`<div class="step-field step-content-field"><span>${displayField}</span>${naBadge}</div>`:naBadge?`<div class="step-field">${naBadge}</div>`:'';
   const answerKey=`ans__${key}`;
