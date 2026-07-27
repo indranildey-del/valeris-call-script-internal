@@ -1076,14 +1076,14 @@ function pbmStandard(prog,lddSps){
 
 function mmJJ(prog){
   const b=mmStandard(prog);
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider office/pharmacy/patient name, as applicable]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider / Provider's office]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
   b[0].steps.splice(2,0,{type:"instruction",label:"Benefits Collection Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; patient has OON benefits:</strong> only OON benefits collected<br><strong>If Provider network status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> INN benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`});
   return b;
 }
 
 function pbmJJ(prog,fullAppeal){
   const b=pbmStandard(prog,[]);
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider office/pharmacy/patient name, as applicable]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider / Provider's office]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
   const ci=b.findIndex(s=>s.title==="Coverage Details");
   b[ci].steps=[
     {type:"statement",label:"Script",text:`I'd like to see if the patient is covered for <span class='placeholder'>[specific drug name]</span> with <span class='placeholder'>[strength, quantity / day supply]</span>. Can you run a test claim?`},
@@ -1103,7 +1103,7 @@ function pbmJJ(prog,fullAppeal){
 
 function pbmErleada(){
   const b=pbmStandard("J&J Innovative Medicine support program",[]);
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider office/pharmacy/patient name, as applicable]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider / Provider's office]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
   return b;
 }
 
@@ -1271,7 +1271,7 @@ function pbmNucala(){
 
 function mmJJNeuro(){
   const b=mmStandard("J&J Innovative Medicine sponsored patient support program");
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider office/pharmacy/patient name, as applicable]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider / Provider's office]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
   b[0].steps.splice(2,0,{type:"instruction",label:"Benefits Collection Rule",text:`<strong>If Provider = IN:</strong> only IN benefits collected<br><strong>If Provider = OON &amp; patient has OON benefits:</strong> only OON benefits collected<br><strong>If Provider network status = Unknown:</strong> IN benefits collected<br><strong>If Provider = OON &amp; no OON benefits:</strong> INN benefits collected<br><br><strong>SOC Rule:</strong> For SOC, the logic will remain the same. However, if any one of provider, facility, or SOC is in-network → collect in-network benefit for the drug; for SOC collect SOC network-status-specific benefit.<br><br><strong>Examples:</strong><br><strong>POS = 11:</strong> Provider OON + Facility OON + SOC IN → collect OON benefit for overall drug + IN benefit for SOC → Update Benefit Network Status (Plan info) = Out-of-network<br><strong>POS = 19 / 22:</strong> Provider OON + Facility OON + SOC IN → collect IN benefit for overall drug &amp; SOC → Update Benefit Network Status (Plan info) = In-network`});
   // Copay Accumulator / Maximizer section is left as mmStandard()'s default
   // here — just the one Yes/No question, no AFP sub-flow (unlike Sandoz,
@@ -1286,7 +1286,7 @@ function mmJJNeuro(){
 
 function pbmJJNeuro(){
   const b=pbmStandard("J&J Innovative Medicine sponsored patient support program",[]);
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider office/pharmacy/patient name, as applicable]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <span class='placeholder'>[Insert Provider / Provider's office]</span>, with the <strong>Johnson &amp; Johnson Innovative Medicine support program</strong> on a recorded line to verify benefits for a <span class='placeholder'>[patient]</span> with <span class='placeholder'>[date of birth]</span>.`};
   const ci=b.findIndex(s=>s.title==="Coverage Details");
   b[ci].steps=[
     {type:"statement",label:"Script",text:`I'd like to see if the patient is covered for <span class='placeholder'>[specific drug name]</span> with <span class='placeholder'>[strength, quantity / day supply]</span>. Can you run a test claim?`},
