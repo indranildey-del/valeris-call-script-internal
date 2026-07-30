@@ -822,7 +822,7 @@ const programs = [
     mm:mmSandoz(),pbm:pbmSandoz()
   },
   {
-    id:"nucala",company:"GSK",label:"GSK (Nucala)",icon:"🫁",type:"both",
+    id:"nucala",company:"GSK",label:"GSK",icon:"🫁",type:"both",
     subtitle:"Nucala (mepolizumab) — Pulmonology / Allergy & Immunology | J2182",
     programName:"Nucala Support Program",
     callbacks:[{therapy:"Nucala Support",number:"844-225-5894"}],
@@ -1244,8 +1244,14 @@ function mmNucala(){
 
 function pbmNucala(){
   const b=pbmStandard("Nucala Support Program",[]);
-  // Custom opening — same format as MM (mentions patient and doctor)
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Name]</span> from <strong>Together With GSK</strong> calling on a recorded line on behalf of patient <span class='placeholder'>[Patient Name]</span> under care of doctor <span class='placeholder'>[Dr. Name]</span>, to inquire about coverage benefits for <strong>Nucala</strong>. Would you please assist me with a determination of coverage?`};
+  // Opening is drug/program-dependent — GSK now covers Nucala, Benlysta, and
+  // GSK PAP under one tab, each with its own opening statement.
+  b[0].steps.splice(0,1,
+    {type:"instruction",label:"⚠️ DRUG-DEPENDENT",text:"Use the correct opening based on which drug/program you are calling about."},
+    {type:"statement",label:"NUCALA",text:`Hi <span class='placeholder'>[Rep Name]</span>, this is <span class='placeholder'>[Name]</span>, calling from <strong>Together With GSK</strong> on a recorded line to verify benefits for member <span class='placeholder'>[Patient Name]</span> with date of birth <span class='placeholder'>[Patient DOB]</span>.`},
+    {type:"statement",label:"BENLYSTA",text:`Hi <span class='placeholder'>[Rep Name]</span>, this is <span class='placeholder'>[Name]</span>, calling from <strong>Benlysta Gateway</strong> on a recorded line to verify benefits for member <span class='placeholder'>[Patient Name]</span> with date of birth <span class='placeholder'>[Patient DOB]</span>.`},
+    {type:"statement",label:"GSK PAP",text:`Hi <span class='placeholder'>[Rep Name]</span>, this is <span class='placeholder'>[Name]</span>, calling from the <strong>GSK Patient Assistance Program</strong> on a recorded line, to verify benefits for member <span class='placeholder'>[Patient Name]</span> with date of birth <span class='placeholder'>[Patient DOB]</span>.`}
+  );
   // Replace the single Copay Accumulator step in Benefit Details with full vendor-list version
   const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
   const caIdx=b[bdIdx].steps.findIndex(s=>s.field&&s.field.includes("Accumulator"));
@@ -4111,7 +4117,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-30.3";
+const APP_VERSION = "2026-07-30.4";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
