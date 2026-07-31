@@ -1252,16 +1252,23 @@ function pbmNucala(){
     {type:"statement",label:"GSK Specialty Benlysta",text:`Hi <span class='placeholder'>[Rep Name]</span>, this is <span class='placeholder'>[Name]</span>, calling from <strong>Benlysta Gateway</strong> on a recorded line to verify benefits for member <span class='placeholder'>[Patient Name]</span> with date of birth <span class='placeholder'>[Patient DOB]</span>.`},
     {type:"statement",label:"GSK PAP",text:`<strong>Drug Names:</strong> Benlysta &nbsp;|&nbsp; Exdensur &nbsp;|&nbsp; Nucala &nbsp;|&nbsp; OJJAARA &nbsp;|&nbsp; Zejula<br><br>Hi <span class='placeholder'>[Rep Name]</span>, this is <span class='placeholder'>[Name]</span>, calling from the <strong>GSK Patient Assistance Program</strong> on a recorded line, to verify benefits for member <span class='placeholder'>[Patient Name]</span> with date of birth <span class='placeholder'>[Patient DOB]</span>.`}
   );
+  // Add two eligibility questions after Benefit Year Type in Plan Details (GSK-specific)
+  const pdIdx=b.findIndex(s=>s.title==="Plan Details");
+  const byIdx=b[pdIdx].steps.findIndex(s=>s.field&&s.field.includes("Benefit Year Type"));
+  if(byIdx!==-1) b[pdIdx].steps.splice(byIdx+1,0,
+    {type:"question",label:"Q",text:"Is this the patient's primary plan?",field:"→ Yes / No"},
+    {type:"question",label:"Q",text:"Does the patient have any other pharmacy coverage listed?",field:"→ Yes / No"}
+  );
   // Replace the single Copay Accumulator step in Benefit Details with full vendor-list version
   const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
-  const caIdx=b[bdIdx].steps.findIndex(s=>s.field&&s.field.includes("Accumulator"));
+  const caIdx=b[bdIdx].steps.findIndex(s=>s.text&&s.text.includes("Copay Accumulator / Maximizer"));
   if(caIdx!==-1) b[bdIdx].steps.splice(caIdx,1,
     {type:"question",label:"Q",text:"Does this member's plan utilize any manufacturer copay adjustment programs, such as Help Script (previously HealthSmart or SmartRx), a copay maximizer, or a copay accumulator?",field:"→ Yes / No"},
     {type:"instruction",label:"If rep asks for clarification",text:"\"We're trying to determine whether manufacturer copay assistance is excluded from, or treated differently toward, the member's deductible or out-of-pocket maximum.\""},
     {type:"branch",label:"If YES",text:"\"Can you confirm the name of the program or vendor administering it?\" <em>OR</em> \"How does participation in that program impact the member's deductible and out-of-pocket accumulations?\""},
     {type:"instruction",label:"Known Vendors",text:"<strong>SaveOnSP</strong> &nbsp;|&nbsp; <strong>PrudentRx</strong> &nbsp;|&nbsp; <strong>SHARx</strong> &nbsp;|&nbsp; <strong>Paydhealth</strong> &nbsp;|&nbsp; <strong>Payer Matrix</strong> &nbsp;|&nbsp; <strong>SHARx Engage</strong> &nbsp;|&nbsp; <strong>AnewHealth</strong> &nbsp;|&nbsp; <strong>Prescription Lifeline</strong>"},
     {type:"branch",label:"If NO",text:"Document: <em>\"No manufacturer copay adjustment program, accumulator, or maximizer identified.\"</em>"},
-    {type:"instruction",label:"AFP Confirmation",text:"<strong>Alternate Funding Plan (AFP) Check</strong>"},
+    {type:"instruction",label:"AFP Confirmation",text:"<strong>AFPs – Alternate Funding Plan Confirmation</strong>"},
     {type:"question",label:"AFP Q1",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
     {type:"branch",label:"If NO",text:"Continue with rest of script."},
     {type:"branch",label:"If YES — ask",text:"<strong>a.</strong> Is this requirement part of an alternate funding program, specialty funding program, maximizer program, or other cost-containment initiative?<br><strong>b.</strong> What is the name of the program, vendor, or organization administering this requirement?<br><strong>c.</strong> Is there a dedicated phone number, website, or contact department for this program?<br><strong>d.</strong> Is member enrollment or participation required before coverage can be approved or paid?<br><strong>e.</strong> Are there any application requirements, approval requirements, or next steps that must be completed by the member or provider?"}
@@ -4117,7 +4124,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-30.6";
+const APP_VERSION = "2026-07-30.8";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
