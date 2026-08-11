@@ -4590,16 +4590,20 @@ function ivrSetTab(tab){
 }
 
 function ivrTile(p, tab, idx){
-  const colors={green:{bg:'#0d2b1a',border:'#1db954',dot:'#1db954'},yellow:{bg:'#2b2100',border:'#f0a500',dot:'#f0a500'},red:{bg:'#2b0d13',border:'#e74c3c',dot:'#e74c3c'}};
+  const colors={
+    green:{bg:'#f0fdf4',border:'#86efac',dot:'#16a34a',text:'#15803d'},
+    yellow:{bg:'#fffbeb',border:'#fcd34d',dot:'#d97706',text:'#b45309'},
+    red:{bg:'#fef2f2',border:'#fca5a5',dot:'#dc2626',text:'#b91c1c'}
+  };
   const c=colors[p.status]||colors.yellow;
   const badge=tab==='mm'
-    ? `<span style="font-size:10px;color:#8891a8">⏱ ${p.timeRep||'—'}</span>`
-    : `<span style="font-size:10px;color:#8891a8">Reach ${p.reach||'—'}</span>`;
-  const cases=p.cases>0?`<span style="font-size:10px;color:#555a78">(${p.cases.toLocaleString()} cases)</span>`:'';
-  return `<div class="ivr-tile" style="background:${c.bg};border:1.5px solid ${c.border}" onclick="ivrOpenCard(${idx})">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0;display:inline-block"></span>
-      <span style="font-size:13px;font-weight:700;color:#e8eaf6;line-height:1.2">${p.name}</span>
+    ? `<span style="font-size:11px;color:#6b7280">⏱ ${p.timeRep||'—'}</span>`
+    : `<span style="font-size:11px;color:#6b7280">Reach ${p.reach||'—'}</span>`;
+  const cases=p.cases>0?`<span style="font-size:11px;color:#9ca3af">${p.cases.toLocaleString()} cases</span>`:'';
+  return `<div class="ivr-tile" style="background:#fff;border:1px solid ${c.border};box-shadow:0 1px 3px rgba(0,0,0,.05)" onclick="ivrOpenCard(${idx})">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+      <span style="width:9px;height:9px;border-radius:50%;background:${c.dot};flex-shrink:0;display:inline-block"></span>
+      <span style="font-size:13px;font-weight:700;color:#111827;line-height:1.3">${p.name}</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center">
       ${badge}
@@ -4610,69 +4614,73 @@ function ivrTile(p, tab, idx){
 
 function ivrOpenCard(idx){
   const {p,tab}=_ivrCardCache[idx];
-  const colors={green:{bg:'#0d2b1a',border:'#1db954',label:'#1db954'},yellow:{bg:'#2b2100',border:'#f0a500',label:'#f0a500'},red:{bg:'#2b0d13',border:'#e74c3c',label:'#e74c3c'}};
+  const colors={
+    green:{bg:'#f0fdf4',border:'#86efac',label:'#15803d',dot:'#16a34a'},
+    yellow:{bg:'#fffbeb',border:'#fcd34d',label:'#b45309',dot:'#d97706'},
+    red:{bg:'#fef2f2',border:'#fca5a5',label:'#b91c1c',dot:'#dc2626'}
+  };
   const c=colors[p.status]||colors.yellow;
   const icons={green:'🟢',yellow:'🟠',red:'🔴'};
   const metaRows = tab==='mm'
-    ? `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px">
-        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Time to Rep (p25/p50)</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.timeRep||'—'}</span></div>
-        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">AI Success Rate</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.aiRate||'—'}</span></div>
-        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Bot-Rejected</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.botRate||'—'}</span></div>
-        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Cases</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.cases>0?p.cases.toLocaleString():'—'}</span></div>
+    ? `<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;padding:14px 16px;background:#f8faff;border:1px solid #e5e9f2;border-radius:10px">
+        <div><div style="color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Time to Rep (p25/p50)</div><div style="color:#111827;font-size:14px;font-weight:700">${p.timeRep||'—'}</div></div>
+        <div><div style="color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">AI Success Rate</div><div style="color:#111827;font-size:14px;font-weight:700">${p.aiRate||'—'}</div></div>
+        <div><div style="color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Bot-Rejected</div><div style="color:#111827;font-size:14px;font-weight:700">${p.botRate||'—'}</div></div>
+        <div><div style="color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Cases</div><div style="color:#111827;font-size:14px;font-weight:700">${p.cases>0?p.cases.toLocaleString():'—'}</div></div>
       </div>`
-    : `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px">
-        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Reach Rate</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.reach||'—'}</span></div>
-        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Bot-Rejected</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.botRate||'—'}</span></div>
-        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Cases</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.cases>0?p.cases.toLocaleString():'—'}</span></div>
+    : `<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;padding:14px 16px;background:#f8faff;border:1px solid #e5e9f2;border-radius:10px">
+        <div><div style="color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Reach Rate</div><div style="color:#111827;font-size:14px;font-weight:700">${p.reach||'—'}</div></div>
+        <div><div style="color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Bot-Rejected</div><div style="color:#111827;font-size:14px;font-weight:700">${p.botRate||'—'}</div></div>
+        <div><div style="color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Cases</div><div style="color:#111827;font-size:14px;font-weight:700">${p.cases>0?p.cases.toLocaleString():'—'}</div></div>
       </div>`;
   const steps=p.steps.map((s,i)=>{
     const isRep=s.startsWith('🎧');
     const isTip=s.startsWith('Tip:')||s.startsWith('⚠️');
-    if(isRep) return `<div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 14px;background:#0a1f3a;border:1.5px solid #3b82f6;border-radius:8px"><span style="font-size:18px">🎧</span><span style="color:#7ab8f5;font-weight:700;font-size:13px">${s.replace('🎧 ','')}</span></div>`;
-    if(isTip) return `<div style="padding:8px 12px;background:#1a1a00;border-left:3px solid #f0a500;border-radius:4px;color:#c8a84b;font-size:12px;margin-top:8px">${s}</div>`;
-    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #1e2235">
-      <span style="width:22px;height:22px;border-radius:50%;background:#1e2540;border:1.5px solid #3d4a7a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#7b8cde;flex-shrink:0">${i+1}</span>
-      <span style="color:#c8cce8;font-size:13px;line-height:1.5;padding-top:2px">${s}</span>
+    if(isRep) return `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:11px 14px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px"><span style="font-size:17px">🎧</span><span style="color:#1d4ed8;font-weight:700;font-size:13px">${s.replace('🎧 ','')}</span></div>`;
+    if(isTip) return `<div style="padding:8px 12px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:4px;color:#92400e;font-size:12px;margin-top:8px">${s}</div>`;
+    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid #f1f4fb">
+      <span style="width:22px;height:22px;border-radius:50%;background:#eff2ff;border:1.5px solid #c7d2fe;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#4263eb;flex-shrink:0">${i+1}</span>
+      <span style="color:#374151;font-size:13px;line-height:1.5;padding-top:2px">${s}</span>
     </div>`;
   }).join('');
 
   const overlay=document.createElement('div');
   overlay.id='ivrOverlay';
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(15,23,41,.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
   overlay.onclick=e=>{if(e.target===overlay) overlay.remove();};
-  overlay.innerHTML=`<div style="background:#12141f;border:1.5px solid ${c.border};border-radius:14px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:28px 28px 24px">
+  overlay.innerHTML=`<div style="background:#fff;border:1px solid #e5e9f2;border-radius:14px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:28px 28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
       <div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
           <span style="font-size:20px">${icons[p.status]||'🟠'}</span>
-          <h2 style="margin:0;font-size:20px;font-weight:800;color:#e8eaf6">${p.name}</h2>
+          <h2 style="margin:0;font-size:20px;font-weight:800;color:#111827">${p.name}</h2>
         </div>
-        <span style="font-size:12px;font-weight:600;color:${c.label};background:${c.bg};border:1px solid ${c.border};padding:3px 10px;border-radius:20px">${p.label}</span>
+        <span style="font-size:12px;font-weight:600;color:${c.label};background:${c.bg};border:1px solid ${c.border};padding:3px 12px;border-radius:20px">${p.label}</span>
       </div>
-      <button onclick="document.getElementById('ivrOverlay').remove()" style="background:#1e2235;border:none;color:#8891a8;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">×</button>
+      <button onclick="document.getElementById('ivrOverlay').remove()" style="background:#f3f4f6;border:none;color:#6b7280;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1">×</button>
     </div>
     ${metaRows}
-    <div style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">IVR Navigation Steps</div>
+    <div style="color:#9ca3af;font-size:10px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-weight:600">IVR Navigation Steps</div>
     ${steps}
   </div>`;
   document.body.appendChild(overlay);
 }
 
 function renderIVR(){
-  return `<div style="padding:24px 28px;min-height:100vh;background:#0d0f1a">
+  return `<div style="padding:24px 28px;min-height:100vh;background:#f0f2f8">
     <div style="margin-bottom:20px">
-      <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;color:#e8eaf6">📞 Payer IVR Navigation</h2>
+      <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;color:#111827">📞 Payer IVR Navigation</h2>
       <p style="margin:0;color:#6b7280;font-size:13px">Click a payer tile to view navigation steps. 🟢 AI works &nbsp;·&nbsp; 🟠 Mixed &nbsp;·&nbsp; 🔴 Route to human</p>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:24px">
-      <button id="ivrTab_mm" data-active="0" onclick="ivrSetTab('mm')" style="padding:8px 22px;border-radius:8px;border:1.5px solid #3d4a7a;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">MM (Medical)</button>
-      <button id="ivrTab_pbm" data-active="0" onclick="ivrSetTab('pbm')" style="padding:8px 22px;border-radius:8px;border:1.5px solid #3d4a7a;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">PBM (Pharmacy)</button>
+      <button id="ivrTab_mm" data-active="0" onclick="ivrSetTab('mm')" style="padding:8px 22px;border-radius:8px;border:1.5px solid #d1d9f0;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">MM (Medical)</button>
+      <button id="ivrTab_pbm" data-active="0" onclick="ivrSetTab('pbm')" style="padding:8px 22px;border-radius:8px;border:1.5px solid #d1d9f0;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">PBM (Pharmacy)</button>
     </div>
     <style>
-      #ivrTab_mm[data-active="1"],#ivrTab_pbm[data-active="1"]{background:#3451d1;border-color:#3451d1;color:#fff}
-      #ivrTab_mm[data-active="0"],#ivrTab_pbm[data-active="0"]{background:#1a1d2e;color:#8891a8}
+      #ivrTab_mm[data-active="1"],#ivrTab_pbm[data-active="1"]{background:#4263eb;border-color:#4263eb;color:#fff}
+      #ivrTab_mm[data-active="0"],#ivrTab_pbm[data-active="0"]{background:#fff;color:#6b7280}
       .ivr-tile{padding:14px 16px;border-radius:10px;cursor:pointer;transition:transform .12s,box-shadow .12s;user-select:none}
-      .ivr-tile:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+      .ivr-tile:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(66,99,235,.12)}
       #ivrGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
     </style>
     <div id="ivrGrid"></div>
