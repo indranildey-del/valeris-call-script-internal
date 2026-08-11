@@ -1661,7 +1661,7 @@ const sidebarEl=document.getElementById("sidebar");
 // ── Drug Reference nav item ──
 const navSection=document.createElement("div");
 navSection.className="sidebar-nav-section";
-navSection.innerHTML=`<div class="sidebar-nav-item" id="navDrugInfo" onclick="showDrugInfo()">💊 <span>Drug Reference</span></div><div class="sidebar-nav-item" id="navTerms" onclick="showTerminology()">📚 <span>Terminologies</span></div><div class="sidebar-nav-item" id="navFieldRef" onclick="showFieldRef()">📋 <span>PBM Field Reference</span></div><div class="sidebar-nav-item" id="navCallFlow" onclick="showCallFlow()">🔀 <span>Case Flow</span></div><div class="sidebar-nav-item sidebar-nav-parent" id="navQCGroup" onclick="qcToggleNavGroup()">🎯 <span style="flex:1">QC</span><span class="nav-chevron" id="qcNavChevron">&#9654;</span></div><div class="sidebar-nav-children" id="qcNavChildren" style="display:none"><div class="sidebar-nav-item sidebar-nav-child" id="navQC" onclick="showQCDashboard('mm')">🎯 <span>MM QC Scorecard</span></div><div class="sidebar-nav-item sidebar-nav-child" id="navQCPBM" onclick="showQCDashboard('pbm')">💊 <span>PBM QC Scorecard</span></div><div class="sidebar-nav-item sidebar-nav-child" id="navQCAnalytics" onclick="showQCAnalytics()">📊 <span>QC Analytics</span></div></div>`;
+navSection.innerHTML=`<div class="sidebar-nav-item" id="navDrugInfo" onclick="showDrugInfo()">💊 <span>Drug Reference</span></div><div class="sidebar-nav-item" id="navTerms" onclick="showTerminology()">📚 <span>Terminologies</span></div><div class="sidebar-nav-item" id="navFieldRef" onclick="showFieldRef()">📋 <span>PBM Field Reference</span></div><div class="sidebar-nav-item" id="navCallFlow" onclick="showCallFlow()">🔀 <span>Case Flow</span></div><div class="sidebar-nav-item" id="navIVR" onclick="showIVR()">📞 <span>IVR Navigation</span></div><div class="sidebar-nav-item sidebar-nav-parent" id="navQCGroup" onclick="qcToggleNavGroup()">🎯 <span style="flex:1">QC</span><span class="nav-chevron" id="qcNavChevron">&#9654;</span></div><div class="sidebar-nav-children" id="qcNavChildren" style="display:none"><div class="sidebar-nav-item sidebar-nav-child" id="navQC" onclick="showQCDashboard('mm')">🎯 <span>MM QC Scorecard</span></div><div class="sidebar-nav-item sidebar-nav-child" id="navQCPBM" onclick="showQCDashboard('pbm')">💊 <span>PBM QC Scorecard</span></div><div class="sidebar-nav-item sidebar-nav-child" id="navQCAnalytics" onclick="showQCAnalytics()">📊 <span>QC Analytics</span></div></div>`;
 sidebarEl.appendChild(navSection);
 companies.forEach(co=>{
   const group=programs.filter(p=>p.company===co);
@@ -4514,6 +4514,169 @@ function cfDiamond(text){
 
 function cfComplete(){
   return `<div style="width:100%;border-radius:6px;padding:7px 8px;text-align:center;background:#0f2d1a;border:2px solid #2dbe6c;font-size:11px;font-weight:700;color:#2dbe6c">✔ Mark Complete</div>`;
+}
+
+// ── IVR Navigation ─────────────────────────────────────────────────────────
+const IVR_DATA = {
+  mm: [
+    {name:'UnitedHealthcare',cases:1113,status:'red',label:'Human only',timeRep:'2.0 / 2.4 min',aiRate:'15%',botRate:'75%',steps:['Say "Eligibility and Benefits"','Say "Yes" (provider)','Say "Medical"','Enter NPI + Tax ID (DTMF)','Enter member ID + DOB (DTMF)','Say "Connect to an advocate"','🎧 Rep answers']},
+    {name:'Aetna',cases:875,status:'green',label:'AI works',timeRep:'3.0 / 4.0 min',aiRate:'70%',botRate:'5%',steps:['Enter NPI / Tax ID via keypad','Press 2 — Coverage & benefits','Enter member ID + DOB (DTMF)','Say "Representative" or press 0 if not found','🎧 Rep answers']},
+    {name:'Humana',cases:575,status:'yellow',label:'Either (human edge)',timeRep:'1.6 / 2.1 min',aiRate:'60%',botRate:'5%',steps:['Say "Eligibility and Benefits"','Say "Yes"','Say "Provider"','Enter member ID + DOB (DTMF)','🎧 Rep answers']},
+    {name:'Regence BCBS',cases:525,status:'yellow',label:'Human-lean',timeRep:'1.2 / 2.5 min',aiRate:'15%',botRate:'35%',steps:['Say "Benefit and eligibility"','Press 1 (Regence / Asuris)','Press 4 (medical / eligibility)','Press 2 (eligibility)','🎧 Rep answers']},
+    {name:'Cigna',cases:496,status:'red',label:'Human only',timeRep:'1.6 / 2.0 min',aiRate:'0%',botRate:'80%',steps:['Press 2 — "Health-care professional"','Say "Eligibility and Benefits"','Say "Medical"','Enter Tax ID (DTMF)','🎧 Rep answers']},
+    {name:'BCBS Texas',cases:409,status:'yellow',label:'Human (AI harvests)',timeRep:'1.2 / 3.0 min',aiRate:'55%',botRate:'20%',steps:['Say "Eligibility and benefits"','Say "Medical"','Enter NPI + member ID (DTMF)','Say "Representative"','🎧 Rep answers','Tip: For full self-service BV → "Benefit details" → route → "Office" → "Check prior auth by procedure code"']},
+    {name:'Anthem Blue Cross',cases:391,status:'red',label:'Human only',timeRep:'1.2 / 2.2 min',aiRate:'10%',botRate:'60%',steps:['Say "Yes" (provider)','Enter member-ID prefix','Say "Eligibility and Benefits"','Say "Something else" (provider services)','🎧 Rep answers']},
+    {name:'Medicare Part B',cases:245,status:'red',label:'Human only',timeRep:'1.3 / 1.9 min',aiRate:'0%',botRate:'55%',steps:['Say "Eligibility and Benefits"','Enter MBI + DOB (DTMF)','Say "Representative" at the SSN-last-4 prompt','🎧 Rep answers']},
+    {name:'BCBS Illinois',cases:189,status:'green',label:'AI works',timeRep:'1.1 / 2.0 min',aiRate:'60%',botRate:'10%',steps:['Say "Benefit and eligibility"','Say "Medical"','Say "Eligibility and benefits"','🎧 Rep answers']},
+    {name:'UMR',cases:184,status:'red',label:'Human only',timeRep:'2.2 / 3.0 min',aiRate:'0%',botRate:'80%',steps:['Say "Member"','Say "Medical"','Say "Customer advocate" or "Representative"','🎧 Rep answers']},
+    {name:'BCBS Louisiana',cases:92,status:'yellow',label:'Mixed',timeRep:'1.6 / 2.4 min',aiRate:'~62%',botRate:'17%',steps:['BlueCard — say "Yes" (provider)','If member ID starts with R → FEP line; else say "No"','Spell first 3 characters of member ID phonetically','Say "Benefit and eligibility"','🎧 Rep answers']},
+    {name:'Anthem BCBS Ohio',cases:92,status:'yellow',label:'Mixed',timeRep:'1.2 / 1.4 min',aiRate:'~64%',botRate:'32%',steps:['BlueCard — say "Yes" (provider)','Spell first 3 chars of member ID phonetically','Say "Benefit and eligibility"','Enter NPI (DTMF) at Anthem plan IVR','Say "Something else" or "Representative"','🎧 Rep answers']},
+    {name:'BCBS South Carolina',cases:72,status:'yellow',label:'Low reach',timeRep:'1.5 / 3.5 min',aiRate:'~26%',botRate:'',steps:['BlueCard — say "Yes" (provider)','Spell first 3 chars phonetically','Say "Eligibility and Benefits"','Say "Both"','Transfer to plan IVR','🎧 Rep answers (⚠️ expect escalation)']},
+    {name:'Florida Blue',cases:123,status:'yellow',label:'Mixed',timeRep:'1.5 / 2.5 min',aiRate:'~65%',botRate:'15%',steps:['BlueCard — say "Yes" (provider)','Spell first 3 chars phonetically','Say "Benefit and eligibility" or "Customer advocate"','🎧 Rep answers']},
+    {name:'Blue Shield of California',cases:69,status:'yellow',label:'Mixed',timeRep:'1.7 / 2.2 min',aiRate:'~70%',botRate:'48%',steps:['BlueCard — say "Yes" (provider)','Spell first 3 chars phonetically','Say "Benefit and eligibility"','Say "Something else" or "Representative"','🎧 Rep answers']},
+    {name:'BCBS Arizona',cases:126,status:'yellow',label:'Mixed',timeRep:'1.3 / 2.2 min',aiRate:'~46%',botRate:'17%',steps:['BlueCard — say "Yes" (provider)','If member ID starts with R → FEP line (⚠️ some AZ lines reject R-prefix outright); else say "No"','Spell first 3 chars phonetically','Say "Benefit and eligibility" → AZ plan IVR','🎧 Rep answers']},
+    {name:'Humana TRICARE East',cases:65,status:'yellow',label:'Mixed (TRICARE)',timeRep:'2.2 / 2.8 min',aiRate:'',botRate:'',steps:['Say "Provider"','Press 2 — third-party contracted by provider','Say "Eligibility and Benefits"','Enter Tax ID / NPI + ZIP + sponsor ID + beneficiary DOB (DTMF)','🎧 Rep answers','⚠️ Rep often deflects benefits back to self-service — capture eligibility/auth from the automated menu ("Check if authorization is required" + procedure code)']},
+    {name:'Oscar Health',cases:69,status:'green',label:'AI-lean',timeRep:'2.4 / 3.1 min',aiRate:'~80%',botRate:'4%',steps:['Press 4 (provider)','Enter member ID — 10-digit (DTMF)','Enter 5-digit ZIP (DTMF)','Press 1 (eligibility / enrollment)','🎧 Rep answers']},
+    {name:'CareFirst BCBS',cases:71,status:'yellow',label:'Mixed',timeRep:'2.6 / 9.2 min',aiRate:'~46%',botRate:'4%',steps:['BlueCard — say "Yes" (provider)','Spell first 3 chars phonetically','Say "Benefit and eligibility"','Press 0','🎧 Rep answers (⚠️ 9.2 min median = long BlueCard hold queue after press 0 — no shortcut)']},
+    {name:'TRICARE for Life',cases:87,status:'yellow',label:'Mixed (TRICARE)',timeRep:'4.1 / 6.0 min',aiRate:'',botRate:'',steps:['Say "Yes" (provider)','Say "Eligibility and benefits"','Say "Operator"','🎧 Rep answers (⚠️ may require member present; routes via WPS/Express Scripts; 6 min = hold queue)']}
+  ],
+  pbm: [
+    {name:'CVS Caremark',cases:3201,status:'red',label:'Majority reject AI',reach:'100%',botRate:'90%',steps:['First menu → press 2 or stay on line','Say "Doctor"','Say "Verify member benefits"','Say "Representative" if PA IVR loops','🎧 Rep answers — have live human on standby']},
+    {name:'OptumRx',cases:2049,status:'red',label:'Broken navigation',reach:'17%',botRate:'3%',steps:['Press 2 ("authorization on file") — occasionally works','Otherwise route to a human immediately','⚠️ ~83% nav-fail — needs engineering fix']},
+    {name:'Humana',cases:1424,status:'green',label:'Works end-to-end',reach:'90%',botRate:'17%',steps:['Say "Pharmacy benefits"','Say "No"','Say "Provider"','At "How may I help?" say only "Pharmacy benefits"','Confirmations: "pharmacy?" → Yes; "office visits?" → No, repeat "Pharmacy benefits"','Enter NPI / ID / DOB (DTMF)','🎧 Rep answers']},
+    {name:'Cigna PBM',cases:979,status:'red',label:'Majority reject AI',reach:'77%',botRate:'87%',steps:['Say "Pharmacy" or "Representative"','Say "Doctor\'s office"','Say "No" to prior-auth prompt','Enter NPI (DTMF)','🎧 Rep answers — expect rejection']},
+    {name:'Express Scripts',cases:847,status:'red',label:'Majority reject AI',reach:'87%',botRate:'67%',steps:['Say "Representative"','Say "I don\'t have that" to ID / DOB prompts','Repeat "Representative"','🎧 Rep answers — expect rejection']},
+    {name:'CareLonRx',cases:651,status:'red',label:'Majority reject AI',reach:'97%',botRate:'67%',steps:['Say "Provider"','Enter NPI (DTMF)','Enter member ID (DTMF)','Say "Pharmacy"','Say "Something else"','(CarelonRx IVR) Say "Doctor\'s office"','Say "Something else"','🎧 Rep answers — expect rejection']},
+    {name:'Prime Therapeutics',cases:633,status:'green',label:'Works end-to-end',reach:'100%',botRate:'0%',steps:['First menu: Medicare → press 1; all others → stay on line','Press 2 (non-BCBS)','Say "Doctor" or press 3','Enter NPI (DTMF) + confirm press 1','🎧 Rep answers']},
+    {name:'Aetna PBM',cases:315,status:'yellow',label:'~Half reject AI',reach:'97%',botRate:'47%',steps:['Press 2 — doctor\'s office','Say "Representative"','🎧 Rep answers']},
+    {name:'Navitus',cases:295,status:'red',label:'Majority reject AI',reach:'100%',botRate:'90%',steps:['Press 3 (prescriber office)','Press 1 (manufacturer / third-party)','Press 2 (non-GLP-1)','🎧 Rep answers — expect rejection']},
+    {name:'SS&C',cases:260,status:'green',label:'Works end-to-end',reach:'77%',botRate:'10%',steps:['Press 1 (provider)','Say "Representative"','Enter DOB, ZIP, member ID (DTMF)','Follow "Provider" branch','🎧 Rep answers']},
+    {name:'WellCare Medicare',cases:222,status:'red',label:'Broken navigation',reach:'23%',botRate:'10%',steps:['Press 2 at the authorization gate — occasionally works','Or say "Provider" → NPI → "patient benefits"','Otherwise route to a human','⚠️ ~80% nav-fail — no reliable path']},
+    {name:'Capital Rx',cases:119,status:'red',label:'Majority reject AI',reach:'100%',botRate:'77%',steps:['Press 0 (customer care)','If DTMF 0 misrecognized, press again','🎧 Rep answers — ~77% reject AI + requires member verbal consent → live-human handoff']},
+    {name:'Anthem Blue Cross PBM',cases:92,status:'yellow',label:'~Half reject AI',reach:'89%',botRate:'42%',steps:['Routes to CarelonRx IVR','Say "Provider"','Enter NPI (DTMF)','Enter member ID (DTMF)','Say "Pharmacy"','Say "Something else"','(CarelonRx) Say "Doctor\'s office"','Say "Something else"','🎧 Rep answers']},
+    {name:'SelectHealth',cases:81,status:'green',label:'Works end-to-end',reach:'96%',botRate:'4%',steps:['Enter member ID (DTMF)','Enter DOB (DTMF)','Press 3 (pharmacy benefits)','🎧 Rep answers']},
+    {name:'UnitedHealthcare PBM',cases:60,status:'yellow',label:'Mixed',reach:'44%',botRate:'0%',steps:['At the third-party authorization prompt say "Representative" or "Speak with an advocate"','🎧 Rep answers (⚠️ may need member present or authorization on file)']},
+    {name:'Humana TRICARE East',cases:57,status:'red',label:'Mostly reject (TRICARE)',reach:'43%',botRate:'70%',steps:['Stay on line','Say "Representative"','Provide provider full name','Enter NPI (DTMF)','Provide company name','Provide caller name + callback number','🎧 Rep answers (⚠️ 70% decline — not all clean bot-rejections)']},
+    {name:'Sav-Rx',cases:47,status:'green',label:'Works end-to-end',reach:'83%',botRate:'0%',steps:['Stay on the line — no menu, straight to hold','🎧 Rep answers → provide member name + DOB + mailing address']},
+    {name:'Priority Health',cases:45,status:'red',label:'Majority reject AI',reach:'44%',botRate:'60%',steps:['Say "Representative" or "Policy benefits"','Provide provider name + NPI + company + callback (alt: SSN + member DOB + ZIP)','🎧 Rep answers']},
+    {name:'Magellan',cases:20,status:'green',label:'Works ⚠️ low confidence',reach:'93%',botRate:'10%',steps:['Press 2 (not BCBS / Capital)','Say "Doctor" or press 3','Enter NPI (DTMF) + confirm press 1','🎧 Rep answers']},
+    {name:'MedImpact',cases:23,status:'yellow',label:'Reaches but stalls ⚠️ low confidence',reach:'100%',botRate:'3%',steps:['Press 2 (providers)','Enter member ID + DOB (DTMF)','First-name prompt often fails → auto-transfers to rep','🎧 Rep answers (⚠️ rarely engages — verify before acting)']},
+    {name:'TrueRx',cases:18,status:'yellow',label:'~Half reject ⚠️ low confidence',reach:'100%',botRate:'43%',steps:['Press 0 (agent)','Press 2 (provider)','🎧 Rep answers — ~half reject → handoff']},
+    {name:'Medical Mutual PBM',cases:15,status:'yellow',label:'~Half reject ⚠️ low confidence',reach:'93%',botRate:'53%',steps:['Say "Representative"','Say "Provider"','Enter NPI + member ID (DTMF)','🎧 Rep answers (⚠️ ~half reject; DTMF works on PBM line — speech-only carve-out is medical only)']},
+    {name:'Data RX',cases:0,status:'yellow',label:'Unverified — no current cases',reach:'—',botRate:'—',steps:['Press 3 (provider services)','Stay on line','🎧 Rep answers (⚠️ unverified — no current case data)']}
+  ]
+};
+
+function showIVR(){
+  currentView='ivr'; currentProgId='';
+  document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav-item').forEach(el=>el.classList.remove('active'));
+  const n=document.getElementById('navIVR'); if(n) n.classList.add('active');
+  document.getElementById('main').innerHTML=renderIVR();
+  ivrSetTab('mm');
+}
+
+let _ivrCardCache = [];
+
+function ivrSetTab(tab){
+  ['mm','pbm'].forEach(t=>{
+    const btn=document.getElementById('ivrTab_'+t);
+    if(btn) btn.setAttribute('data-active', t===tab ? '1' : '0');
+  });
+  const grid=document.getElementById('ivrGrid');
+  if(!grid) return;
+  _ivrCardCache = IVR_DATA[tab].map(p=>({p,tab}));
+  grid.innerHTML = IVR_DATA[tab].map((p,i)=>ivrTile(p,tab,i)).join('');
+}
+
+function ivrTile(p, tab, idx){
+  const colors={green:{bg:'#0d2b1a',border:'#1db954',dot:'#1db954'},yellow:{bg:'#2b2100',border:'#f0a500',dot:'#f0a500'},red:{bg:'#2b0d13',border:'#e74c3c',dot:'#e74c3c'}};
+  const c=colors[p.status]||colors.yellow;
+  const badge=tab==='mm'
+    ? `<span style="font-size:10px;color:#8891a8">⏱ ${p.timeRep||'—'}</span>`
+    : `<span style="font-size:10px;color:#8891a8">Reach ${p.reach||'—'}</span>`;
+  const cases=p.cases>0?`<span style="font-size:10px;color:#555a78">(${p.cases.toLocaleString()} cases)</span>`:'';
+  return `<div class="ivr-tile" style="background:${c.bg};border:1.5px solid ${c.border}" onclick="ivrOpenCard(${idx})">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0;display:inline-block"></span>
+      <span style="font-size:13px;font-weight:700;color:#e8eaf6;line-height:1.2">${p.name}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      ${badge}
+      ${cases}
+    </div>
+  </div>`;
+}
+
+function ivrOpenCard(idx){
+  const {p,tab}=_ivrCardCache[idx];
+  const colors={green:{bg:'#0d2b1a',border:'#1db954',label:'#1db954'},yellow:{bg:'#2b2100',border:'#f0a500',label:'#f0a500'},red:{bg:'#2b0d13',border:'#e74c3c',label:'#e74c3c'}};
+  const c=colors[p.status]||colors.yellow;
+  const icons={green:'🟢',yellow:'🟠',red:'🔴'};
+  const metaRows = tab==='mm'
+    ? `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px">
+        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Time to Rep (p25/p50)</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.timeRep||'—'}</span></div>
+        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">AI Success Rate</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.aiRate||'—'}</span></div>
+        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Bot-Rejected</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.botRate||'—'}</span></div>
+        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Cases</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.cases>0?p.cases.toLocaleString():'—'}</span></div>
+      </div>`
+    : `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px">
+        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Reach Rate</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.reach||'—'}</span></div>
+        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Bot-Rejected</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.botRate||'—'}</span></div>
+        <div><span style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.6px">Cases</span><br><span style="color:#e8eaf6;font-size:14px;font-weight:600">${p.cases>0?p.cases.toLocaleString():'—'}</span></div>
+      </div>`;
+  const steps=p.steps.map((s,i)=>{
+    const isRep=s.startsWith('🎧');
+    const isTip=s.startsWith('Tip:')||s.startsWith('⚠️');
+    if(isRep) return `<div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 14px;background:#0a1f3a;border:1.5px solid #3b82f6;border-radius:8px"><span style="font-size:18px">🎧</span><span style="color:#7ab8f5;font-weight:700;font-size:13px">${s.replace('🎧 ','')}</span></div>`;
+    if(isTip) return `<div style="padding:8px 12px;background:#1a1a00;border-left:3px solid #f0a500;border-radius:4px;color:#c8a84b;font-size:12px;margin-top:8px">${s}</div>`;
+    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid #1e2235">
+      <span style="width:22px;height:22px;border-radius:50%;background:#1e2540;border:1.5px solid #3d4a7a;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#7b8cde;flex-shrink:0">${i+1}</span>
+      <span style="color:#c8cce8;font-size:13px;line-height:1.5;padding-top:2px">${s}</span>
+    </div>`;
+  }).join('');
+
+  const overlay=document.createElement('div');
+  overlay.id='ivrOverlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.onclick=e=>{if(e.target===overlay) overlay.remove();};
+  overlay.innerHTML=`<div style="background:#12141f;border:1.5px solid ${c.border};border-radius:14px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:28px 28px 24px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:20px">${icons[p.status]||'🟠'}</span>
+          <h2 style="margin:0;font-size:20px;font-weight:800;color:#e8eaf6">${p.name}</h2>
+        </div>
+        <span style="font-size:12px;font-weight:600;color:${c.label};background:${c.bg};border:1px solid ${c.border};padding:3px 10px;border-radius:20px">${p.label}</span>
+      </div>
+      <button onclick="document.getElementById('ivrOverlay').remove()" style="background:#1e2235;border:none;color:#8891a8;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0">×</button>
+    </div>
+    ${metaRows}
+    <div style="color:#8891a8;font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">IVR Navigation Steps</div>
+    ${steps}
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function renderIVR(){
+  return `<div style="padding:24px 28px;min-height:100vh;background:#0d0f1a">
+    <div style="margin-bottom:20px">
+      <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;color:#e8eaf6">📞 Payer IVR Navigation</h2>
+      <p style="margin:0;color:#6b7280;font-size:13px">Click a payer tile to view navigation steps. 🟢 AI works &nbsp;·&nbsp; 🟠 Mixed &nbsp;·&nbsp; 🔴 Route to human</p>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:24px">
+      <button id="ivrTab_mm" data-active="0" onclick="ivrSetTab('mm')" style="padding:8px 22px;border-radius:8px;border:1.5px solid #3d4a7a;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">MM (Medical)</button>
+      <button id="ivrTab_pbm" data-active="0" onclick="ivrSetTab('pbm')" style="padding:8px 22px;border-radius:8px;border:1.5px solid #3d4a7a;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s">PBM (Pharmacy)</button>
+    </div>
+    <style>
+      #ivrTab_mm[data-active="1"],#ivrTab_pbm[data-active="1"]{background:#3451d1;border-color:#3451d1;color:#fff}
+      #ivrTab_mm[data-active="0"],#ivrTab_pbm[data-active="0"]{background:#1a1d2e;color:#8891a8}
+      .ivr-tile{padding:14px 16px;border-radius:10px;cursor:pointer;transition:transform .12s,box-shadow .12s;user-select:none}
+      .ivr-tile:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+      #ivrGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+    </style>
+    <div id="ivrGrid"></div>
+  </div>`;
 }
 
 function showQCAnalytics(){
