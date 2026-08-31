@@ -845,7 +845,34 @@ const programs = [
       {name:"Spravato",type:"MM/PBM",strength:"28mg/0.2mL",supply:"3 sprays",cpt:"—",jcode:"J0013 / G2082 / G2083",ndc:"50458002803"},
     ],
     mm:mmJJNeuro(),pbm:pbmJJNeuro()
-  }
+  },
+  {
+    id:"leo-pbm",company:"Leo Pharma",label:"Leo Pharma",icon:"🧴",type:"pbm",
+    subtitle:"Adbry (tralokinumab) — Atopic Dermatitis",programName:"Adbry Advocate Program",
+    drugs:[
+      {name:"Adbry (tralokinumab)",type:"PBM",strength:"150mg/mL",supply:"varies",cpt:"—",jcode:"—",ndc:"—"},
+    ],
+    callbacks:[],
+    pbm:pbmLeo()
+  },
+  {
+    id:"teva-pbm",company:"Teva",label:"Teva",icon:"💊",type:"pbm",
+    subtitle:"Austedo (deutetrabenazine) — Tardive Dyskinesia / Chorea",programName:"Teva Total Support",
+    drugs:[
+      {name:"Austedo (deutetrabenazine)",type:"PBM",strength:"6mg/9mg/12mg tab",supply:"30 days",cpt:"—",jcode:"—",ndc:"—"},
+    ],
+    callbacks:[],
+    pbm:pbmTeva()
+  },
+  {
+    id:"fk-mm",company:"Fresenius Kabi",label:"Fresenius Kabi",icon:"💉",type:"both",
+    subtitle:"Tyenne (tocilizumab biosimilar) — MM & PBM",programName:"Fresenius Kabi Patient Support",
+    drugs:[
+      {name:"Tyenne (tocilizumab)",type:"MM",strength:"80mg/4mL · 200mg/10mL · 400mg/20mL",supply:"varies",cpt:"96413",jcode:"J3380 / Q5123",ndc:"65219058401"},
+    ],
+    callbacks:[],
+    mm:mmFK(),pbm:pbmFK()
+  },
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -1330,6 +1357,92 @@ function pbmJJNeuro(){
   return b;
 }
 
+function pbmLeo(){
+  const b=pbmStandard("Adbry Advocate Program",[]);
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, my name is <span class='placeholder'>[Patient Access Manager's name]</span> calling from <strong>Adbry Advocate Program</strong> on a recorded line. I'm calling to verify pharmacy benefits for a patient by the name of <span class='placeholder'>[patient's name]</span> and date of birth <span class='placeholder'>[DOB]</span>.`};
+  b[0].steps.push({type:"instruction",label:"If asked — calling from Doctor's office?",text:"Say: <em>\"No, I'm calling from Adbry Advocate Program, on behalf of the member, but I have the prescribing doctor's NPI and it is _______\"</em>"});
+  // Add AFP section inside Benefit Details
+  const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
+  b[bdIdx].steps.splice(2,1,
+    {type:"question",label:"AFP Q",text:"Does this plan require the member to apply for manufacturer assistance, foundation assistance, or another external funding source before coverage or payment will be provided for this medication?",field:"→ AFP Required: Yes / No"},
+  );
+  return b;
+}
+
+function pbmTeva(){
+  const b=pbmStandard("Teva Total Support",[]);
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hello, this is <span class='placeholder'>Melanie</span> calling on a recorded line from <strong>Teva Total Support</strong>. I am calling on behalf of patient <span class='placeholder'>[Patient's name]</span> with date of birth <span class='placeholder'>[DOB]</span> under the care of doctor <span class='placeholder'>[Doctor's name]</span>. Would you please assist me with determining if <strong>Austedo</strong> is covered under the member's plan?`};
+  // Add two extra eligibility questions after LIS level
+  const pdIdx=b.findIndex(s=>s.title==="Plan Details");
+  b[pdIdx].steps.push(
+    {type:"question",label:"Q",text:"Is this the patient's primary plan?",field:"→ Primary Plan: Yes / No"},
+    {type:"question",label:"Q",text:"Is there any other pharmacy coverage listed?",field:"→ Other coverage: Yes / No | Details"}
+  );
+  // Tier exception for tier 3+
+  const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
+  const tierIdx=b[bdIdx].steps.findIndex(s=>s.field&&s.field.includes("Drug Tier"));
+  if(tierIdx!==-1) b[bdIdx].steps.splice(tierIdx+1,0,
+    {type:"branch",label:"If Tier 3 or higher",text:"Is there a Tier Exception Process?",field:"→ Yes/No | Process details: Phone / Fax / Portal"}
+  );
+  return b;
+}
+
+function mmFK(){
+  const b=mmStandard("Fresenius Kabi Patient Support");
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <strong>Fresenius Kabi Patient Support</strong> on a recorded line to verify benefits for <span class='placeholder'>[patient]</span> with date of birth <span class='placeholder'>[date of birth]</span>.`};
+  // Add Site of Care section before closing
+  const closeIdx=b.findIndex(s=>s.title==="Closing Statement");
+  b.splice(closeIdx,0,{title:"Site of Care Policy",hdr:"hdr-benefit",steps:[
+    {type:"instruction",label:"NOTE",text:"Confirm SOC only if selected on PEF. If no selection — confirm for all locations below."},
+    {type:"question",label:"Q",text:"Is administration covered at the HCP office?",field:"→ HCP Office: Yes/No | Network Status"},
+    {type:"question",label:"Q",text:"Is administration covered at Hospital / Outpatient Infusion Center?",field:"→ Hospital/Outpatient: Yes/No | Network Status"},
+    {type:"question",label:"Q",text:"How much would be the copay or coinsurance for the drug at each site?",field:"→ Copay / Coinsurance by SOC"},
+  ]});
+  return b;
+}
+
+function pbmFK(){
+  const b=pbmStandard("Fresenius Kabi Patient Support",[]);
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <strong>Fresenius Kabi Patient Support</strong> on a recorded line to verify benefits for <span class='placeholder'>[patient]</span> with date of birth <span class='placeholder'>[date of birth]</span>.`};
+  // Add AFP + alternate funding plan questions to Plan Details
+  const pdIdx=b.findIndex(s=>s.title==="Plan Details");
+  b[pdIdx].steps.push(
+    {type:"question",label:"Q",text:"Is this an Employer Based Plan?",field:"→ Employer Based: Yes / No"},
+    {type:"question",label:"Q",text:"Is this plan enrolled in any type of Alternate Funding Plan (e.g. PayerRx, PrudentRx)?",field:"→ AFP Enrolled: Yes / No | AFP Name"},
+    {type:"instruction",label:"Note — Simponi & Stelara only",text:"Days supply under mail order — confirm with Valeris as needed."}
+  );
+  // Replace Coverage Details with expanded PA / Pre-D / Appeal flow
+  const ci=b.findIndex(s=>s.title==="Coverage Details");
+  b[ci].steps=[
+    {type:"statement",label:"Script",text:`I'd like to see if the patient is covered for <span class='placeholder'>[specific drug name]</span> with <span class='placeholder'>[strength, quantity / day supply]</span>. Can you run a test claim?`},
+    {type:"instruction",label:"NOTE",text:"Be sure to provide/verify Medication by NDC."},
+    {type:"question",label:"Q",text:"Is the drug covered?",field:"→ Drug Name, Strength, Qty/Day Supply | Covered: Yes/No"},
+    {type:"question",label:"Q",text:"Is there a PA required for [Drug name]? If not — is there a Formulary Exception?",field:"→ Prior Auth or Formulary Exception"},
+    {type:"branch",label:"PA on file — APPROVED",text:"PA dept name & number | PA Ref ID | Effective date | End date | Total approved units | Verify provider name matches BV request | Confirm J-code/CPT/DX on auth"},
+    {type:"branch",label:"PA on file — DENIED",text:"PA dept name & number | Denial date | Denial reason | Submission method (Phone/Fax/Portal) | TAT | Check for other active auth"},
+    {type:"branch",label:"PA on file — PENDING",text:"PA dept name & number | Reference number | Submitted on | Submission method | TAT | Check for other active auth"},
+    {type:"branch",label:"PA NOT on file",text:"PA dept name & number | Submission method (Phone/Fax/Portal) | PA form required? Download instructions | TAT"},
+    {type:"branch",label:"Pre-D on file — APPROVED",text:"Pre-d dept name & number | Pre-d Ref ID | Effective date | End date | Total approved units | Verify provider name | Confirm J-code/CPT/DX"},
+    {type:"branch",label:"Pre-D on file — DENIED",text:"Pre-d dept name & number | Denial date | Denial reason | Submission method | TAT | Check for other active auth"},
+    {type:"branch",label:"Pre-D on file — PENDING",text:"Pre-d dept name & number | Reference number | Submitted on | Submission method | TAT"},
+    {type:"branch",label:"Pre-D NOT on file",text:"Pre-d dept name & number | Submission method | Pre-d form required? Download instructions | TAT"},
+    {type:"branch",label:"Appeal (drug not covered & PA not required)",text:"Approved: dept, number, ref#, submitted on, count | Denied: dept, number, method, TAT | Pending: dept, number, ref#, submitted on, notification, TAT, website, count | Not on file: dept, number, method, TAT, notification, website, count"},
+    {type:"question",label:"Q",text:"Can you help me with the name of the preferred SP(s) who can dispense [Drug name], phone number and fax number?",field:"→ Preferred SP | SP Phone | SP Fax"},
+    {type:"instruction",label:"If drug not covered",text:"Ask for Prior Auth. If PA not required → ask for Formulary Exception. If neither → ask for Appeal details."},
+  ];
+  // Override Benefit Details to use mail order EPP wording
+  const bdIdx=b.findIndex(s=>s.title==="Benefit Details");
+  b[bdIdx].steps[0]={type:"question",label:"Q",text:"May I know the EPP (Estimated Patient Price) of the drug on the mail order preferred SP?",field:"→ Estimated Copay"};
+  b[bdIdx].steps[1]={type:"question",label:"Q",text:"If EPP not available — how much is the copay or coinsurance of the drug on the mail order preferred SP? (Always ask coinsurance first, then copay)",field:"→ Copay $ | Coinsurance %"};
+  // Add TrOOP field and remove copay accumulator question for FK PBM
+  const caIdx=b[bdIdx].steps.findIndex(s=>s.text&&s.text.includes("Copay Accumulator / Maximizer"));
+  if(caIdx!==-1) b[bdIdx].steps.splice(caIdx,1);
+  b[bdIdx].steps.push(
+    {type:"question",label:"Q",text:"May I know the TrOOP amount and how much has been met? [Medicare Part D]",field:"→ TrOOP: $ | Met: $"}
+  );
+  return b;
+}
+
 function mmSandoz(){
   const b=mmStandard("Sandoz One Source™");
   // Override opening statement
@@ -1598,6 +1711,8 @@ const QC_SECTIONS_PBM=[
     {label:"Subscriber Relationship",q:"Is the member the subscriber of the plan? If not, what is the patient's relationship to the subscriber?",w:1},
     {label:"LIS Status",q:"Does this patient have Low Income Subsidy (LIS)? (Medicare Part D only)",w:1},
     {label:"LIS Level",q:"What is the level of LIS — Level 1 / 2 / 3 / 4? (Medicare Part D only)",w:1},
+    {label:"Primary Plan & Other Coverage",q:"Is this the patient's primary plan? Is there any other pharmacy coverage listed? [Required for Teva/Austedo]",w:1},
+    {label:"AFP / Alternate Funding Plan",q:"Is this plan enrolled in any Alternate Funding Plan (e.g. PayerRx, PrudentRx)? Is this an Employer Based Plan? [Required for Fresenius Kabi PBM]",w:1},
   ]},
   {title:"Pharmacy Processing Information",hdr:"hdr-pharmacy",weightPct:2,items:[
     {label:"BIN / PCN / Rx Group",q:"May I know the BIN, PCN, and Rx Group number?",w:1},
@@ -1635,6 +1750,7 @@ const QC_SECTIONS_PBM=[
     {label:"Deductible Included in OOP",q:"Is the deductible included in the OOP max? (Commercial)",w:1},
     {label:"TrOOP",q:"What is the TrOOP amount, and how much has been met? (Medicare Part D)",w:1},
     {label:"Drug Tier",q:"What tier does this drug fall under?",w:1},
+    {label:"Tier Exception",q:"If drug is on Tier 3 or higher — is there a Tier Exception process available? (Phone / Fax / Portal details) [Required for Teva/Austedo and similar programs]",w:1},
     {label:"Annual Benefit Cap",q:"Is there an annual benefit cap on this plan? (Commercial)",w:1},
     {label:"Step Therapy",q:"Is step therapy required? If so, what are the step therapy drug names?",w:1},
   ]},
@@ -4082,10 +4198,10 @@ delete editStore['qc__state_v2']; // drop v2 — item order/count changed (copay
 const QC_STATE_KEYS={mm:'qc__state_v3',pbm:'qc__pbm_state_v1'};
 const QC_KIND_META={
   mm:{title:'MM QC Scorecard',shortLabel:'MM',navId:'navQC',
-      subtitle:'Quality audit checklist for Major Medical (MM) benefit-verification calls — one row per literal call-script question, generalized across all MM programs (Spravato, Ipsen, J&amp;J Immunology, J&amp;J PAP, J&amp;J Oncology, Vyepti, Dextenza, Nucala, Sandoz DENO).',
+      subtitle:'Quality audit checklist for Major Medical (MM) benefit-verification calls — one row per literal call-script question, generalized across all MM programs (Spravato, Ipsen, J&amp;J Immunology, J&amp;J PAP, J&amp;J Oncology, Vyepti, Dextenza, Nucala, Sandoz DENO, Fresenius Kabi).',
       progFilter:p=>p.type==='mm'||p.type==='both'},
   pbm:{title:'PBM QC Scorecard',shortLabel:'PBM',navId:'navQCPBM',
-      subtitle:'Quality audit checklist for Pharmacy Benefit Manager (PBM) benefit-verification calls — one row per literal call-script question, generalized across all PBM programs (Spravato, IpsenCares, J&amp;J Immunology, J&amp;J PAP, J&amp;J Oncology/Erleada, Orgovyx, Nucala, Sandoz DENO).',
+      subtitle:'Quality audit checklist for Pharmacy Benefit Manager (PBM) benefit-verification calls — one row per literal call-script question, generalized across all PBM programs (Spravato, IpsenCares, J&amp;J Immunology, J&amp;J PAP, J&amp;J Oncology/Erleada, Orgovyx, Nucala, Sandoz DENO, Leo Pharma/Adbry, Teva/Austedo, Fresenius Kabi).',
       progFilter:p=>p.type==='pbm'||p.type==='both'},
 };
 function qcDefaultScores(sections){
@@ -4124,7 +4240,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-07-30.8";
+const APP_VERSION = "2026-07-30.9";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -6087,7 +6203,7 @@ function qcScoreSelectHtml(si,ii,axis,val){
 // agents, the same reason Team Leader/Type are already closed dropdowns.
 // Sorted for scanability; trimmed since a few source entries had stray
 // trailing spaces that would otherwise create an invisible duplicate name.
-const QC_AGENT_NAME_OPTIONS=['Haseena P','Manjith Kumar Durthati','Pavan Kumar Kalasu','Abu Talha','Junaid R','Kelam Siva Sankar','Sudharshan. S','Trilok Srinivas','Keerthana K','Afraa Fathima','SANTHOSH S','Intiyaj Sharif','Jennifer Sb','Manoj G','Mohammed Zeeshan Rathod','Rakhesh Rohidas Pal','Ajuba Yelmo','Megha Rai','Sneha PN','Saiyad Noorulla','Riyaz Rehman','Vinoth N','Sandhya V','Anil Kumar H S','Pasupuleti Hymavathi','Abhishek Ningappanavar','Arbiya Taj','Dravid Kumar R','Sharanya','Nadhini Ravi','Likith Kumar Ambruthaluru','Vighneshwar Hegde','Devendra Kothollu','Pallavi N','Shereen Taj','Syed Sahil','Naveena M','Kimdiana Grace','Hemalatha P','Pooja v','Challa Pavan Kumar','Srinivasan Baskaran','Nandha kumar R','Sanjay S Kumar','Sindhu M','Shreya','Dr. Thanmai Yeruva','Srihari K P','Hariharan Rajapandian','Thejashwini R','Christopher Samson','Nirmal Kandhesh B','Chandana Kurapothula','Anushiya S','Pooja Y','Asma Banu','Esha R','Balaji A','Kabiya C','Bhavana S','Divyashree M','Moin Khan','Deepika Dhanunjaya','Jyoti Sharma'].map(n=>n.trim()).sort((a,b)=>a.localeCompare(b));
+const QC_AGENT_NAME_OPTIONS=['Haseena P','Manjith Kumar Durthati','Pavan Kumar Kalasu','Abu Talha','Junaid R','Kelam Siva Sankar','Sudharshan. S','Trilok Srinivas','Keerthana K','Afraa Fathima','SANTHOSH S','Intiyaj Sharif','Jennifer Sb','Manoj G','Mohammed Zeeshan Rathod','Rakhesh Rohidas Pal','Ajuba Yelmo','Megha Rai','Sneha PN','Saiyad Noorulla','Riyaz Rehman','Vinoth N','Sandhya V','Anil Kumar H S','Pasupuleti Hymavathi','Abhishek Ningappanavar','Arbiya Taj','Dravid Kumar R','Sharanya','Nadhini Ravi','Likith Kumar Ambruthaluru','Vighneshwar Hegde','Devendra Kothollu','Pallavi N','Shereen Taj','Syed Sahil','Naveena M','Kimdiana Grace','Hemalatha P','Pooja v','Challa Pavan Kumar','Srinivasan Baskaran','Nandha kumar R','Sanjay S Kumar','Sindhu M','Shreya','Dr. Thanmai Yeruva','Srihari K P','Hariharan Rajapandian','Thejashwini R','Christopher Samson','Nirmal Kandhesh B','Chandana Kurapothula','Anushiya S','Pooja Y','Asma Banu','Esha R','Balaji A','Kabiya C','Bhavana S','Divyashree M','Moin Khan','Deepika Dhanunjaya','Jyoti Sharma','Mohammed Ayub'].map(n=>n.trim()).sort((a,b)=>a.localeCompare(b));
 
 // Registered at render/filter time and referenced by index (not embedded
 // directly in onmousedown="..." strings) — same reason row/breadcrumb
