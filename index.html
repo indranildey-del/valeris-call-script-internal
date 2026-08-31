@@ -1389,7 +1389,7 @@ function pbmTeva(){
 
 function mmFK(){
   const b=mmStandard("Fresenius Kabi Patient Support");
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <strong>Fresenius Kabi Patient Support</strong> on a recorded line to verify benefits for <span class='placeholder'>[patient]</span> with date of birth <span class='placeholder'>[date of birth]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi <span class='placeholder'>[Rep Name]</span>, this is <span class='placeholder'>[Name]</span>, calling on behalf of provider <span class='placeholder'>[Provider Name]</span>, on a recorded line to verify benefits for member <span class='placeholder'>[Patient Name]</span> with date of birth <span class='placeholder'>[Patient DOB]</span>.`};
   // Add Site of Care section before closing
   const closeIdx=b.findIndex(s=>s.title==="Closing Statement");
   b.splice(closeIdx,0,{title:"Site of Care Policy",hdr:"hdr-benefit",steps:[
@@ -1403,7 +1403,7 @@ function mmFK(){
 
 function pbmFK(){
   const b=pbmStandard("Fresenius Kabi Patient Support",[]);
-  b[0].steps[0]={type:"statement",label:"Script",text:`Hi, this is <span class='placeholder'>[Insert Program Representative name]</span> calling on behalf of <strong>Fresenius Kabi Patient Support</strong> on a recorded line to verify benefits for <span class='placeholder'>[patient]</span> with date of birth <span class='placeholder'>[date of birth]</span>.`};
+  b[0].steps[0]={type:"statement",label:"Script",text:`Hi <span class='placeholder'>[Rep Name]</span>, this is <span class='placeholder'>[Name]</span>, calling on behalf of provider <span class='placeholder'>[Provider Name]</span>, on a recorded line to verify benefits for member <span class='placeholder'>[Patient Name]</span> with date of birth <span class='placeholder'>[Patient DOB]</span>.`};
   // Add AFP + alternate funding plan questions to Plan Details
   const pdIdx=b.findIndex(s=>s.title==="Plan Details");
   b[pdIdx].steps.push(
