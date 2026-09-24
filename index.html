@@ -4240,7 +4240,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-09-04.3";
+const APP_VERSION = "2026-09-24.1";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -6205,59 +6205,73 @@ function qcScoreSelectHtml(si,ii,axis,val){
 // trailing spaces that would otherwise create an invisible duplicate name.
 const QC_AGENT_NAME_OPTIONS=['Haseena P','Manjith Kumar Durthati','Pavan Kumar Kalasu','Abu Talha','Junaid R','Kelam Siva Sankar','Sudharshan. S','Trilok Srinivas','Keerthana K','Afraa Fathima','SANTHOSH S','Intiyaj Sharif','Jennifer Sb','Manoj G','Mohammed Zeeshan Rathod','Rakhesh Rohidas Pal','Ajuba Yelmo','Megha Rai','Sneha PN','Saiyad Noorulla','Riyaz Rehman','Vinoth N','Sandhya V','Anil Kumar H S','Pasupuleti Hymavathi','Abhishek Ningappanavar','Arbiya Taj','Dravid Kumar R','Sharanya','Nadhini Ravi','Likith Kumar Ambruthaluru','Vighneshwar Hegde','Devendra Kothollu','Pallavi N','Shereen Taj','Syed Sahil','Naveena M','Kimdiana Grace','Hemalatha P','Pooja v','Challa Pavan Kumar','Srinivasan Baskaran','Nandha kumar R','Sanjay S Kumar','Sindhu M','Shreya','Dr. Thanmai Yeruva','Srihari K P','Hariharan Rajapandian','Thejashwini R','Christopher Samson','Nirmal Kandhesh B','Chandana Kurapothula','Anushiya S','Pooja Y','Asma Banu','Esha R','Balaji A','Kabiya C','Bhavana S','Divyashree M','Moin Khan','Deepika Dhanunjaya','Jyoti Sharma','Mohammed Ayub'].map(n=>n.trim()).sort((a,b)=>a.localeCompare(b));
 
-// Registered at render/filter time and referenced by index (not embedded
-// directly in onmousedown="..." strings) — same reason row/breadcrumb
-// targets elsewhere in this file avoid inlining free-text names: a name
-// containing a quote/apostrophe would otherwise break the attribute string.
-let _qcAgentNameOptionTargets=[];
-function qcAgentNameOptionsHtml(names){
-  _qcAgentNameOptionTargets=names;
-  if(!names.length) return `<div class="qc-analytics-dropdown-empty">No matching agents</div>`;
-  return names.map((name,idx)=>`<div class="qc-analytics-dropdown-option" onmousedown="event.preventDefault();qcSelectAgentNameByIdx(${idx})">${escHtml(name)}</div>`).join('');
+// Shared searchable-dropdown combobox for any case field backed by
+// QC_AGENT_NAME_OPTIONS — Agent Name and Auditor Name both draw from the
+// same roster, so this is one component parameterized by field key rather
+// than two near-duplicate copies. Strict select-only, same as before: typing
+// only filters the list, never writes to state — only clicking an option
+// (or landing exactly on it) does, so a typed-but-unselected name can never
+// reach Save. Registered option lists are keyed by field (not a single
+// shared array) since Agent Name and Auditor Name are independent
+// comboboxes that can each have their own filtered list open.
+let _qcNameComboboxOptionTargets={};
+// "agentName" -> "AgentName" / "auditorName" -> "AuditorName", used to build
+// each field's own element IDs (qcAgentNameInput, qcAuditorNameInput, ...)
+// so the two comboboxes never collide, and the Agent Name IDs stay exactly
+// what they were before this was generalized.
+function qcNameComboboxIdBase(field){ return field.charAt(0).toUpperCase()+field.slice(1); }
+function qcNameComboboxOptionsHtml(names,field){
+  _qcNameComboboxOptionTargets[field]=names;
+  if(!names.length) return `<div class="qc-analytics-dropdown-empty">No matching names</div>`;
+  return names.map((name,idx)=>`<div class="qc-analytics-dropdown-option" onmousedown="event.preventDefault();qcSelectNameComboboxByIdx('${field}',${idx})">${escHtml(name)}</div>`).join('');
 }
-function qcFilterAgentNameOptions(query){
+function qcFilterNameComboboxOptions(field,query){
   const q=(query||'').trim().toLowerCase();
   const filtered=QC_AGENT_NAME_OPTIONS.filter(n=>n.toLowerCase().includes(q));
-  const panel=document.getElementById('qcAgentNameDropdownPanel');
-  if(panel){ panel.innerHTML=qcAgentNameOptionsHtml(filtered); panel.classList.add('open'); }
+  const panel=document.getElementById('qc'+qcNameComboboxIdBase(field)+'DropdownPanel');
+  if(panel){ panel.innerHTML=qcNameComboboxOptionsHtml(filtered,field); panel.classList.add('open'); }
 }
-function qcOpenAgentNameDropdown(){
-  qcFilterAgentNameOptions(document.getElementById('qcAgentNameInput')?document.getElementById('qcAgentNameInput').value:'');
+function qcOpenNameComboboxDropdown(field){
+  const input=document.getElementById('qc'+qcNameComboboxIdBase(field)+'Input');
+  qcFilterNameComboboxOptions(field, input?input.value:'');
 }
 // Runs on blur, delayed — clicking an option fires via onmousedown (which
-// runs before blur and calls qcSelectAgentNameByIdx directly), so by the
+// runs before blur and calls qcSelectNameComboboxByIdx directly), so by the
 // time this timeout fires the state/input are already correct; this only
 // needs to clean up when the user types a search then clicks away without
 // picking anything, reverting the box back to whatever was actually saved.
-function qcCloseAgentNameDropdown(){
+function qcCloseNameComboboxDropdown(field){
   setTimeout(()=>{
-    const panel=document.getElementById('qcAgentNameDropdownPanel');
+    const idBase=qcNameComboboxIdBase(field);
+    const panel=document.getElementById('qc'+idBase+'DropdownPanel');
     if(panel) panel.classList.remove('open');
-    const input=document.getElementById('qcAgentNameInput');
-    if(input) input.value=qcState.case.agentName||'';
+    const input=document.getElementById('qc'+idBase+'Input');
+    if(input) input.value=qcState.case[field]||'';
   },150);
 }
-function qcSelectAgentNameByIdx(idx){
-  const name=_qcAgentNameOptionTargets[idx];
+function qcSelectNameComboboxByIdx(field,idx){
+  const name=(_qcNameComboboxOptionTargets[field]||[])[idx];
   if(name==null) return;
-  qcUpdateCase('agentName',name);
-  const input=document.getElementById('qcAgentNameInput');
+  qcUpdateCase(field,name);
+  const idBase=qcNameComboboxIdBase(field);
+  const input=document.getElementById('qc'+idBase+'Input');
   if(input) input.value=name;
-  const panel=document.getElementById('qcAgentNameDropdownPanel');
+  const panel=document.getElementById('qc'+idBase+'DropdownPanel');
   if(panel) panel.classList.remove('open');
 }
-function qcAgentNameFieldHtml(){
+function qcNameComboboxFieldHtml(field,label,placeholder){
   const c=qcState.case||{};
-  const val=(c.agentName||'').toString();
+  const val=(c[field]||'').toString();
+  const idBase=qcNameComboboxIdBase(field);
   return `<div class="qc-field qc-agent-combobox">
-    <label>Agent Name<span class="qc-required-star">*</span></label>
-    <input data-field="agentName" type="text" id="qcAgentNameInput" autocomplete="off" placeholder="Search agent name…"
+    <label>${label}<span class="qc-required-star">*</span></label>
+    <input data-field="${field}" type="text" id="qc${idBase}Input" autocomplete="off" placeholder="${escHtml(placeholder)}"
       value="${escHtml(val)}"
-      oninput="qcFilterAgentNameOptions(this.value)"
-      onfocus="this.select();qcOpenAgentNameDropdown()"
-      onblur="qcCloseAgentNameDropdown()"
+      oninput="qcFilterNameComboboxOptions('${field}',this.value)"
+      onfocus="this.select();qcOpenNameComboboxDropdown('${field}')"
+      onblur="qcCloseNameComboboxDropdown('${field}')"
       onkeydown="if(event.key==='Escape')this.blur()">
-    <div class="qc-analytics-dropdown-panel" id="qcAgentNameDropdownPanel">${qcAgentNameOptionsHtml(QC_AGENT_NAME_OPTIONS)}</div>
+    <div class="qc-analytics-dropdown-panel" id="qc${idBase}DropdownPanel">${qcNameComboboxOptionsHtml(QC_AGENT_NAME_OPTIONS,field)}</div>
   </div>`;
 }
 
@@ -6268,7 +6282,6 @@ function renderQCDashboard(){
   const progOptions=`<option value="">&#8212; Select Program &#8212;</option>`+kindProgs.map(p=>`<option value="${p.id}" ${c.program===p.id?'selected':''}>${p.label}</option>`).join('');
   const fields=[
     {k:'srNumber',label:'SR / Case Number',type:'text'},
-    {k:'auditorName',label:'Auditor Name',type:'text'},
     {k:'auditDate',label:'Audit Date',type:'date'},
     {k:'payerName',label:'Payer Name',type:'text'},
     {k:'payerType',label:'Payer Type',type:'text'},
@@ -6328,7 +6341,7 @@ function renderQCDashboard(){
         <div id="qcSaveStatus" class="qc-save-status" data-role="qc-save-status"></div>
       </div>
     </div>
-    <div class="qc-fields-grid">${programField}${typeField}${teamLeaderField}${qcAgentNameFieldHtml()}${fieldsHtml}</div>
+    <div class="qc-fields-grid">${programField}${typeField}${teamLeaderField}${qcNameComboboxFieldHtml('agentName','Agent Name','Search agent name…')}${qcNameComboboxFieldHtml('auditorName','Auditor Name','Search auditor name…')}${fieldsHtml}</div>
   </div>
   <div id="qcFatalBanner" class="qc-egregious-banner" style="display:none">&#9888; A fatal item is marked Fail. This is counted in the score and error count like any other item, but flagged here for visibility.</div>
   <div class="qc-score-strip">
@@ -6958,16 +6971,3 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden) qcCheckF
       <option value="Authorization">Authorization</option>
       <option value="Benefits">Benefits</option>
       <option value="Plan">Plan</option>
-      <option value="Pharmacy">Pharmacy</option>
-      <option value="Medicare">Medicare</option>
-      <option value="Appeals">Appeals</option>
-      <option value="Transportation">Transportation</option>
-    </select>
-    <div class="term-modal-actions">
-      <button class="btn-cancel" onclick="closeTermModal()">Cancel</button>
-      <button class="btn-save" onclick="saveTermModal()">Save</button>
-    </div>
-  </div>
-</div>
-</body>
-</html>
