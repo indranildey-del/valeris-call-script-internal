@@ -504,6 +504,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .qc-field input.qc-field-error,.qc-field select.qc-field-error{border-color:#dc2626;background:#fef2f2}
 .qc-agent-combobox{position:relative}
 .qc-agent-combobox .qc-analytics-dropdown-panel{width:100%;box-sizing:border-box}
+.qc-agent-combobox input{padding-right:28px}
+.qc-agent-combobox-arrow{position:absolute;right:8px;top:26px;font-size:11px;color:#94a3b8;cursor:pointer;line-height:1;padding:4px;user-select:none}
+.qc-agent-combobox-arrow:hover{color:#4263eb}
 .qc-section-count{font-size:11px;color:#94a3b8;font-weight:600;margin-left:auto;padding-right:8px}
 .qc-table-hdr{display:grid;grid-template-columns:180px 1fr 100px 100px 50px 1fr;gap:10px;padding:6px 0 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#94a3b8;border-bottom:1px solid #f1f4fb}
 @media(max-width:1100px){.qc-table-hdr{display:none}}
@@ -4240,7 +4243,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-09-24.1";
+const APP_VERSION = "2026-09-24.2";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5176,7 +5179,13 @@ function qcAnalyticsToggleDropdown(id){
   if(!wasOpen) panel.classList.add('open');
 }
 document.addEventListener('click',function(e){
-  if(e.target.closest('.qc-analytics-multiselect')) return;
+  // Agent Name/Auditor Name (.qc-agent-combobox) reuse this same panel class
+  // but close themselves independently via their own blur handler — without
+  // this exclusion, the very click that focuses one of those fields (and
+  // opens its panel via onfocus) would immediately get caught by this
+  // listener too and close it again in the same tick, before the user ever
+  // saw it.
+  if(e.target.closest('.qc-analytics-multiselect')||e.target.closest('.qc-agent-combobox')) return;
   document.querySelectorAll('.qc-analytics-dropdown-panel.open').forEach(p=>p.classList.remove('open'));
 });
 
@@ -6231,9 +6240,13 @@ function qcFilterNameComboboxOptions(field,query){
   const panel=document.getElementById('qc'+qcNameComboboxIdBase(field)+'DropdownPanel');
   if(panel){ panel.innerHTML=qcNameComboboxOptionsHtml(filtered,field); panel.classList.add('open'); }
 }
+// Always the full list, not filtered to whatever's already selected — if a
+// field already has a value and you click back into it, filtering by that
+// value would show only itself as a match, defeating the point of opening
+// the list to browse/change it. Typing afterward is what filters; opening
+// should always start from "everything."
 function qcOpenNameComboboxDropdown(field){
-  const input=document.getElementById('qc'+qcNameComboboxIdBase(field)+'Input');
-  qcFilterNameComboboxOptions(field, input?input.value:'');
+  qcFilterNameComboboxOptions(field, '');
 }
 // Runs on blur, delayed — clicking an option fires via onmousedown (which
 // runs before blur and calls qcSelectNameComboboxByIdx directly), so by the
@@ -6259,6 +6272,34 @@ function qcSelectNameComboboxByIdx(field,idx){
   const panel=document.getElementById('qc'+idBase+'DropdownPanel');
   if(panel) panel.classList.remove('open');
 }
+// Opens/closes the panel on demand, alongside (not instead of) the existing
+// auto-open-on-focus — a manual trigger for anyone who wants to browse the
+// full list without needing to click straight into the text box. Uses
+// mousedown+preventDefault (same trick the option rows already use) so
+// clicking the arrow doesn't blur the input first if it's already focused —
+// otherwise the resulting blur would run its revert/close logic right
+// before this toggle runs, making an "open" click look like a no-op.
+//
+// Opens directly via qcOpenNameComboboxDropdown() rather than relying on
+// input.focus() to trigger it through the onfocus handler — .focus() is a
+// no-op (fires no event) when the input is already the focused element,
+// which happens the moment you've picked an option once (selecting doesn't
+// blur the input, it just closes the panel), so depending on that side
+// effect alone made every toggle after the first one silently do nothing.
+function qcToggleNameComboboxDropdown(field){
+  const idBase=qcNameComboboxIdBase(field);
+  const panel=document.getElementById('qc'+idBase+'DropdownPanel');
+  const input=document.getElementById('qc'+idBase+'Input');
+  if(!panel||!input) return;
+  if(panel.classList.contains('open')){
+    panel.classList.remove('open');
+    input.value=qcState.case[field]||'';
+  } else {
+    input.focus();
+    input.select();
+    qcOpenNameComboboxDropdown(field);
+  }
+}
 function qcNameComboboxFieldHtml(field,label,placeholder){
   const c=qcState.case||{};
   const val=(c[field]||'').toString();
@@ -6271,6 +6312,7 @@ function qcNameComboboxFieldHtml(field,label,placeholder){
       onfocus="this.select();qcOpenNameComboboxDropdown('${field}')"
       onblur="qcCloseNameComboboxDropdown('${field}')"
       onkeydown="if(event.key==='Escape')this.blur()">
+    <span class="qc-agent-combobox-arrow" onmousedown="event.preventDefault();qcToggleNameComboboxDropdown('${field}')" title="Open list">&#9662;</span>
     <div class="qc-analytics-dropdown-panel" id="qc${idBase}DropdownPanel">${qcNameComboboxOptionsHtml(QC_AGENT_NAME_OPTIONS,field)}</div>
   </div>`;
 }
@@ -6971,3 +7013,16 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden) qcCheckF
       <option value="Authorization">Authorization</option>
       <option value="Benefits">Benefits</option>
       <option value="Plan">Plan</option>
+      <option value="Pharmacy">Pharmacy</option>
+      <option value="Medicare">Medicare</option>
+      <option value="Appeals">Appeals</option>
+      <option value="Transportation">Transportation</option>
+    </select>
+    <div class="term-modal-actions">
+      <button class="btn-cancel" onclick="closeTermModal()">Cancel</button>
+      <button class="btn-save" onclick="saveTermModal()">Save</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
