@@ -4255,7 +4255,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-09-30.4";
+const APP_VERSION = "2026-09-30.5";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -6334,7 +6334,13 @@ function qcpOpenRepeatDetail(name){
   const details=qcpRepeatingCriticalDetails(name);
   const overlay=document.createElement('div');
   overlay.id='qcpModalOverlay';
-  overlay.className='qcp-agentmodal-overlay';
+  // Also tagged qcp-root (not just qcp-agentmodal-overlay) — this overlay is
+  // appended to document.body, OUTSIDE the .qcp-root wrapper that every
+  // --qcp-* CSS custom property (surface/text/border colors) is scoped to.
+  // Without re-establishing that scope here, every var(--qcp-*) inside the
+  // modal resolves to nothing — its background goes fully transparent, and
+  // the page behind it shows straight through, unreadable.
+  overlay.className='qcp-agentmodal-overlay qcp-root';
   overlay.onclick=e=>{ if(e.target===overlay) qcpCloseModal(); };
   overlay.innerHTML=`<div class="qcp-agentmodal-box" style="max-width:640px">
       <div class="qcp-agentmodal-hdr">
@@ -6391,7 +6397,13 @@ function qcpOpenAgentReport(name){
 
   const overlay=document.createElement('div');
   overlay.id='qcpModalOverlay';
-  overlay.className='qcp-agentmodal-overlay';
+  // Also tagged qcp-root (not just qcp-agentmodal-overlay) — this overlay is
+  // appended to document.body, OUTSIDE the .qcp-root wrapper that every
+  // --qcp-* CSS custom property (surface/text/border colors) is scoped to.
+  // Without re-establishing that scope here, every var(--qcp-*) inside the
+  // modal resolves to nothing — its background goes fully transparent, and
+  // the page behind it shows straight through, unreadable.
+  overlay.className='qcp-agentmodal-overlay qcp-root';
   overlay.onclick=ev=>{ if(ev.target===overlay) qcpCloseModal(); };
   overlay.innerHTML=`<div class="qcp-agentmodal-box">
       <div class="qcp-agentmodal-hdr">
@@ -6502,7 +6514,13 @@ function qcpOpenTeamReport(name){
 
   const overlay=document.createElement('div');
   overlay.id='qcpModalOverlay';
-  overlay.className='qcp-agentmodal-overlay';
+  // Also tagged qcp-root (not just qcp-agentmodal-overlay) — this overlay is
+  // appended to document.body, OUTSIDE the .qcp-root wrapper that every
+  // --qcp-* CSS custom property (surface/text/border colors) is scoped to.
+  // Without re-establishing that scope here, every var(--qcp-*) inside the
+  // modal resolves to nothing — its background goes fully transparent, and
+  // the page behind it shows straight through, unreadable.
+  overlay.className='qcp-agentmodal-overlay qcp-root';
   overlay.onclick=ev=>{ if(ev.target===overlay) qcpCloseModal(); };
   overlay.innerHTML=`<div class="qcp-agentmodal-box">
       <div class="qcp-agentmodal-hdr">
@@ -6605,7 +6623,13 @@ function qcpOpenProgramReport(programName){
 
   const overlay=document.createElement('div');
   overlay.id='qcpModalOverlay';
-  overlay.className='qcp-agentmodal-overlay';
+  // Also tagged qcp-root (not just qcp-agentmodal-overlay) — this overlay is
+  // appended to document.body, OUTSIDE the .qcp-root wrapper that every
+  // --qcp-* CSS custom property (surface/text/border colors) is scoped to.
+  // Without re-establishing that scope here, every var(--qcp-*) inside the
+  // modal resolves to nothing — its background goes fully transparent, and
+  // the page behind it shows straight through, unreadable.
+  overlay.className='qcp-agentmodal-overlay qcp-root';
   overlay.onclick=ev=>{ if(ev.target===overlay) qcpCloseModal(); };
   overlay.innerHTML=`<div class="qcp-agentmodal-box">
       <div class="qcp-agentmodal-hdr">
