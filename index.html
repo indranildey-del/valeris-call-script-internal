@@ -4255,7 +4255,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-09-30.1";
+const APP_VERSION = "2026-09-30.2";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5253,10 +5253,20 @@ async function qcLoadAnalytics(kind){
       fetch(QC_WEBHOOK_URL,{method:'POST',body:JSON.stringify({action:'rosterList',kind,idToken:qcAuthToken})}).then(r=>r.json()),
       fetch(QC_WEBHOOK_URL,{method:'POST',body:JSON.stringify({action:'missLogList',idToken:qcAuthToken})}).then(r=>r.json())
     ]);
+    // Audits are the one source this page can't work at all without —
+    // still fail hard if that fails. Roster/Miss Log are enrichment
+    // (cases/talk time/attendance, escalations) layered on top of the real
+    // audit data — a hiccup fetching either one (a misconfigured sheet, a
+    // permissions gap) shouldn't blank out audits that loaded just fine, so
+    // those two degrade to empty data plus a console warning instead.
     if(auditsRes.status!=='ok') throw new Error(auditsRes.message||'Unknown error loading audits');
-    if(rosterRes.status!=='ok') throw new Error(rosterRes.message||'Unknown error loading the roster');
-    if(missRes.status!=='ok') throw new Error(missRes.message||'Unknown error loading the miss log');
-    const combined={audits:auditsRes.audits||[], roster:rosterRes.agents||[], missLog:missRes.rows||[]};
+    if(rosterRes.status!=='ok') console.warn('QC Analytics: roster failed to load, continuing without it —',rosterRes.message);
+    if(missRes.status!=='ok') console.warn('QC Analytics: miss log failed to load, continuing without it —',missRes.message);
+    const combined={
+      audits:auditsRes.audits||[],
+      roster:(rosterRes.status==='ok'?rosterRes.agents:[])||[],
+      missLog:(missRes.status==='ok'?missRes.rows:[])||[]
+    };
     _qcAnalyticsCache[kind]={data:combined,ts:Date.now()};
     qcpOnDataLoaded();
   }catch(err){
