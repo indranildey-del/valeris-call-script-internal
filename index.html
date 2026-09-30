@@ -4255,7 +4255,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-09-30.2";
+const APP_VERSION = "2026-09-30.4";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5262,11 +5262,11 @@ async function qcLoadAnalytics(kind){
     if(auditsRes.status!=='ok') throw new Error(auditsRes.message||'Unknown error loading audits');
     if(rosterRes.status!=='ok') console.warn('QC Analytics: roster failed to load, continuing without it —',rosterRes.message);
     if(missRes.status!=='ok') console.warn('QC Analytics: miss log failed to load, continuing without it —',missRes.message);
-    const combined={
-      audits:auditsRes.audits||[],
-      roster:(rosterRes.status==='ok'?rosterRes.agents:[])||[],
-      missLog:(missRes.status==='ok'?missRes.rows:[])||[]
-    };
+    const combined=qcpExcludeAiAuditTeam(
+      auditsRes.audits||[],
+      (rosterRes.status==='ok'?rosterRes.agents:[])||[],
+      (missRes.status==='ok'?missRes.rows:[])||[]
+    );
     _qcAnalyticsCache[kind]={data:combined,ts:Date.now()};
     qcpOnDataLoaded();
   }catch(err){
@@ -5309,6 +5309,39 @@ function qcpMissLog(){ const d=qcpData(); return d?(d.missLog||[]):[]; }
 
 function qcpNormName(s){ return String(s==null?'':s).trim().toLowerCase(); }
 function qcpEscJs(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' '); }
+
+// Agents on the "AI Audit Team" (an agent-level tag, not a per-day one —
+// once any Roster row for that agent ever shows it, they're excluded
+// everywhere, not just for the days it applied) are AI-handled cases, not
+// real human agents subject to QC — excluded from every calculation (case
+// counts, QC score, escalations, Coaching Queue), real-name-agnostic so it
+// keeps working regardless of which agents are on that team on a given day.
+// Substring match, not exact, since the precise casing/format of this value
+// in the live sheet isn't guaranteed (e.g. "AI Audit Team" vs "MM - AI Audit").
+function qcpIsAiAuditTeamValue(team){ return String(team||'').toLowerCase().indexOf('ai audit')!==-1; }
+function qcpAiAuditAgentNameSet(rosterAgents){
+  const set=new Set();
+  (rosterAgents||[]).forEach(r=>{
+    if(!r||!r.name) return;
+    const flagged=(r.daily||[]).some(d=>qcpIsAiAuditTeamValue(d.team));
+    if(flagged) set.add(qcpNormName(r.name));
+  });
+  return set;
+}
+// Drops every audit/roster/miss-log row belonging to an AI-audit-team agent
+// — called once right where each page's raw fetch results are combined, so
+// every downstream calculation (which all read from that same cached,
+// already-filtered data) excludes them automatically without each one
+// needing to know about this exclusion itself.
+function qcpExcludeAiAuditTeam(audits,roster,missLog){
+  const excluded=qcpAiAuditAgentNameSet(roster);
+  if(!excluded.size) return {audits,roster,missLog};
+  return {
+    audits:(audits||[]).filter(a=>!excluded.has(qcpNormName(a.agent))),
+    roster:(roster||[]).filter(r=>!excluded.has(qcpNormName(r.name))),
+    missLog:(missLog||[]).filter(r=>!excluded.has(qcpNormName(r.agent)))
+  };
+}
 
 function qcpBuildRosterIndex(rosterAgents){
   const exact=new Map(), norm=new Map();
@@ -6836,6 +6869,7 @@ const QC_COACHING_ESCALATIONS_ATTENTION=5,QC_COACHING_ESCALATIONS_ESCALATE=10;
 let _coachingKind='mm';
 let _coachingCache={mm:null,pbm:null};
 let _missLogCache=null;
+let _coachingRosterCache={mm:null,pbm:null};
 
 function showCoachingQueue(){
   currentView='coaching_queue';currentProgId='';
@@ -6875,6 +6909,7 @@ function qcSwitchCoachingKind(kind){
 function qcRefreshCoachingQueue(){
   _coachingCache[_coachingKind]=null;
   _missLogCache=null;
+  _coachingRosterCache[_coachingKind]=null;
   qcLoadCoachingQueue(_coachingKind);
 }
 
@@ -6916,11 +6951,29 @@ async function qcLoadCoachingQueue(kind){
             _missLogCache={data:data.rows,ts:Date.now()};
             return data.rows;
           });
-    // The audit list and the Miss Log are two independent sheets — fire
-    // both requests at once instead of awaiting them one after another,
-    // which would otherwise roughly double the wait on a cold cache.
-    const [audits,missLogRows]=await Promise.all([auditsPromise,missLogPromise]);
-    bodyEl.innerHTML=renderCoachingQueueBody(kind,audits,missLogRows);
+    // Roster is only fetched here to know which agents are on the "AI Audit
+    // Team" (see qcpAiAuditAgentNameSet) so they can be excluded from
+    // flagging below — a roster hiccup shouldn't block the whole queue, so
+    // this one degrades to "no exclusions" rather than throwing.
+    const cachedRoster=_coachingRosterCache[kind];
+    const rosterPromise=(cachedRoster&&(Date.now()-cachedRoster.ts)<FRESH_MS)
+      ? Promise.resolve(cachedRoster.data)
+      : fetch(QC_WEBHOOK_URL,{method:'POST',body:JSON.stringify({action:'rosterList',kind,idToken:qcAuthToken})})
+          .then(res=>res.json())
+          .then(data=>{
+            if(data.status!=='ok'){ console.warn('Coaching Queue: roster failed to load, no AI-audit-team exclusions applied —',data.message); return []; }
+            _coachingRosterCache[kind]={data:data.agents,ts:Date.now()};
+            return data.agents;
+          })
+          .catch(()=>[]);
+    // The audit list, the Miss Log, and the roster are three independent
+    // sheets — fire all requests at once instead of awaiting them one after
+    // another, which would otherwise roughly triple the wait on a cold cache.
+    const [audits,missLogRows,rosterAgents]=await Promise.all([auditsPromise,missLogPromise,rosterPromise]);
+    const excluded=qcpAiAuditAgentNameSet(rosterAgents);
+    const filteredAudits=excluded.size?audits.filter(a=>!excluded.has(qcpNormName(a.agent))):audits;
+    const filteredMissLog=excluded.size?missLogRows.filter(r=>!excluded.has(qcpNormName(r.agent))):missLogRows;
+    bodyEl.innerHTML=renderCoachingQueueBody(kind,filteredAudits,filteredMissLog);
   }catch(err){
     bodyEl.innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626">&#10005; Could not load coaching queue: ${escHtml(err.message)}</div>`;
   }
@@ -7431,7 +7484,7 @@ function qcScoreSelectHtml(si,ii,axis,val){
 // agents, the same reason Team Leader/Type are already closed dropdowns.
 // Sorted for scanability; trimmed since a few source entries had stray
 // trailing spaces that would otherwise create an invisible duplicate name.
-const QC_AGENT_NAME_OPTIONS=['Haseena P','Manjith Kumar Durthati','Pavan Kumar Kalasu','Abu Talha','Junaid R','Kelam Siva Sankar','Sudharshan. S','Trilok Srinivas','Keerthana K','Afraa Fathima','SANTHOSH S','Intiyaj Sharif','Jennifer Sb','Manoj G','Mohammed Zeeshan Rathod','Rakhesh Rohidas Pal','Ajuba Yelmo','Megha Rai','Sneha PN','Saiyad Noorulla','Riyaz Rehman','Vinoth N','Sandhya V','Anil Kumar H S','Pasupuleti Hymavathi','Abhishek Ningappanavar','Arbiya Taj','Dravid Kumar R','Sharanya','Nadhini Ravi','Likith Kumar Ambruthaluru','Vighneshwar Hegde','Devendra Kothollu','Pallavi N','Shereen Taj','Syed Sahil','Naveena M','Kimdiana Grace','Hemalatha P','Pooja v','Challa Pavan Kumar','Srinivasan Baskaran','Nandha kumar R','Sanjay S Kumar','Sindhu M','Shreya','Dr. Thanmai Yeruva','Srihari K P','Hariharan Rajapandian','Thejashwini R','Christopher Samson','Nirmal Kandhesh B','Chandana Kurapothula','Anushiya S','Pooja Y','Asma Banu','Esha R','Balaji A','Kabiya C','Bhavana S','Divyashree M','Moin Khan','Deepika Dhanunjaya','Jyoti Sharma','Mohammed Ayub'].map(n=>n.trim()).sort((a,b)=>a.localeCompare(b));
+const QC_AGENT_NAME_OPTIONS=["Abdul Shahid","Abhishek Ningappanavar","Abu Talha","Afraa Fathima","Ajuba Yelmo","Anil Kumar H S","Anushiya S","Arbiya Taj","Asma Banu","Balaji A","Banupriya Rajan","Bhavana S","Challa Pavan Kumar","CHANDANA KURAPOTHULA","Christopher Samson","Deepika Dhanunjaya","Devendra Kothollu","Divyashree M","Dravid Kumar R","Esha R","Hariharan Rajapandian","Haseena Pulacherla","Hemalatha P","Intiyaj","Jennifer","Jennifer Sb","Junaid R","Jyoti Sharma","Kabiya C","Keerthana K","KELAM SIVA SANKAR","Kimdiana Grace","Likith Kumar Ambruthaluru","Manjith Kumar Durthati","Manoj G","Megha Rai","Mohammed Ayub","Mohammed Zeeshan Rathod","Mohanapriya M","Moin Khan","Nandhini Ravi","Naveena M","Nirmal Kandhesh B","Pallavi N","Pasupuleti Hymavathi","PAVAN KUMAR KALASU","Pooja V","Pooja Y","Rakhesh Rohidas Pal","Riyaz Rehman","Saiyad Noorulla","Sandhya V","Sanjay S Kumar","SANTHOSH S","Sharanya A","Shereen taj","Sneha PN","Srihari K P","Srinivasan Baskaran","Sudharshan S","Sumit Chetry","Syed Sahil","Thejashwini R","Trilok Srinivas","Vighneshwar Hegde","VINOTH N"].map(n=>n.trim()).sort((a,b)=>a.localeCompare(b));
 
 // Shared searchable-dropdown combobox for any case field backed by
 // QC_AGENT_NAME_OPTIONS — Agent Name and Auditor Name both draw from the
