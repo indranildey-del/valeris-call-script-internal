@@ -5260,6 +5260,12 @@ async function qcLoadAnalytics(kind){
     _qcAnalyticsCache[kind]={data:combined,ts:Date.now()};
     qcpOnDataLoaded();
   }catch(err){
+    // The message alone doesn't say WHERE it broke, and this can be a real
+    // rendering bug (not just a network/auth failure) — qcpOnDataLoaded()
+    // above runs entirely inside this try, so a bug anywhere in rendering
+    // real data lands here too. Log the full stack so it's diagnosable from
+    // the console instead of just the one-line message shown on screen.
+    console.error('QC Analytics load/render failed:',err);
     document.getElementById('qcp-sec-overview').innerHTML=`<div style="padding:40px;text-align:center;color:#dc2626">&#10005; Could not load analytics: ${escHtml(err.message)}</div>`;
   }
 }
