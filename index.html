@@ -4255,7 +4255,7 @@ function qcWebhookConfigured(){ return !!QC_WEBHOOK_URL && QC_WEBHOOK_URL.indexO
 // a reload when it no longer matches what this page loaded with — otherwise
 // a tab left open across a deploy keeps running stale code (e.g. hitting an
 // old QC_WEBHOOK_URL/Apps Script deployment) with no way to notice.
-const APP_VERSION = "2026-09-30.5";
+const APP_VERSION = "2026-10-17.1";
 
 // ── Google Sign-In (real, domain-verified server-side — see Code.gs) ──
 const QC_GOOGLE_CLIENT_ID = "872194684059-892v6oe8jktuij9m0gbefte2cdbp5oim.apps.googleusercontent.com";
@@ -5106,6 +5106,8 @@ function renderQCAnalyticsShell(){
             <div class="qcp-agentjump-panel" id="qcpAgentJumpPanel"></div>
           </div>
           <button class="qc-btn" onclick="qcRefreshAnalytics()">&#9851; Refresh</button>
+          <button class="qc-btn" onclick="printToPDF('qcAnalytics')">&#128196; Download PDF</button>
+          <button class="qc-btn" onclick="qcpExportExcelReport()">&#128202; Export Report</button>
           <div class="qcp-ddms" id="qcpFiltersDD">
             <button class="qcp-ddms-trigger" onclick="qcpToggleDD()"><span id="qcpFiltersSummary">All time · All programs · All team leaders</span><span class="qcp-ddms-caret">&#9662;</span></button>
             <div class="qcp-ddms-panel" id="qcpFiltersPanel">
@@ -5988,8 +5990,8 @@ function qcpProgramAgentNames(program){
 function qcpTeamLeaderAgentNames(tl){
   return qcpDirectory().agents.filter(e=>e.teamLeader===tl).map(e=>e.name);
 }
-function qcpEntityGroups(){
-  const level=_qcp.level;
+function qcpEntityGroups(levelOverride){
+  const level=levelOverride||_qcp.level;
   const audits=qcpFilteredAudits();
   const dir=qcpDirectory();
   if(level==='program'){
@@ -7873,6 +7875,198 @@ function qcSyncFormValuesIntoClone(liveRoot,cloneRoot){
   });
 }
 
+// ══════════════════════════════════════════════════════════════
+//  QC Analytics report export (Excel) — builds a formatted multi-sheet
+//  workbook from exactly what the page is currently scoped to: the same
+//  date range / program / team-leader filters (and agent/team focus, if
+//  one is set) the on-screen numbers use, so the file never disagrees
+//  with the screen.
+// ══════════════════════════════════════════════════════════════
+const QC_REPORT_HEADER_FILL='FF0C447C';
+const QC_REPORT_HEADER_FONT='FFE6F1FB';
+const QC_REPORT_BAND_COLORS={
+  pass:{fill:'FFEAF3DE',font:'FF27500A'},
+  warn:{fill:'FFFAEEDA',font:'FF633806'},
+  fail:{fill:'FFFCEBEB',font:'FF791F1F'},
+  na:{fill:'FFF1EFE8',font:'FF5F5E5A'}
+};
+function qcApplyHeaderRowStyle(row){
+  row.eachCell(cell=>{
+    cell.font={bold:true,color:{argb:QC_REPORT_HEADER_FONT}};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:QC_REPORT_HEADER_FILL}};
+  });
+}
+function qcApplyBandColor(cell,band){
+  const c=QC_REPORT_BAND_COLORS[band]||QC_REPORT_BAND_COLORS.na;
+  cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:c.fill}};
+  cell.font={bold:true,color:{argb:c.font}};
+}
+function qcpDateFilterLabel(){
+  const labels={all:'All Time',today:'Today','7d':'Last 7 Days','30d':'Last 30 Days'};
+  if(_qcp.dateMode==='custom') return 'Custom range: '+(_qcp.dateFrom||'…')+' to '+(_qcp.dateTo||'…');
+  return labels[_qcp.dateMode]||'All Time';
+}
+function qcpSetScopeLabel(set,all,noun){
+  if(!set||set.size===all.length) return 'All '+noun;
+  return [...set].sort().join(', ');
+}
+// One row per Program / Team Leader / Agent, same grouping + filters the
+// on-screen table uses (qcpEntityGroups), with cases/escalations rolled up
+// from the member agents' real Roster and Miss Log rows.
+function qcpEntityReportRows(level){
+  const [from,to]=qcpEffectiveDateRange();
+  const missLog=qcpMissLog();
+  return qcpEntityGroups(level).map(g=>{
+    const agg=qcpAggregate(g.recs);
+    const names=level==='program'?qcpProgramAgentNames(g.name):level==='teamLeader'?qcpTeamLeaderAgentNames(g.name):[g.name];
+    let cases=0; names.forEach(n=>{ cases+=qcpCasesForRange(qcpRosterRowFor(n),from,to); });
+    const top=qcpTopFields(g.recs,1)[0];
+    return {name:g.name,subtitle:g.subtitle||'',audits:agg.n,health:agg.health,critical:agg.criticalCount,
+      nonCritical:agg.nonCriticalCount,escalations:qcpEscalationsForAgents(names,from,to,missLog),cases,
+      topField:top?top.label+' ('+top.count+')':'',
+      workingDays:g.workingDays,leaveDays:g.leaveDays,pctAvailable:g.pctAvailable};
+  });
+}
+async function qcpExportExcelReport(){
+  if(!qcpData()){ alert('Nothing to export yet — load analytics first.'); return; }
+  if(typeof ExcelJS==='undefined'){ alert('Report library failed to load — check your connection and try again.'); return; }
+  const kindLabel=QC_KIND_META[_qcAnalyticsKind].shortLabel;
+  const dir=qcpDirectory();
+  const audits=qcpFilteredAudits();
+  const [from,to]=qcpEffectiveDateRange();
+  const missLog=qcpMissLog();
+  const pctCell=(cell,score)=>{ if(score!==null&&score!==undefined&&!isNaN(score)){ cell.numFmt='0.0%'; qcApplyBandColor(cell,qcpBand(score)); } };
+  const pct=v=>(v===null||v===undefined||isNaN(v))?null:v/100;
+
+  const wb=new ExcelJS.Workbook();
+  wb.creator='Valeris';
+  wb.created=new Date();
+
+  // ---- Summary ----
+  const agg=qcpAggregate(audits);
+  const agentsInView=[...new Set(audits.map(a=>a.agent).filter(Boolean))];
+  const summary=wb.addWorksheet('Summary');
+  summary.columns=[{width:34},{width:30},{width:14}];
+  const titleRow=summary.addRow([kindLabel+' QC Analytics Report']);
+  titleRow.font={bold:true,size:14};
+  summary.mergeCells(titleRow.number,1,titleRow.number,3);
+  const metaRow=summary.addRow(['Generated '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})]);
+  metaRow.font={italic:true,color:{argb:'FF5F5E5A'}};
+  summary.mergeCells(metaRow.number,1,metaRow.number,3);
+  summary.addRow(['Date range',qcpDateFilterLabel()]);
+  summary.addRow(['Programs',qcpSetScopeLabel(_qcp.programs,dir.programs,'programs')]);
+  summary.addRow(['Team leaders',qcpSetScopeLabel(_qcp.teamLeaders,dir.teamLeaders,'team leaders')]);
+  if(_qcp.focus) summary.addRow(['Focus',(_qcp.focus.type==='agent'?'Agent: ':'Team leader: ')+_qcp.focus.name]);
+  summary.addRow([]);
+  qcApplyHeaderRowStyle(summary.addRow(['Metric','Value']));
+  summary.addRow(['Audits evaluated',agg.n]);
+  const healthRow=summary.addRow(['Health score (avg QC score)',pct(agg.health)]);
+  pctCell(healthRow.getCell(2),agg.health);
+  summary.addRow(['Critical errors',agg.criticalCount]);
+  summary.addRow(['Non-critical errors',agg.nonCriticalCount]);
+  summary.addRow(['   Documentation',agg.bucketCounts.documentation]);
+  summary.addRow(['   Communication',agg.bucketCounts.communication]);
+  summary.addRow(['Escalations (Miss Log rows)',qcpEscalationsForAgents(agentsInView,from,to,missLog)]);
+  summary.addRow(['Agents in view',agentsInView.length]);
+  summary.addRow([]);
+  qcApplyHeaderRowStyle(summary.addRow(['Top failed items','Bucket','Occurrences']));
+  const topItems=qcpTopFields(audits,10);
+  (topItems.length?topItems:[{label:'No errors recorded',count:0,critical:false}]).forEach(f=>{
+    const b=qcpBucketOf(f.label);
+    summary.addRow([f.label,b?QCP_BUCKET_LABEL[b]:'',f.count]);
+  });
+
+  // ---- Roster ----
+  const ro=wb.addWorksheet('Roster');
+  ro.columns=[
+    {header:'Agent',key:'name',width:28},{header:'Team Leader',key:'tl',width:18},{header:'Team',key:'team',width:30},
+    {header:'Working Days',key:'wd',width:14},{header:'Leave',key:'lv',width:8},{header:'Available Days (%)',key:'av',width:18},
+    {header:'Cases',key:'cases',width:10},{header:'Escalations',key:'esc',width:12},{header:'QC Score',key:'qc',width:11}
+  ];
+  qcApplyHeaderRowStyle(ro.getRow(1));
+  ro.views=[{state:'frozen',ySplit:1}];
+  ro.autoFilter='A1:I1';
+  qcpRosterRows().sort((a,b)=>a.name.localeCompare(b.name)).forEach(r=>{
+    const row=ro.addRow([r.name,r.tl,r.team,r.workingDays,r.leaveDays,r.pctAvailable===null||r.pctAvailable===undefined?null:r.pctAvailable/100,r.caseCount,r.escalationCount,pct(r.qcScore)]);
+    if(r.pctAvailable!==null&&r.pctAvailable!==undefined) row.getCell(6).numFmt='0.0%';
+    pctCell(row.getCell(9),r.qcScore);
+  });
+
+  // ---- By Program / By Team Leader / By Agent ----
+  [['program','By Program','Program'],['teamLeader','By Team Leader','Team Leader'],['agent','By Agent','Agent']].forEach(([level,sheetName,label])=>{
+    const ws=wb.addWorksheet(sheetName);
+    const cols=[{header:label,key:'name',width:28}];
+    if(level!=='program') cols.push({header:level==='agent'?'Team Leader':'Agents',key:'sub',width:18});
+    cols.push({header:'Audits',key:'audits',width:10},{header:'Health',key:'health',width:11},{header:'Critical',key:'crit',width:10},
+      {header:'Non-Critical',key:'nc',width:13},{header:'Escalations',key:'esc',width:12},{header:'Cases',key:'cases',width:10});
+    if(level==='agent') cols.push({header:'Working Days',key:'wd',width:14},{header:'Leave',key:'lv',width:8},{header:'Available Days (%)',key:'av',width:18});
+    cols.push({header:'Top Failed Item',key:'top',width:36});
+    ws.columns=cols;
+    qcApplyHeaderRowStyle(ws.getRow(1));
+    ws.views=[{state:'frozen',ySplit:1}];
+    ws.autoFilter={from:{row:1,column:1},to:{row:1,column:cols.length}};
+    const healthCol=cols.findIndex(c=>c.key==='health')+1;
+    const availCol=cols.findIndex(c=>c.key==='av')+1;
+    qcpEntityReportRows(level).sort((a,b)=>(a.health===null?-1:a.health)-(b.health===null?-1:b.health)).forEach(r=>{
+      const vals=[r.name];
+      if(level!=='program') vals.push(r.subtitle);
+      vals.push(r.audits,pct(r.health),r.critical,r.nonCritical,r.escalations,r.cases);
+      if(level==='agent') vals.push(r.workingDays,r.leaveDays,r.pctAvailable===null||r.pctAvailable===undefined?null:r.pctAvailable/100);
+      vals.push(r.topField);
+      const row=ws.addRow(vals);
+      pctCell(row.getCell(healthCol),r.health);
+      if(availCol && r.pctAvailable!==null && r.pctAvailable!==undefined) row.getCell(availCol).numFmt='0.0%';
+    });
+  });
+
+  // ---- Critical Items (program x bucket failure rate, same as the heatmap) ----
+  const ci=wb.addWorksheet('Critical Items');
+  ci.columns=[{header:'Program',width:28},{header:'Audits',width:10}]
+    .concat(QCP_BUCKETS.flatMap(b=>[{header:QCP_BUCKET_LABEL[b]+' — rate',width:26},{header:QCP_BUCKET_LABEL[b]+' — audits',width:24}]));
+  qcApplyHeaderRowStyle(ci.getRow(1));
+  ci.views=[{state:'frozen',ySplit:1}];
+  dir.programs.filter(p=>_qcp.programs.has(p)).forEach(p=>{
+    const recs=audits.filter(a=>a.program===p);
+    const vals=[p,recs.length];
+    QCP_BUCKETS.forEach(bucket=>{
+      const count=recs.filter(r=>(r.failedFields||[]).some(l=>qcpBucketOf(l)===bucket)).length;
+      vals.push(recs.length?count/recs.length:null,count);
+    });
+    const row=ci.addRow(vals);
+    QCP_BUCKETS.forEach((b,i)=>{ if(recs.length) row.getCell(3+i*2).numFmt='0.0%'; });
+  });
+
+  // ---- Raw Audit Log ----
+  const raw=wb.addWorksheet('Raw Audit Log');
+  raw.columns=[
+    {header:'Audit Date',width:12},{header:'Agent',width:24},{header:'Team Leader',width:18},{header:'Program',width:22},
+    {header:'SR / Case #',width:16},{header:'Payer',width:18},{header:'Score',width:10},{header:'# Errors',width:10},
+    {header:'Critical Fails',width:34},{header:'Non-Critical Fails',width:38},{header:'Auditor',width:18}
+  ];
+  qcApplyHeaderRowStyle(raw.getRow(1));
+  raw.views=[{state:'frozen',ySplit:1}];
+  raw.autoFilter='A1:K1';
+  audits.slice().sort((a,b)=>(b.auditDate||'').localeCompare(a.auditDate||'')).forEach(a=>{
+    const score=a.overallScore===''||a.overallScore==null?null:Math.round(parseFloat(a.overallScore));
+    const fails=Array.isArray(a.failedFields)?Array.from(new Set(a.failedFields)):[];
+    const row=raw.addRow([a.auditDate||'',a.agent||'',qcpAgentTL(a.agent||''),a.program||'',a.srNumber||'',a.payer||'',
+      score===null||isNaN(score)?null:score/100,a.errorCount===''||a.errorCount==null?null:a.errorCount,
+      fails.filter(l=>qcpBucketOf(l)==='critical').join(', '),fails.filter(l=>qcpBucketOf(l)!=='critical').join(', '),a.auditor||'']);
+    if(score!==null&&!isNaN(score)){ row.getCell(7).numFmt='0%'; qcApplyBandColor(row.getCell(7),qcpBand(score)); }
+  });
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;
+  link.download='Valeris_QC_Report_'+kindLabel+'_'+new Date().toISOString().slice(0,10)+'.xlsx';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function printToPDF(type){
   /* ══ QC SCORECARD (MM/PBM) — print an EXACT clone of the on-screen page, no restyling ══ */
   if(type==='qc'){
@@ -7913,41 +8107,31 @@ function printToPDF(type){
     setTimeout(()=>{win.focus();win.print();},700);
     return;
   }
-  /* ══ QC ANALYTICS — print an exact clone of the current drill level's
-     cards/charts (respecting whatever search/checkbox filtering is
-     currently hiding cards, same "print what you see" fidelity as the
-     scorecard above), with the interactive-only controls stripped out
-     since they're meaningless on paper. ══ */
+  /* ══ QC ANALYTICS — print the section currently on screen: a clone of the
+     visible panel(s) (so charts/tables/KPIs print exactly as shown, under
+     whatever date/program/team-leader filters are active), re-wrapped in
+     .qcp-root so the page's scoped color variables still resolve in the
+     print window, with the interactive-only controls stripped out. ══ */
   if(type==='qcAnalytics'){
-    const bodyEl=document.getElementById('qcAnalyticsBody');
-    if(!bodyEl){alert('Nothing to print.');return;}
-    const clone=bodyEl.cloneNode(true);
-    clone.querySelectorAll('.qc-analytics-search-row, .qc-analytics-expand-btn, .qc-analytics-dropdown-panel').forEach(el=>el.remove());
+    const panels=[...document.querySelectorAll('.qcp-secpanel')].filter(el=>!el.hidden);
+    if(!panels.length || !qcpData()){alert('Nothing to print.');return;}
+    const wrap=document.createElement('div');
+    panels.forEach(p=>wrap.appendChild(p.cloneNode(true)));
+    wrap.querySelectorAll('.qcp-viewtoggle, .qcp-agentjump, .qcp-ddms, .qcp-clearchip, button').forEach(el=>el.remove());
     const kindLabel=QC_KIND_META[_qcAnalyticsKind].shortLabel;
-    const d=_qcAnalyticsDrill;
-    const isWorkflowAgentTab=d.level==='kind'&&_qcAnalyticsWorkflowTab==='agent';
-    // The team leader filter only hides cards live — it never touches the
-    // drill level/title above — so without this the exported PDF would show
-    // a filtered subset of agents under a title that still just says "By
-    // Agent (All Programs)", with no record of which filter produced it.
-    const tlFilterSuffix=(isWorkflowAgentTab&&_qcAnalyticsWorkflowTLFilter.size)
-      ?' — Team Leader: '+Array.from(_qcAnalyticsWorkflowTLFilter).sort().join(', ')
-      :'';
-    const title=d.level==='teamLeader'?kindLabel+' QC Analytics — '+d.program+' — By Team Leader'
-      :d.level==='agent'?kindLabel+' QC Analytics — '+d.program+' — '+d.teamLeader+' — By Agent'
-      :d.level==='workflowAgentDetail'?kindLabel+' QC Analytics — '+d.agent+' — All Programs'
-      :d.level==='workflowMultiAgent'?kindLabel+' QC Analytics — Selected Agents — All Programs'
-      :isWorkflowAgentTab?kindLabel+' QC Analytics — By Agent (All Programs)'+tlFilterSuffix
-      :kindLabel+' QC Analytics — By Program';
+    const sectionEl=document.getElementById('qcpSectionTitle');
+    const title=kindLabel+' QC Analytics — '+(sectionEl?sectionEl.textContent:'Report');
+    const scope=qcpFiltersSummaryLabel()+(_qcp.focus?' · '+(_qcp.focus.type==='agent'?'Agent: ':'Team leader: ')+_qcp.focus.name:'');
     const styleHtml=[...document.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"], style')].map(el=>el.outerHTML).join('\n');
     const win=window.open('','_blank','width=1100,height=900');
     if(!win){alert('Please allow pop-ups in your browser to use this feature.');return;}
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>${styleHtml}<style>
-      body{height:auto!important;overflow:visible!important;display:block!important;padding:24px}
-      #qcAnalyticsBody{height:auto!important;overflow:visible!important}
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escHtml(title)}</title>${styleHtml}<style>
+      body{height:auto!important;overflow:visible!important;display:block!important;padding:24px;background:#fff}
+      .qcp-root{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .qcp-progtable-wrap{overflow:visible!important}
+      .qcp-card,.qcp-kpi,.qcp-qa-card{break-inside:avoid;page-break-inside:avoid}
       @page{size:A4 landscape;margin:10mm}
-      .qc-analytics-card{break-inside:avoid;page-break-inside:avoid}
-    </style></head><body><h2 style="font-family:Arial,Helvetica,sans-serif;margin-bottom:16px">${title}</h2>${clone.outerHTML}</body></html>`);
+    </style></head><body><div class="qcp-root"><h2 style="font-family:Arial,Helvetica,sans-serif;margin-bottom:4px">${escHtml(title)}</h2><div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#64748b;margin-bottom:16px">${escHtml(scope)} — generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}</div><div class="qcp-main" style="padding:0">${wrap.innerHTML}</div></div></body></html>`);
     win.document.close();
     setTimeout(()=>{win.focus();win.print();},700);
     return;
